@@ -1,5 +1,5 @@
 import type { ODHero } from '../types'
-import { classifyHero, type HeroRole } from './heroRoles'
+import { classifyHeroById, type HeroRole } from './heroRoles'
 
 /** In-memory cache of the OpenDota /heroes response. */
 let heroById: Map<number, ODHero> | null = null
@@ -27,9 +27,11 @@ export function isFarmCore(id: number): boolean {
 }
 
 /**
- * Per-hero typical pub role: 'core' | 'support' | 'flex'. Returns 'flex'
- * if the heroes index hasn't loaded yet — better than guessing wrong.
+ * Per-hero typical pub role: 'core' | 'support' | 'flex'.
+ *
+ * Reads from the hardcoded HERO_ROLES table — works even before /heroes
+ * has finished loading, since the table keys on hero ID directly.
  */
 export function heroPlaystyle(id: number): HeroRole {
-  return classifyHero(heroById?.get(id))
+  return classifyHeroById(id)
 }

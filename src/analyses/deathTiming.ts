@@ -30,8 +30,8 @@ function bucketTick(i: number): string {
  * showing "0 deaths/game" as a Healthy result.
  */
 export function analyzeDeathTiming(input: ReportInput): AnalysisResult {
-  const { matches, details, accountId, inferredRole, rankBucket } = input
-  const baseline = getBaseline(inferredRole, rankBucket)
+  const { matches, details, accountId, inferredRole, rankBucket, roleDistribution } = input
+  const baseline = getBaseline(inferredRole, rankBucket, roleDistribution)
 
   const buckets = new Array(NUM_BUCKETS).fill(0)
   let totalDeaths = 0
@@ -161,6 +161,11 @@ export function analyzeDeathTiming(input: ReportInput): AnalysisResult {
     suggestion = 'Keep prioritizing position over greed. This is one of your strengths.'
   }
 
+  // Death timing: lower is better, so the "Strong" label fires when the
+  // ratio is meaningfully *below* baseline (≤ 0.85).
+  const severityLabel =
+    severity === 'good' && totalRatio <= 0.85 ? 'Strong' : undefined
+
   return {
     id: 'death-timing',
     title: 'Death timing',
@@ -169,6 +174,7 @@ export function analyzeDeathTiming(input: ReportInput): AnalysisResult {
     baseline: Math.round(baseTotal * 10) / 10,
     baselineLabel: 'deaths/game',
     severity,
+    severityLabel,
     finding,
     suggestion,
     note,

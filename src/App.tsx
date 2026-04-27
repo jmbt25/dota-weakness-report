@@ -135,13 +135,18 @@ function App() {
       }
 
       setStatus({ kind: 'loading', stage: 'Crunching analyses…' })
-      const inferredRole = inferRole(matches, details, parsed.accountId)
+      const { role: inferredRole, distribution: roleDistribution } = inferRole(
+        matches,
+        details,
+        parsed.accountId
+      )
       const reportInput: ReportInput = {
         accountId: parsed.accountId,
         matches,
         details,
         rankTier: profile.rank_tier ?? null,
         inferredRole,
+        roleDistribution,
         rankBucket: rankBucketFromTier(profile.rank_tier),
         heroName: getHeroName,
       }

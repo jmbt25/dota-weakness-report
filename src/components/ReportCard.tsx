@@ -24,6 +24,10 @@ function severityLabel(sev: Severity): string {
   return 'Concerning'
 }
 
+function badgeText(result: { severity: Severity; severityLabel?: string }): string {
+  return result.severityLabel ?? severityLabel(result.severity)
+}
+
 const TOOLTIP_STYLE = {
   background: '#13161d',
   border: '1px solid #222632',
@@ -40,7 +44,7 @@ export function ReportCard({ result }: { result: AnalysisResult }) {
     <article className="card flex flex-col">
       <header className="flex items-start justify-between gap-3">
         <h3 className="text-lg font-semibold">{result.title}</h3>
-        <span className={severityClass(severity)}>{severityLabel(severity)}</span>
+        <span className={severityClass(severity)}>{badgeText(result)}</span>
       </header>
 
       {!isUnmeasured && (

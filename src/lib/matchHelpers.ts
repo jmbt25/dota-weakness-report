@@ -1,6 +1,12 @@
 // Small helpers for pulling player-specific data out of OpenDota match details.
 
-import type { ODMatchDetail, ODMatchPlayer, ODMatchSummary, Role } from '../types'
+import type {
+  ODMatchDetail,
+  ODMatchPlayer,
+  ODMatchSummary,
+  Role,
+  RoleDistribution,
+} from '../types'
 import { heroPlaystyle } from './heroes'
 
 /** A player_slot < 128 means Radiant; >= 128 means Dire. */
@@ -33,45 +39,68 @@ export function isParsed(detail: ODMatchDetail | undefined): boolean {
  * Role inference from the user's full hero pool.
  *
  * Counts each match's hero as 'core', 'support', or 'flex' via the
- * /heroes role tags + override table in `heroRoles.ts`. Weighted by games:
- *   - core if core-share > 60%
- *   - support if support-share > 60%
- *   - else 'flex' (with a tiebreak: lean toward whichever side has more
- *     games when the two are far apart but neither hits 60%)
+ * hardcoded `heroRoles.ts` table, then applies (per v5 spec):
+ *   - support if support_pct >= 50%
+ *     OR (support_pct + flex_pct >= 70% AND support_pct > core_pct)
+ *   - core    if core_pct    >= 50%
+ *     OR (core_pct    + flex_pct >= 70% AND core_pct    > support_pct)
+ *   - else flex
  *
- * Falls back to a GPM/last-hit threshold from match details when the
- * heroes index hasn't loaded.
+ * Falls back to a GPM/last-hit threshold from match details when no heroes
+ * could be classified (e.g. all unknown IDs).
  */
+export interface InferredRole {
+  role: Role
+  distribution: RoleDistribution
+}
+
 export function inferRole(
   matches: ODMatchSummary[],
   details: Record<number, ODMatchDetail>,
   accountId: number
-): Role {
-  if (matches.length === 0) return 'unknown'
+): InferredRole {
+  if (matches.length === 0) return { role: 'unknown', distribution: ZERO_DIST }
 
-  // Weighted count by games played across the entire window.
   let core = 0
   let support = 0
   let flex = 0
+  const breakdown: Record<string, { games: number; role: string }> = {}
   for (const m of matches) {
     const style = heroPlaystyle(m.hero_id)
     if (style === 'core') core++
     else if (style === 'support') support++
     else flex++
+    const key = String(m.hero_id)
+    breakdown[key] ??= { games: 0, role: style }
+    breakdown[key].games++
   }
 
   const total = core + support + flex
   if (total > 0) {
     const corePct = core / total
     const supportPct = support / total
-    if (corePct > 0.6) return 'core'
-    if (supportPct > 0.6) return 'support'
-    // Tiebreaker: if one side clearly outweighs the other and flex is the
-    // bridge, lean to that side. Avoids "everyone is flex" for users with
-    // a meaningful tilt but lots of flex picks.
-    if (support > core && supportPct >= 0.4) return 'support'
-    if (core > support && corePct >= 0.4) return 'core'
-    return 'flex'
+    const flexPct = flex / total
+
+    let result: Role
+    if (supportPct >= 0.5) result = 'support'
+    else if (corePct >= 0.5) result = 'core'
+    else if (supportPct + flexPct >= 0.7 && supportPct > corePct) result = 'support'
+    else if (corePct + flexPct >= 0.7 && corePct > supportPct) result = 'core'
+    else result = 'flex'
+
+    const distribution: RoleDistribution = {
+      core: Number(corePct.toFixed(3)),
+      support: Number(supportPct.toFixed(3)),
+      flex: Number(flexPct.toFixed(3)),
+    }
+    // eslint-disable-next-line no-console
+    console.debug('[role] classified', {
+      result,
+      counts: { core, support, flex, total },
+      distribution,
+      heroBreakdown: breakdown,
+    })
+    return { role: result, distribution }
   }
 
   // Fallback: GPM/last-hit heuristic from match details.
@@ -86,9 +115,11 @@ export function inferRole(
     lhSum += player.last_hits ?? 0
     n++
   }
-  if (n === 0) return 'unknown'
+  if (n === 0) return { role: 'unknown', distribution: ZERO_DIST }
   const avgGpm = gpmSum / n
   const avgLh = lhSum / n
-  if (avgGpm < 320 && avgLh < 120) return 'support'
-  return 'core'
+  const role: Role = avgGpm < 320 && avgLh < 120 ? 'support' : 'core'
+  return { role, distribution: ZERO_DIST }
 }
+
+const ZERO_DIST: RoleDistribution = { core: 0, support: 0, flex: 0 }

@@ -5,7 +5,7 @@
 // /heroStats + /benchmarks/{match_id}, or a self-hosted JSON file we
 // regenerate per patch).
 
-import type { RankBucket, Role } from '../types'
+import type { RankBucket, Role, RoleDistribution } from '../types'
 
 export interface FarmBaseline {
   gpm10: number
@@ -93,33 +93,52 @@ const SUPPORT: Record<RankBucket, RoleBaseline> = {
   },
 }
 
-export function getBaseline(role: Role, bucket: RankBucket): RoleBaseline {
+export function getBaseline(
+  role: Role,
+  bucket: RankBucket,
+  dist?: RoleDistribution
+): RoleBaseline {
   if (role === 'support') return SUPPORT[bucket]
-  if (role === 'flex') return blendFlex(bucket)
-  return CORE[bucket]
+  if (role === 'core') return CORE[bucket]
+  // 'flex' or 'unknown' → distribution-weighted blend.
+  return blendFlex(bucket, dist)
 }
 
-/** Average of the core and support baselines for the given bucket. */
-function blendFlex(bucket: RankBucket): RoleBaseline {
+/**
+ * Weighted average of core + support baselines for flex players, where
+ * flex games are split 50/50 across both sides. Falls back to a 50/50
+ * blend if no distribution was supplied.
+ */
+function blendFlex(bucket: RankBucket, dist?: RoleDistribution): RoleBaseline {
   const c = CORE[bucket]
   const s = SUPPORT[bucket]
-  const avg = (a: number, b: number) => Math.round((a + b) / 2)
-  const avgFloat = (a: number, b: number) => Number(((a + b) / 2).toFixed(2))
+  let supportWeight = 0.5
+  let coreWeight = 0.5
+  if (dist) {
+    const supW = dist.support + 0.5 * dist.flex
+    const corW = dist.core + 0.5 * dist.flex
+    const total = supW + corW
+    if (total > 0) {
+      supportWeight = supW / total
+      coreWeight = corW / total
+    }
+  }
+  const lerp = (cVal: number, sVal: number) => coreWeight * cVal + supportWeight * sVal
   return {
     farm: {
-      gpm10: avg(c.farm.gpm10, s.farm.gpm10),
-      gpm20: avg(c.farm.gpm20, s.farm.gpm20),
-      xpm10: avg(c.farm.xpm10, s.farm.xpm10),
-      xpm20: avg(c.farm.xpm20, s.farm.xpm20),
+      gpm10: Math.round(lerp(c.farm.gpm10, s.farm.gpm10)),
+      gpm20: Math.round(lerp(c.farm.gpm20, s.farm.gpm20)),
+      xpm10: Math.round(lerp(c.farm.xpm10, s.farm.xpm10)),
+      xpm20: Math.round(lerp(c.farm.xpm20, s.farm.xpm20)),
     },
     deaths: {
-      perGame: avgFloat(c.deaths.perGame, s.deaths.perGame),
+      perGame: Number(lerp(c.deaths.perGame, s.deaths.perGame).toFixed(2)),
       perBucket: c.deaths.perBucket.map((cv, i) =>
-        avgFloat(cv, s.deaths.perBucket[i] ?? cv)
+        Number(lerp(cv, s.deaths.perBucket[i] ?? cv).toFixed(2))
       ),
     },
-    laneWinRate: avgFloat(c.laneWinRate, s.laneWinRate),
-    winGivenLaneWon: avgFloat(c.winGivenLaneWon, s.winGivenLaneWon),
+    laneWinRate: Number(lerp(c.laneWinRate, s.laneWinRate).toFixed(2)),
+    winGivenLaneWon: Number(lerp(c.winGivenLaneWon, s.winGivenLaneWon).toFixed(2)),
   }
 }
 

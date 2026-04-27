@@ -121,6 +121,8 @@ export interface AnalysisResult {
   /** Short label after the baseline value. Should NOT contain the word "baseline". */
   baselineLabel: string
   severity: Severity
+  /** Optional label override for the severity pill (e.g. "Strong" instead of "Healthy"). */
+  severityLabel?: string
   finding: string
   suggestion: string
   /** Optional payload for the chart on this card. */
@@ -168,6 +170,13 @@ export interface ChartStatBlocks {
 
 export type ChartPayload = ChartBars | ChartSeries | ChartStatBlocks
 
+export interface RoleDistribution {
+  /** Fractions in [0, 1], summing to ~1. */
+  core: number
+  support: number
+  flex: number
+}
+
 export interface ReportInput {
   accountId: number
   matches: ODMatchSummary[]
@@ -176,6 +185,8 @@ export interface ReportInput {
   inferredRole: Role
   /** Resolved bucket for baseline lookup. */
   rankBucket: RankBucket
+  /** Game-share by classified hero role. Used for flex baseline blending. */
+  roleDistribution: RoleDistribution
   /** Hero ID → localized name. Falls back to "Hero N" if missing. */
   heroName: (id: number) => string
 }

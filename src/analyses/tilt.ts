@@ -71,6 +71,13 @@ export function analyzeTilt(input: ReportInput): AnalysisResult {
     suggestion = 'You bounce back well after losses and don’t hit deep streaks. Keep the queue discipline — it’s rarer than people think.'
   }
 
+  // "Strong" badge when there's no streak AND post-loss WR is meaningfully
+  // above overall WR — that's a player who actively bounces back.
+  const severityLabel =
+    severity === 'good' && longestLossStreak <= SAFE_STREAK && postLossWR > overallWR + 0.1
+      ? 'Strong'
+      : undefined
+
   return {
     id: 'tilt',
     title: 'Loss streak / tilt',
@@ -79,6 +86,7 @@ export function analyzeTilt(input: ReportInput): AnalysisResult {
     baseline: SAFE_STREAK,
     baselineLabel: 'safe streak',
     severity,
+    severityLabel,
     finding,
     suggestion,
     chart: {
