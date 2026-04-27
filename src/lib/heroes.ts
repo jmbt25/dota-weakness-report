@@ -1,4 +1,5 @@
 import type { ODHero } from '../types'
+import { classifyHero, type HeroRole } from './heroRoles'
 
 /** In-memory cache of the OpenDota /heroes response. */
 let heroById: Map<number, ODHero> | null = null
@@ -20,29 +21,15 @@ export function getHero(id: number): ODHero | undefined {
 /**
  * Heuristic for whether a hero is typically played as a farm-dependent core
  * (used to guard suggestions like "try a Hand of Midas timing").
- *
- * OpenDota tags heroes with roles like "Carry", "Nuker", "Support". We treat
- * heroes flagged Carry as farm cores.
  */
 export function isFarmCore(id: number): boolean {
-  const hero = heroById?.get(id)
-  if (!hero) return false
-  return hero.roles.includes('Carry')
+  return heroPlaystyle(id) === 'core'
 }
 
 /**
- * Heuristic classification of a hero as core-vs-support.
- *
- * Returns 'support' if "Support" is in the role list AND "Carry" is not.
- * Pure flex picks (Beastmaster, Mirana etc) end up as 'core' — close enough
- * for the role-detection heuristic that drives baseline selection.
+ * Per-hero typical pub role: 'core' | 'support' | 'flex'. Returns 'flex'
+ * if the heroes index hasn't loaded yet — better than guessing wrong.
  */
-export function heroPlaystyle(id: number): 'core' | 'support' | 'unknown' {
-  const hero = heroById?.get(id)
-  if (!hero) return 'unknown'
-  const roles = hero.roles
-  const isSupport = roles.includes('Support')
-  const isCarry = roles.includes('Carry')
-  if (isSupport && !isCarry) return 'support'
-  return 'core'
+export function heroPlaystyle(id: number): HeroRole {
+  return classifyHero(heroById?.get(id))
 }

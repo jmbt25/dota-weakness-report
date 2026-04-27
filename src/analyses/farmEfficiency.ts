@@ -7,10 +7,9 @@ import { isFarmCore } from '../lib/heroes'
  * Average GPM/XPM at the 10-min and 20-min marks vs. the rank+role baseline.
  * Uses cumulative `gold_t` / `xp_t` arrays from parsed matches.
  *
- * Without any parsed match the result is reported as 'unmeasured' rather than
- * making up numbers from whole-match averages — the rank baselines are
- * calibrated against minute-window GPM, so a whole-match comparison would be
- * misleading.
+ * Headline metric is GPM@20 (the chart's primary number); the prose always
+ * cites both windows with their explicit baselines so chart and prose
+ * reconcile no matter which window is the worst offender.
  */
 export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
   const { matches, details, accountId, inferredRole, rankBucket } = input
@@ -43,7 +42,6 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
       if (typeof x20 === 'number') samples20xpm.push(x20 / 20)
     }
   }
-  // Identify top hero for suggestion targeting.
   let topGames = 0
   for (const [id, games] of heroGames) {
     if (games > topGames) { topGames = games; topHeroId = id }
@@ -60,6 +58,7 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
       severity: 'unmeasured',
       finding: 'Farm efficiency needs per-minute GPM/XPM data, which only parsed matches expose.',
       suggestion: 'Once your matches finish parsing, re-run the report — this card will fill in.',
+      note: `${parsedCount}/${matches.length} matches had parsed replays.`,
     }
   }
 
@@ -77,31 +76,40 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
     : worst >= 0.85 ? 'ok'
     : 'concerning'
 
-  const userPlaysFarmCore = topHeroId != null && isFarmCore(topHeroId) && inferredRole !== 'support'
+  const userPlaysFarmCore =
+    topHeroId != null && isFarmCore(topHeroId) && inferredRole === 'core'
+
+  // Common comparison string used in every branch — keeps prose and chart
+  // numerically aligned.
+  const numbers = `${gpm10} GPM @10 (vs ${base.gpm10} target), ${gpm20} GPM @20 (vs ${base.gpm20})`
 
   let finding: string
   let suggestion: string
   if (severity === 'concerning') {
-    if (ratio10 < ratio20) {
-      finding = `Your 10-min GPM (${gpm10}) is below the ${base.gpm10} ${inferredRole} target. The lane stage is bleeding economy.`
+    const worseWindow = ratio10 < ratio20 ? 'lane stage' : 'mid-game'
+    finding = `Farm is below your bracket+role target: ${numbers}. The ${worseWindow} is the bigger gap.`
+    if (worseWindow === 'lane stage') {
       suggestion = inferredRole === 'support'
         ? 'Focus on stacking, pulling, and rotation timing — your GPM ceiling is structural, not mechanical. Hit the 10-min pull window and the courier-snap gold scales the rest.'
-        : 'Cut creep aggression so the wave settles in your favor. Free farm > a few fancy trades.'
+        : inferredRole === 'flex'
+          ? 'Whatever role you’re in this game, the lane stage is where you’re leaking gold. As a core: cut creep aggression so the wave settles in your favor. As a sup: target one full pull cycle every 53 sec.'
+          : 'Cut creep aggression so the wave settles in your favor. Free farm > a few fancy trades.'
     } else {
-      finding = `Your 20-min GPM (${gpm20}) is below the ${base.gpm20} ${inferredRole} target. You stall after the lane.`
       suggestion = inferredRole === 'support'
-        ? 'After laning, GPM growth is mostly hero-kill participation. Be the first to TP into kills your team is starting; passive supports flatline here.'
-        : 'After laning, transition to ancient stacks/jungle camps between objectives instead of TPing across the map for fights you can’t win.'
+        ? 'Mid-game GPM growth as a support is mostly kill participation. Be the first to TP into fights your team starts; passive supports flatline here.'
+        : inferredRole === 'flex'
+          ? 'Mid-game stalling. As a core, hit ancient/jungle camps between objectives instead of TPing across the map for fights you can’t win.'
+          : 'After laning, transition to ancient stacks/jungle camps between objectives instead of TPing across the map for fights you can’t win.'
     }
   } else if (severity === 'ok') {
-    finding = `Farm is roughly average for your bracket: ${gpm10} GPM @10 vs ${base.gpm10}, ${gpm20} GPM @20 vs ${base.gpm20}.`
+    finding = `Farm is roughly average for your bracket: ${numbers}.`
     suggestion = inferredRole === 'support'
       ? 'Focus on stacking, pulling, and rotation timing — your GPM ceiling is structural, not mechanical. The next 30 GPM comes from hitting more rotations on cooldown.'
       : userPlaysFarmCore
         ? 'Try a Hand of Midas timing on your most-played hero — it tends to lift mid-game GPM more than another raw farming item.'
         : 'Watch your laning replay back. Most of the gap is one or two missed pulls/stacks per game.'
   } else {
-    finding = `Strong farm: ${gpm10} GPM @10 (vs ${base.gpm10}) and ${gpm20} GPM @20 (vs ${base.gpm20}).`
+    finding = `Strong farm: ${numbers}.`
     suggestion = 'Make sure that farm converts to fight pressure — track your damage/networth ratio next.'
   }
 
@@ -115,9 +123,7 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
     severity,
     finding,
     suggestion,
-    note: parsedCount < matches.length
-      ? `${parsedCount}/${matches.length} matches had parsed replays.`
-      : undefined,
+    note: `${parsedCount}/${matches.length} matches had parsed replays.`,
     chart: {
       kind: 'series',
       valueName: 'You',

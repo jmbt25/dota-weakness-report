@@ -106,7 +106,7 @@ export interface ODHero {
 
 // Domain types
 
-export type Role = 'core' | 'support' | 'unknown'
+export type Role = 'core' | 'support' | 'flex' | 'unknown'
 
 /** Bucket of rank tiers used by baselines. */
 export type RankBucket = 'low' | 'mid' | 'high' | 'top'

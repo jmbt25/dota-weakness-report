@@ -94,8 +94,33 @@ const SUPPORT: Record<RankBucket, RoleBaseline> = {
 }
 
 export function getBaseline(role: Role, bucket: RankBucket): RoleBaseline {
-  const set = role === 'support' ? SUPPORT : CORE
-  return set[bucket]
+  if (role === 'support') return SUPPORT[bucket]
+  if (role === 'flex') return blendFlex(bucket)
+  return CORE[bucket]
+}
+
+/** Average of the core and support baselines for the given bucket. */
+function blendFlex(bucket: RankBucket): RoleBaseline {
+  const c = CORE[bucket]
+  const s = SUPPORT[bucket]
+  const avg = (a: number, b: number) => Math.round((a + b) / 2)
+  const avgFloat = (a: number, b: number) => Number(((a + b) / 2).toFixed(2))
+  return {
+    farm: {
+      gpm10: avg(c.farm.gpm10, s.farm.gpm10),
+      gpm20: avg(c.farm.gpm20, s.farm.gpm20),
+      xpm10: avg(c.farm.xpm10, s.farm.xpm10),
+      xpm20: avg(c.farm.xpm20, s.farm.xpm20),
+    },
+    deaths: {
+      perGame: avgFloat(c.deaths.perGame, s.deaths.perGame),
+      perBucket: c.deaths.perBucket.map((cv, i) =>
+        avgFloat(cv, s.deaths.perBucket[i] ?? cv)
+      ),
+    },
+    laneWinRate: avgFloat(c.laneWinRate, s.laneWinRate),
+    winGivenLaneWon: avgFloat(c.winGivenLaneWon, s.winGivenLaneWon),
+  }
 }
 
 /**

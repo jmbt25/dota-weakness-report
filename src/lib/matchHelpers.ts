@@ -30,14 +30,17 @@ export function isParsed(detail: ODMatchDetail | undefined): boolean {
 }
 
 /**
- * Role inference from the user's hero pool.
+ * Role inference from the user's full hero pool.
  *
- * Heuristic: classify each of the user's top 5 most-played heroes via the
- * OpenDota /heroes role tags (Support-and-not-Carry → support, otherwise
- * core), then take the majority vote.
+ * Counts each match's hero as 'core', 'support', or 'flex' via the
+ * /heroes role tags + override table in `heroRoles.ts`. Weighted by games:
+ *   - core if core-share > 60%
+ *   - support if support-share > 60%
+ *   - else 'flex' (with a tiebreak: lean toward whichever side has more
+ *     games when the two are far apart but neither hits 60%)
  *
- * Falls back to a GPM/last-hit threshold when the heroes index isn't loaded
- * (e.g. /heroes fetch failed) or when no parsed details are available.
+ * Falls back to a GPM/last-hit threshold from match details when the
+ * heroes index hasn't loaded.
  */
 export function inferRole(
   matches: ODMatchSummary[],
@@ -46,23 +49,29 @@ export function inferRole(
 ): Role {
   if (matches.length === 0) return 'unknown'
 
-  // Hero-pool majority vote, weighted by games played.
-  const heroGames = new Map<number, number>()
-  for (const m of matches) heroGames.set(m.hero_id, (heroGames.get(m.hero_id) ?? 0) + 1)
-  const top5 = [...heroGames.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5)
-
-  let supportWeight = 0
-  let coreWeight = 0
-  let knownWeight = 0
-  for (const [heroId, games] of top5) {
-    const style = heroPlaystyle(heroId)
-    if (style === 'unknown') continue
-    knownWeight += games
-    if (style === 'support') supportWeight += games
-    else coreWeight += games
+  // Weighted count by games played across the entire window.
+  let core = 0
+  let support = 0
+  let flex = 0
+  for (const m of matches) {
+    const style = heroPlaystyle(m.hero_id)
+    if (style === 'core') core++
+    else if (style === 'support') support++
+    else flex++
   }
-  if (knownWeight > 0) {
-    return supportWeight > coreWeight ? 'support' : 'core'
+
+  const total = core + support + flex
+  if (total > 0) {
+    const corePct = core / total
+    const supportPct = support / total
+    if (corePct > 0.6) return 'core'
+    if (supportPct > 0.6) return 'support'
+    // Tiebreaker: if one side clearly outweighs the other and flex is the
+    // bridge, lean to that side. Avoids "everyone is flex" for users with
+    // a meaningful tilt but lots of flex picks.
+    if (support > core && supportPct >= 0.4) return 'support'
+    if (core > support && corePct >= 0.4) return 'core'
+    return 'flex'
   }
 
   // Fallback: GPM/last-hit heuristic from match details.

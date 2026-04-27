@@ -28,6 +28,7 @@ export function analyzeItemTiming(input: ReportInput): AnalysisResult {
     games: number
   }
   const findings: HeroFinding[] = []
+  let parsedMatchesWithPurchaseLog = 0
 
   for (const heroId of top3Heroes) {
     const itemTimings = new Map<string, number[]>()
@@ -37,6 +38,7 @@ export function analyzeItemTiming(input: ReportInput): AnalysisResult {
       if (!detail) continue
       const player = findPlayerInMatch(detail, accountId)
       if (!player?.purchase_log?.length) continue
+      parsedMatchesWithPurchaseLog++
       const seen = new Set<string>()
       for (const entry of player.purchase_log) {
         const key = entry.key
@@ -80,6 +82,7 @@ export function analyzeItemTiming(input: ReportInput): AnalysisResult {
       severity: 'unmeasured',
       finding: 'No parsed matches with purchase logs found for your top heroes.',
       suggestion: 'Once your matches finish parsing, re-run the report — this card will fill in.',
+      note: `${parsedMatchesWithPurchaseLog}/${matches.length} matches had purchase logs.`,
     }
   }
 
@@ -119,6 +122,7 @@ export function analyzeItemTiming(input: ReportInput): AnalysisResult {
     severity,
     finding,
     suggestion,
+    note: `${parsedMatchesWithPurchaseLog}/${matches.length} matches had purchase logs.`,
     chart: {
       kind: 'bars',
       valueName: 'You (min)',
