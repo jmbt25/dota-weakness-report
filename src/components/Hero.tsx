@@ -46,7 +46,7 @@ export function Hero({ onAnalyze, isLoading, error }: HeroProps) {
       </form>
       {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
       <p className="mt-3 text-xs text-ink-dim">
-        Free for 20-match reports. Unlock the 100-match window, per-hero deep dives, and Taglish honest mode <span aria-label="Philippines flag">🇵🇭</span> with a license key below.
+        Free for 20-match reports. Unlock the 100-match window and per-hero deep dives with a license key below.
       </p>
     </header>
   )

@@ -14,9 +14,7 @@
 //      reading, or damage/utility item splits).
 //   4. Run the placeholder validator on this file.
 //
-// Until then, this is a paid-tier promise made visible in the UI via
-// the "Taglish coming soon to paid tier" teaser line in the honest mode
-// panel.
+// Until then this file is dormant — no UI surfaces it.
 
 import type { AnalysisId, AnalysisResult } from '../../types'
 

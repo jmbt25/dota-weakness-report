@@ -26,10 +26,7 @@ Baselines in v1 are hardcoded role/rank averages. Search the codebase for
 ### Honest mode
 
 A toggle next to the Free/Paid badge swaps the descriptive prose to a
-roast voice that cites your stats. Off by default. Launch ships English
-only — Taglish templates are preserved in
-`src/lib/honest-mode/taglish-templates.ts` and will be wired up as a
-paid-tier feature.
+roast voice that cites your stats. Off by default. English only.
 
 ## Run locally
 

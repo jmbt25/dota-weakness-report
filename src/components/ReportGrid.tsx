@@ -40,7 +40,7 @@ export function ReportGrid({
             Based on your last {matchCount} match{matchCount === 1 ? '' : 'es'}.
             {!isPaid && (
               <>
-                {' '}<span className="text-sky-300">Widen the window to 100 matches, unlock per-hero deep dives, and get Taglish honest mode <span aria-label="Philippines flag">🇵🇭</span> with a license key below.</span>
+                {' '}<span className="text-sky-300">Unlock the 100-match window and per-hero deep dives with a license key below.</span>
               </>
             )}
           </p>

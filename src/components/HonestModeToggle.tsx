@@ -11,9 +11,8 @@ interface HonestModeToggleProps {
  * localStorage, per the embed-safety rule).
  *
  * Launch ships English only. Taglish templates exist in the repo
- * (`lib/honest-mode/taglish-templates.ts`) but are gated behind paid tier
- * — surfaced here as a "coming soon" teaser to preview the feature without
- * gating on region or detection.
+ * (`lib/honest-mode/taglish-templates.ts`) gated behind paid tier; the UI
+ * doesn't surface them yet.
  *
  * The icon is intentionally subtle — the spec asks us to NOT auto-suggest
  * enabling it, so it's discoverable but not prompting.
@@ -64,9 +63,6 @@ export function HonestModeToggle({ enabled, onToggle }: HonestModeToggleProps) {
               </span>
             </span>
           </label>
-          <div className="mt-3 pt-3 border-t border-line text-xs text-ink-dim">
-            Taglish coming soon to paid tier <span aria-label="Philippines flag">🇵🇭</span>
-          </div>
         </div>
       )}
     </div>
