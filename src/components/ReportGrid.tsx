@@ -1,6 +1,7 @@
 import type { AnalysisResult, HonestLanguage } from '../types'
 import { ReportCard } from './ReportCard'
 import { StackSynergyCard } from './StackSynergyCard'
+import { VisionCard } from './VisionCard'
 
 interface ReportGridProps {
   results: AnalysisResult[]
@@ -45,17 +46,31 @@ export function ReportGrid({
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-        {results.map((r) =>
-          r.id === 'stack-synergy' ? (
-            <StackSynergyCard
-              key={r.id}
-              result={r}
-              honestMode={honestMode}
-              language={language}
-              accountId={accountId}
-            />
-          ) : (
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        {results.map((r) => {
+          if (r.id === 'stack-synergy') {
+            return (
+              <StackSynergyCard
+                key={r.id}
+                result={r}
+                honestMode={honestMode}
+                language={language}
+                accountId={accountId}
+              />
+            )
+          }
+          if (r.id === 'vision') {
+            return (
+              <VisionCard
+                key={r.id}
+                result={r}
+                honestMode={honestMode}
+                language={language}
+                accountId={accountId}
+              />
+            )
+          }
+          return (
             <ReportCard
               key={r.id}
               result={r}
@@ -64,7 +79,7 @@ export function ReportGrid({
               accountId={accountId}
             />
           )
-        )}
+        })}
       </div>
     </section>
   )

@@ -7,6 +7,7 @@ import { analyzeLaneOutcome } from './laneOutcome'
 import { analyzeHeroPool } from './heroPool'
 import { analyzeStackSynergy } from './stackSynergy'
 import { analyzeTilt } from './tilt'
+import { analyzeVision } from './vision'
 
 export function runAllAnalyses(input: ReportInput): AnalysisResult[] {
   return [
@@ -18,5 +19,6 @@ export function runAllAnalyses(input: ReportInput): AnalysisResult[] {
     analyzeHeroPool(input),
     analyzeStackSynergy(input),
     analyzeTilt(input),
+    analyzeVision(input),
   ]
 }

@@ -34,6 +34,9 @@ export interface ODObjective {
   player_slot?: number
   key?: string | number
   value?: number
+  /** Some parsed event types (deaths, tower kills, etc.) carry coordinates. */
+  x?: number | null
+  y?: number | null
 }
 
 export interface ODMatchPlayer {
@@ -70,9 +73,47 @@ export interface ODMatchPlayer {
   lh_t?: number[]
   times?: number[]
   purchase_log?: ODPurchaseLogEntry[]
+  // Ward / vision fields (parsed-only). Counts are post-game and survive
+  // even when the per-event logs don't; the logs power timing + region
+  // analysis.
+  obs_placed?: number | null
+  sen_placed?: number | null
+  observer_kills?: number | null
+  sentry_kills?: number | null
+  obs_log?: ODWardEvent[]
+  sen_log?: ODWardEvent[]
+  obs_left_log?: ODWardEvent[]
+  sen_left_log?: ODWardEvent[]
+  // Per-event death log for vision-death-mismatch analysis. Each entry is
+  // a death the player suffered, with coordinates + time when parsed.
+  kills_log?: ODKillEvent[]
   win?: number
   lose?: number
   isRadiant?: boolean
+}
+
+/**
+ * One observer/sentry placement (or expiry) event from a parsed match.
+ * Coordinates are the OpenDota grid (~64–192 on each axis).
+ */
+export interface ODWardEvent {
+  time: number
+  x?: number | null
+  y?: number | null
+  /** Internal item key, e.g. "ward_observer" / "ward_sentry". */
+  key?: string
+  /** Some events also carry the placer's slot. */
+  player_slot?: number
+  /** True when the ward was killed by the enemy (`obs_left_log`). */
+  ehandle?: number
+}
+
+/** Death event with coordinates. */
+export interface ODKillEvent {
+  time: number
+  x?: number | null
+  y?: number | null
+  key?: string
 }
 
 export interface ODMatchDetail {
@@ -135,6 +176,8 @@ export interface AnalysisResult {
   note?: string
   /** Stack synergy needs an anonymization toggle, so it ships raw partner data. */
   stackSynergy?: StackSynergyData
+  /** Vision card renders a custom SVG overlay on the minimap, so it ships raw placement data. */
+  vision?: VisionData
   /**
    * Honest-mode roast templates pull placeholder values from this map.
    * Keys are template-defined strings (e.g. "deaths_per_game"); values
@@ -155,6 +198,7 @@ export type AnalysisId =
   | 'hero-pool'
   | 'stack-synergy'
   | 'tilt'
+  | 'vision'
 
 export interface StackSynergyPartner {
   /** Stable per-session key. Account ID when known; otherwise a synthetic id. */
@@ -185,6 +229,42 @@ export interface StackSynergyData {
   detectionConfidence: 'high' | 'low'
   partyMatchCount: number
   totalMatches: number
+}
+
+export type WardKind = 'observer' | 'sentry'
+export type WardOutcome = 'dewarded' | 'expired' | 'still_alive_at_match_end'
+
+export interface WardPlacement {
+  kind: WardKind
+  /** OpenDota grid coordinates (~64..192). Top-left origin AFTER y-flip. */
+  x: number
+  y: number
+  outcome: WardOutcome
+  /** Lifetime in seconds (placement → deward / expiry / match end). */
+  lifetimeSec: number
+}
+
+export interface VisionData {
+  placements: WardPlacement[]
+  obsPerGame: number
+  senPerGame: number
+  dewardsPerGame: number
+  /** Average lifetime across observers + sentries. Seconds. */
+  avgLifetimeSec: number
+  avgObsLifetimeSec: number
+  avgSenLifetimeSec: number
+  obsBaseline: number
+  senBaseline: number
+  dewardsBaseline: number
+  lifetimeBaselineSec: number
+  /** Null when we couldn't compute (no death coordinates available in OpenDota response). */
+  mismatchPct: number | null
+  /** Total deaths sampled — surfaced for the footnote so users can see the denominator. */
+  deathSamples: number
+  eligibleMatches: number
+  totalMatches: number
+  /** Renders the role-specific framing in the headline. */
+  inferredRole: 'core' | 'support' | 'flex' | 'unknown'
 }
 
 export interface ChartBars {

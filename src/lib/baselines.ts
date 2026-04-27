@@ -21,6 +21,17 @@ export interface DeathBaseline {
   perGame: number
 }
 
+export interface VisionBaseline {
+  /** Observers placed per game (typical for this role+rank). */
+  obsPerGame: number
+  /** Sentries placed per game. */
+  senPerGame: number
+  /** Enemy wards killed per game (dewards). */
+  dewardsPerGame: number
+  /** Average ward lifetime in seconds (combined obs + sen). */
+  avgWardLifetimeSec: number
+}
+
 export interface RoleBaseline {
   farm: FarmBaseline
   deaths: DeathBaseline
@@ -28,6 +39,7 @@ export interface RoleBaseline {
   laneWinRate: number
   /** Match win rate when winning lane (0-1). Higher ranks convert better. */
   winGivenLaneWon: number
+  vision: VisionBaseline
 }
 
 // Death distribution shape. Total ≈ perGame; weighted toward mid-game.
@@ -39,30 +51,52 @@ function deathDist(perGame: number): DeathBaseline {
   }
 }
 
+// Vision baselines: ballparks based on community stat aggregations.
+// Cores ward less and deward more; supports invert that pattern. Ward
+// lifetime is closer to 4 minutes at low ranks (placed in obvious spots)
+// and 5+ minutes at high ranks where placement reads dewards better.
+// TODO: replace with dynamic baseline once we aggregate /heroStats vision data.
+const visionCore = (rank: RankBucket): VisionBaseline => ({
+  obsPerGame: rank === 'low' ? 1.0 : rank === 'mid' ? 1.2 : rank === 'high' ? 1.5 : 1.8,
+  senPerGame: rank === 'low' ? 1.5 : rank === 'mid' ? 2.0 : rank === 'high' ? 2.5 : 3.0,
+  dewardsPerGame: rank === 'low' ? 1.0 : rank === 'mid' ? 1.5 : rank === 'high' ? 2.5 : 3.5,
+  avgWardLifetimeSec: rank === 'low' ? 240 : rank === 'mid' ? 270 : rank === 'high' ? 300 : 320,
+})
+const visionSupport = (rank: RankBucket): VisionBaseline => ({
+  obsPerGame: rank === 'low' ? 6 : rank === 'mid' ? 8 : rank === 'high' ? 10 : 12,
+  senPerGame: rank === 'low' ? 5 : rank === 'mid' ? 7 : rank === 'high' ? 9 : 11,
+  dewardsPerGame: rank === 'low' ? 1.5 : rank === 'mid' ? 2.5 : rank === 'high' ? 3.5 : 4.5,
+  avgWardLifetimeSec: rank === 'low' ? 240 : rank === 'mid' ? 280 : rank === 'high' ? 320 : 340,
+})
+
 const CORE: Record<RankBucket, RoleBaseline> = {
   low: {
     farm: { gpm10: 350, gpm20: 440, xpm10: 400, xpm20: 510 },
     deaths: deathDist(8.0),
     laneWinRate: 0.5,
     winGivenLaneWon: 0.58,
+    vision: visionCore('low'),
   },
   mid: {
     farm: { gpm10: 400, gpm20: 500, xpm10: 440, xpm20: 560 },
     deaths: deathDist(7.0),
     laneWinRate: 0.5,
     winGivenLaneWon: 0.62,
+    vision: visionCore('mid'),
   },
   high: {
     farm: { gpm10: 460, gpm20: 580, xpm10: 490, xpm20: 620 },
     deaths: deathDist(6.0),
     laneWinRate: 0.5,
     winGivenLaneWon: 0.66,
+    vision: visionCore('high'),
   },
   top: {
     farm: { gpm10: 520, gpm20: 660, xpm10: 540, xpm20: 700 },
     deaths: deathDist(5.0),
     laneWinRate: 0.5,
     winGivenLaneWon: 0.70,
+    vision: visionCore('top'),
   },
 }
 
@@ -72,24 +106,28 @@ const SUPPORT: Record<RankBucket, RoleBaseline> = {
     deaths: deathDist(9.5),
     laneWinRate: 0.5,
     winGivenLaneWon: 0.56,
+    vision: visionSupport('low'),
   },
   mid: {
     farm: { gpm10: 250, gpm20: 320, xpm10: 350, xpm20: 450 },
     deaths: deathDist(8.5),
     laneWinRate: 0.5,
     winGivenLaneWon: 0.60,
+    vision: visionSupport('mid'),
   },
   high: {
     farm: { gpm10: 290, gpm20: 380, xpm10: 390, xpm20: 510 },
     deaths: deathDist(7.5),
     laneWinRate: 0.5,
     winGivenLaneWon: 0.64,
+    vision: visionSupport('high'),
   },
   top: {
     farm: { gpm10: 330, gpm20: 430, xpm10: 430, xpm20: 570 },
     deaths: deathDist(6.5),
     laneWinRate: 0.5,
     winGivenLaneWon: 0.68,
+    vision: visionSupport('top'),
   },
 }
 
@@ -139,6 +177,12 @@ function blendFlex(bucket: RankBucket, dist?: RoleDistribution): RoleBaseline {
     },
     laneWinRate: Number(lerp(c.laneWinRate, s.laneWinRate).toFixed(2)),
     winGivenLaneWon: Number(lerp(c.winGivenLaneWon, s.winGivenLaneWon).toFixed(2)),
+    vision: {
+      obsPerGame: Number(lerp(c.vision.obsPerGame, s.vision.obsPerGame).toFixed(2)),
+      senPerGame: Number(lerp(c.vision.senPerGame, s.vision.senPerGame).toFixed(2)),
+      dewardsPerGame: Number(lerp(c.vision.dewardsPerGame, s.vision.dewardsPerGame).toFixed(2)),
+      avgWardLifetimeSec: Math.round(lerp(c.vision.avgWardLifetimeSec, s.vision.avgWardLifetimeSec)),
+    },
   }
 }
 

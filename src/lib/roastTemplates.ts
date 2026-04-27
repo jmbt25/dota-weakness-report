@@ -280,4 +280,51 @@ export const ROAST_TEMPLATES: Partial<Record<AnalysisId, RoastTemplate[]>> = {
         "{best_partner}: {best_wr}% WR (+{best_delta}pp). Lock this person in, ignore everyone else in your friends list.",
     },
   ],
+
+  // ─── Vision ────────────────────────────────────────────────────────────
+  // Headline metric is role-specific: support/flex graded on obs/game,
+  // core graded on dewards/game. Templates cite the relevant stat plus
+  // shared sub-metrics (lifetime, mismatch) when conditions allow.
+  vision: [
+    {
+      // Support / flex placing fewer obs than baseline.
+      condition: (r, f) =>
+        isConcerning(r) && String(f.role ?? '') !== 'core',
+      english:
+        "{obs}/game observers (baseline {obs_baseline}). The fog of war is winning.",
+    },
+    {
+      // Core neglecting dewards.
+      condition: (r, f) => isConcerning(r) && String(f.role ?? '') === 'core',
+      english:
+        "{dewards} dewards/game vs {dewards_baseline}. The enemy team appreciates your hands-off vision policy.",
+    },
+    {
+      // High vision-death mismatch — only fires when the mismatch was
+      // actually computed and is meaningfully high.
+      condition: (_r, f) => Number(f.mismatch ?? 0) >= 30,
+      english:
+        "{mismatch}% of your deaths in unwarded regions. The map shows where you ward; the body count shows where you don't.",
+    },
+    {
+      // Wards die fast — surfaces when avg lifetime trails baseline by 60s+.
+      condition: (_r, f) =>
+        Number(f.seconds ?? 0) > 0 &&
+        Number(f.seconds ?? 999) <= Number(f.lifetime_baseline_sec ?? 0) - 60,
+      english:
+        "Wards live {seconds}s on average. Your vision investments have the half-life of a tweet.",
+    },
+    {
+      // Watch — generic role-aware fallback.
+      condition: (r) => isWatch(r),
+      english:
+        "{headline} {role} on the headline vs {headline_baseline} bracket. Vision is leaking points you could be banking.",
+    },
+    {
+      // Healthy.
+      condition: (r) => isHealthy(r),
+      english:
+        "{headline} on the headline vs {headline_baseline}. Vision input is on-pace — now spot-check whether your wards see anything important.",
+    },
+  ],
 }
