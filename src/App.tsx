@@ -99,10 +99,6 @@ function App() {
       }
 
       const matches = allMatches
-      // Cap detail-fetch to MAX_DETAIL_FETCH most-recent matches. Hero-pool /
-      // tilt analyses still see the full window via the summary list; the
-      // parsed-only analyses (lane/farm/item/death-timing) operate on this
-      // detail subset.
       const matchesToDetailFetch = matches.slice(0, MAX_DETAIL_FETCH)
       const ids = matchesToDetailFetch.map((m) => m.match_id)
 
@@ -180,27 +176,50 @@ function App() {
   function unlock(key: string) {
     setIsPaid(true)
     void key
-    // Re-run the analysis in paid mode if a report is already on-screen.
     if (status.kind === 'ready' && lastInputRef.current) {
       analyze(lastInputRef.current, true)
     }
   }
 
+  function goHome() {
+    abortRef.current?.abort()
+    lastInputRef.current = null
+    setHonestMode(false)
+    setStatus({ kind: 'idle' })
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'auto' })
+    }
+  }
+
   const errorMessage = status.kind === 'error' ? status.message : null
+  const isReady = status.kind === 'ready'
+
+  // When the report finishes loading, jump back to the top so the user sees
+  // the user card and the first row of analyses without scrolling.
+  useEffect(() => {
+    if (status.kind === 'ready' && typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'auto' })
+    }
+  }, [status.kind])
 
   return (
-    <div className="min-h-full flex flex-col">
+    <div className="dwr" data-honest={honestMode ? 'true' : 'false'}>
+      <div className="cosmos" />
+
       <Hero
         onAnalyze={(raw) => analyze(raw)}
         isLoading={status.kind === 'loading'}
         error={errorMessage}
+        showLanding={!isReady}
+        onHome={goHome}
+        loaderSlot={
+          status.kind === 'loading' ? (
+            <Loader stage={status.stage} done={status.done} total={status.total} />
+          ) : null
+        }
       />
 
-      {status.kind === 'loading' && (
-        <Loader stage={status.stage} done={status.done} total={status.total} />
-      )}
-
-      {status.kind === 'ready' && (
+      {isReady && (
         <>
           <ProfileBar
             profile={status.report.profile}
@@ -221,9 +240,7 @@ function App() {
         </>
       )}
 
-      <div className="mt-auto">
-        <Footer isPaid={isPaid} onUnlock={unlock} />
-      </div>
+      <Footer isPaid={isPaid} onUnlock={unlock} onHome={goHome} />
     </div>
   )
 }
@@ -247,25 +264,33 @@ function ProfileBar({
     () => rankBucketLabel(rankBucketFromTier(profile.rank_tier)),
     [profile.rank_tier]
   )
+  const initial = (name.trim()[0] ?? 'A').toUpperCase()
+  const avatarUrl = profile.profile?.avatarfull
+
   return (
-    <section className="max-w-7xl mx-auto px-6 pt-4 pb-8 w-full">
-      <div className="flex items-center gap-5 card">
-        {profile.profile?.avatarfull && (
-          <img
-            src={profile.profile.avatarfull}
-            alt=""
-            className="h-16 w-16 rounded-lg border border-line"
-            referrerPolicy="no-referrer"
-          />
-        )}
-        <div className="min-w-0 flex-1">
-          <div className="text-xl font-semibold truncate">{name}</div>
-          <div className="text-sm text-ink-muted mt-0.5">
-            {rank} · baselines tuned for <span className="text-ink">{bucket}</span> · {matchCount} matches analyzed
+    <section className="dwr-report-head">
+      <div className="dwr-user">
+        <div className="dwr-avatar">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" referrerPolicy="no-referrer" />
+          ) : (
+            initial
+          )}
+        </div>
+        <div className="dwr-user-info">
+          <div className="dwr-user-name">{name}</div>
+          <div className="dwr-user-meta">
+            <span className="rank">{rank}</span>
+            <span className="sep">·</span>
+            <span>baselines tuned for {bucket}</span>
+            <span className="sep">·</span>
+            <span>{matchCount} matches analyzed</span>
           </div>
         </div>
-        <span className={isPaid ? 'pill-good' : 'pill-muted'}>{isPaid ? 'Paid' : 'Free'}</span>
-        <HonestModeToggle enabled={honestMode} onToggle={onToggleHonestMode} />
+        <div className="dwr-badges">
+          <span className={`dwr-badge ${isPaid ? 'paid' : ''}`}>{isPaid ? 'Paid' : 'Free'}</span>
+          <HonestModeToggle enabled={honestMode} onToggle={onToggleHonestMode} />
+        </div>
       </div>
     </section>
   )

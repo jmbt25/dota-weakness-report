@@ -32,47 +32,67 @@ export function DeepDive({ matches }: DeepDiveProps) {
   if (heroOptions.length === 0) return null
 
   return (
-    <section className="max-w-6xl mx-auto px-6 pb-16 w-full">
-      <div className="flex items-end justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-semibold">Hero deep dive</h2>
-          <p className="text-sm text-ink-muted mt-1">
-            Drill into a specific hero — item build vs. winning builds, fight participation, losing patterns.
-          </p>
-        </div>
-        <span className="pill-good">Paid</span>
+    <section className="dwr-report-head" style={{ paddingTop: 8, paddingBottom: 48 }}>
+      <div className="dwr-section-head" style={{ marginTop: 8 }}>
+        <h2 className="dwr-section-title" style={{ fontSize: 28 }}>
+          Hero <span className="red">deep</span> dive
+          <span className="honest-badge" style={{ background: 'rgba(74,222,128,0.08)', color: 'var(--sev-strong)', borderColor: 'rgba(74,222,128,0.4)', boxShadow: 'none' }}>
+            PAID
+          </span>
+        </h2>
       </div>
+      <p className="dwr-section-sub">
+        Drill into a specific hero — item build vs. winning builds, fight participation, losing patterns.
+      </p>
 
-      <form onSubmit={submit} className="card flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-        <label className="text-sm text-ink-muted sm:w-auto flex-shrink-0">Hero</label>
-        <select
-          className="input-base flex-1"
-          value={selected ?? ''}
-          onChange={(e) => setSelected(Number(e.target.value))}
+      <form
+        onSubmit={submit}
+        className="dwr-form"
+        style={{ marginTop: 18, maxWidth: 'none', alignItems: 'center' }}
+      >
+        <label
+          style={{
+            fontFamily: '"JetBrains Mono", monospace',
+            fontSize: 11,
+            color: 'var(--ink-muted)',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}
         >
-          {heroOptions.map((h) => (
-            <option key={h.heroId} value={h.heroId}>
-              {h.name} ({h.games} game{h.games === 1 ? '' : 's'})
-            </option>
-          ))}
-        </select>
-        <button type="submit" className="btn-primary" disabled={selected == null}>
+          Hero
+        </label>
+        <div className="dwr-input-wrap">
+          <select
+            className="dwr-input"
+            style={{ paddingLeft: 18 }}
+            value={selected ?? ''}
+            onChange={(e) => setSelected(Number(e.target.value))}
+          >
+            {heroOptions.map((h) => (
+              <option key={h.heroId} value={h.heroId}>
+                {h.name} ({h.games} game{h.games === 1 ? '' : 's'})
+              </option>
+            ))}
+          </select>
+        </div>
+        <button type="submit" className="dwr-btn" disabled={selected == null}>
           Analyze
         </button>
       </form>
 
       {submittedHero != null && (
-        <article className="card mt-5">
-          <header className="flex items-start justify-between gap-3">
-            <h3 className="text-lg font-semibold">{getHeroName(submittedHero)}</h3>
-            <span className="pill-muted">Coming soon</span>
-          </header>
-          <p className="mt-4 text-sm text-ink leading-relaxed">
-            Hero-specific drilldowns are next on the roadmap: median item build compared against your
-            winning builds on this hero, fight participation timing, and the most common lane/timing
-            patterns in your losses. The data plumbing is in place — the analysis layer ships next.
+        <article className="card" style={{ marginTop: 20 }}>
+          <div className="card-head">
+            <h3 className="card-title">{getHeroName(submittedHero)}</h3>
+            <span className="pill unmeasured">Coming soon</span>
+          </div>
+          <p className="prose">
+            Hero-specific drilldowns are next on the roadmap: median item build compared against
+            your winning builds on this hero, fight participation timing, and the most common
+            lane/timing patterns in your losses. The data plumbing is in place — the analysis layer
+            ships next.
           </p>
-          <p className="mt-3 text-xs text-ink-dim italic">Paid feature stub — your license unlocks this when it lands.</p>
+          <div className="footnote">Paid feature stub — your license unlocks this when it lands.</div>
         </article>
       )}
     </section>

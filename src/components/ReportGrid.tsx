@@ -21,32 +21,27 @@ export function ReportGrid({
   accountId,
 }: ReportGridProps) {
   return (
-    <section className="max-w-7xl mx-auto px-6 pb-16">
-      <div className="flex items-end justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-semibold flex items-center gap-2">
-            Your weakness report
-            {honestMode && (
-              <span
-                className="text-sm pill-amber"
-                aria-label="Honest mode is active"
-                title="Honest mode is active"
-              >
-                🔥 Honest mode
-              </span>
-            )}
+    <>
+      <div className="dwr-report-head">
+        <div className="dwr-section-head">
+          <h2 className="dwr-section-title">
+            Your <span className="red">weakness</span> report
+            {honestMode && <span className="honest-badge">🔥 HONEST MODE</span>}
           </h2>
-          <p className="text-sm text-ink-muted mt-1">
-            Based on your last {matchCount} match{matchCount === 1 ? '' : 'es'}.
-            {!isPaid && (
-              <>
-                {' '}<span className="text-sky-300">Unlock the 100-match window and per-hero deep dives with a license key below.</span>
-              </>
-            )}
-          </p>
         </div>
+        <p className="dwr-section-sub">
+          Based on your last {matchCount} match{matchCount === 1 ? '' : 'es'}.
+          {!isPaid && (
+            <>
+              {' '}<span className="upgrade">
+                Unlock the 100-match window and per-hero deep dives with a license key below.
+              </span>
+            </>
+          )}
+        </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+
+      <div className="dwr-grid">
         {results.map((r) => {
           if (r.id === 'stack-synergy') {
             return (
@@ -81,6 +76,6 @@ export function ReportGrid({
           )
         })}
       </div>
-    </section>
+    </>
   )
 }

@@ -4,14 +4,6 @@ import { generateRoast } from '../lib/honestMode'
 
 const MINIMAP_SRC = '/dota-minimap.jpg'
 
-// Coordinate transform — matches odota/web's `gameCoordToUV`:
-//   ux = gx - 64
-//   uy = 127 - (gy - 64)
-// then scaled to pixel space. OpenDota observed coords land in [64, 191].
-//
-// TODO: refine after testing — spot-check 5 wards against a real Dota 2
-// map to confirm the linear scale is correct on the 900x900 source image
-// we bundle (no border, no padding to subtract).
 function gameToPixel(
   gx: number,
   gy: number,
@@ -26,11 +18,13 @@ function gameToPixel(
   }
 }
 
-function severityClass(sev: Severity): string {
-  if (sev === 'good') return 'pill-good'
-  if (sev === 'ok') return 'pill-neutral'
-  if (sev === 'unmeasured') return 'pill-muted'
-  return 'pill-bad'
+function severityClass(result: { severity: Severity; severityLabel?: string }): string {
+  if (result.severity === 'good') {
+    return result.severityLabel?.toLowerCase() === 'strong' ? 'pill strong' : 'pill healthy'
+  }
+  if (result.severity === 'ok') return 'pill watch'
+  if (result.severity === 'unmeasured') return 'pill unmeasured'
+  return 'pill concerning'
 }
 
 function severityLabelText(sev: Severity): string {
@@ -38,6 +32,13 @@ function severityLabelText(sev: Severity): string {
   if (sev === 'ok') return 'Watch'
   if (sev === 'unmeasured') return 'Unmeasured'
   return 'Concerning'
+}
+
+function cardSeverityClass(sev: Severity): string {
+  if (sev === 'good') return ''
+  if (sev === 'ok') return 'sev-watch'
+  if (sev === 'unmeasured') return 'sev-unmeasured'
+  return 'sev-concerning'
 }
 
 function formatMmSs(sec: number): string {
@@ -64,22 +65,22 @@ export function VisionCard({ result, honestMode, language, accountId }: VisionCa
   }, [honestMode, language, accountId, result])
 
   return (
-    <article className="card flex flex-col">
-      <header className="flex items-start justify-between gap-3">
-        <h3 className="text-lg font-semibold">{result.title}</h3>
-        <span className={severityClass(result.severity)}>
+    <article className={`card ${cardSeverityClass(result.severity)}`}>
+      <div className="card-head">
+        <h3 className="card-title">{result.title}</h3>
+        <span className={severityClass(result)}>
           {result.severityLabel ?? severityLabelText(result.severity)}
         </span>
-      </header>
+      </div>
 
       {!isUnmeasured && (
         <>
-          <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-3xl font-semibold tabular-nums">{result.metric}</span>
-            <span className="text-xs text-ink-muted">{result.metricLabel}</span>
-            <span className="ml-auto text-xs text-ink-dim tabular-nums">
-              vs {result.baseline} {result.baselineLabel}
-            </span>
+          <div className="metric">
+            {result.metric}
+            <small>{result.metricLabel}</small>
+          </div>
+          <div className="baseline">
+            vs {result.baseline} {result.baselineLabel}
           </div>
 
           {data && <SubMetrics data={data} />}
@@ -87,48 +88,42 @@ export function VisionCard({ result, honestMode, language, accountId }: VisionCa
         </>
       )}
 
-      <p className="mt-4 text-sm text-ink leading-relaxed">{finding}</p>
-      <p className="mt-3 text-sm text-ink-muted leading-relaxed">
-        <span className="text-ink-dim text-xs uppercase tracking-wider mr-2">What to do</span>
+      <p className="prose">{finding}</p>
+      <div className="what">
+        <b>What to do</b>
         {result.suggestion}
-      </p>
-      {result.note && (
-        <p className="mt-3 text-xs text-ink-dim italic leading-relaxed">{result.note}</p>
-      )}
+      </div>
+      {result.note && <div className="footnote">{result.note}</div>}
     </article>
   )
 }
 
 function SubMetrics({ data }: { data: VisionData }) {
   return (
-    <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-      <div className="rounded bg-bg-raised border border-line p-2">
-        <div className="text-ink-dim uppercase tracking-wider">Avg ward lifetime</div>
-        <div className="mt-1 text-base text-ink tabular-nums">
-          {formatMmSs(data.avgLifetimeSec)}{' '}
-          <span className="text-ink-dim text-[10px] tabular-nums">
-            vs {formatMmSs(data.lifetimeBaselineSec)}
-          </span>
+    <div className="substat">
+      <div>
+        <div className="v">
+          {formatMmSs(data.avgLifetimeSec)}
+          <span className="sub">vs {formatMmSs(data.lifetimeBaselineSec)}</span>
         </div>
+        <div className="l">Avg ward lifetime</div>
       </div>
-      <div className="rounded bg-bg-raised border border-line p-2">
-        <div className="text-ink-dim uppercase tracking-wider">Vision-death mismatch</div>
-        <div className="mt-1 text-base text-ink tabular-nums">
+      <div>
+        <div className="v">
           {data.mismatchPct != null ? `${Math.round(data.mismatchPct)}%` : '—'}
-          <span className="text-ink-dim text-[10px] ml-2">
+          <span className="sub">
             {data.mismatchPct != null
-              ? `${data.deathSamples} death${data.deathSamples === 1 ? '' : 's'} scored`
+              ? `${data.deathSamples} death${data.deathSamples === 1 ? '' : 's'}`
               : 'no death coords'}
           </span>
         </div>
+        <div className="l">Vision-death mismatch</div>
       </div>
     </div>
   )
 }
 
 function WardMap({ placements }: { placements: WardPlacement[] }) {
-  // Measure the rendered map width to size the SVG overlay. The map is a
-  // square; height === width.
   const wrapperRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState<number>(0)
 
@@ -142,34 +137,41 @@ function WardMap({ placements }: { placements: WardPlacement[] }) {
     return () => obs.disconnect()
   }, [])
 
-  // Mobile gets bigger dots so density stays visible at 375px viewport.
   const isSmall = size > 0 && size < 280
   const radius = isSmall ? 6 : 4
   const opacity = isSmall ? 0.55 : 0.6
 
   return (
-    <div className="mt-3">
+    <div>
       <div
         ref={wrapperRef}
         className="relative w-full"
-        style={{ aspectRatio: '1 / 1' }}
+        style={{
+          aspectRatio: '1 / 1',
+          borderRadius: 6,
+          overflow: 'hidden',
+          border: '1px solid var(--line-strong)',
+          position: 'relative',
+        }}
       >
         <img
           src={MINIMAP_SRC}
           alt="Dota 2 minimap"
-          className="absolute inset-0 w-full h-full rounded select-none"
+          className="absolute inset-0 w-full h-full select-none"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
           draggable={false}
         />
         {size > 0 && (
           <svg
             viewBox={`0 0 ${size} ${size}`}
             className="absolute inset-0 w-full h-full"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
             aria-hidden="true"
           >
             {placements.map((p, i) => {
               const { px, py } = gameToPixel(p.x, p.y, size, size)
-              const fill = p.kind === 'observer' ? '#facc15' : '#a78bfa'
-              const stroke = p.outcome === 'dewarded' ? '#ef4444' : 'none'
+              const fill = p.kind === 'observer' ? '#FBBF24' : '#38BDF8'
+              const stroke = p.outcome === 'dewarded' ? '#E94560' : 'none'
               return (
                 <circle
                   key={i}
@@ -186,32 +188,12 @@ function WardMap({ placements }: { placements: WardPlacement[] }) {
           </svg>
         )}
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink-dim">
-        <span className="inline-flex items-center gap-1">
-          <span
-            className="inline-block rounded-full"
-            style={{ width: 8, height: 8, background: '#facc15', opacity: 0.7 }}
-          />
-          obs
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <span
-            className="inline-block rounded-full"
-            style={{ width: 8, height: 8, background: '#a78bfa', opacity: 0.7 }}
-          />
-          sen
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <span
-            className="inline-block rounded-full"
-            style={{
-              width: 8,
-              height: 8,
-              border: '1.5px solid #ef4444',
-              background: 'transparent',
-            }}
-          />
-          dewarded
+      <div className="legend">
+        <span><i style={{ background: '#FBBF24' }} />Obs</span>
+        <span><i style={{ background: '#38BDF8' }} />Sen</span>
+        <span>
+          <i style={{ border: '1.5px solid #E94560', background: 'transparent' }} />
+          Dewarded
         </span>
       </div>
     </div>

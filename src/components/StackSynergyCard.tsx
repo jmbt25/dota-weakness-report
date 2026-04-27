@@ -13,25 +13,35 @@ import type { AnalysisResult, HonestLanguage, Severity, StackSynergyPartner } fr
 import { generateRoast } from '../lib/honestMode'
 
 const TOOLTIP_STYLE = {
-  background: '#13161d',
-  border: '1px solid #222632',
-  borderRadius: 8,
-  color: '#e6e8ee',
+  background: '#12151f',
+  border: '1px solid #3A3F52',
+  borderRadius: 6,
+  color: '#ECE6D6',
   fontSize: 12,
+  fontFamily: '"JetBrains Mono", monospace',
 }
 
-function severityClass(sev: Severity): string {
-  if (sev === 'good') return 'pill-good'
-  if (sev === 'ok') return 'pill-neutral'
-  if (sev === 'unmeasured') return 'pill-muted'
-  return 'pill-bad'
+function severityClass(result: { severity: Severity; severityLabel?: string }): string {
+  if (result.severity === 'good') {
+    return result.severityLabel?.toLowerCase() === 'strong' ? 'pill strong' : 'pill healthy'
+  }
+  if (result.severity === 'ok') return 'pill watch'
+  if (result.severity === 'unmeasured') return 'pill unmeasured'
+  return 'pill concerning'
 }
 
-function severityLabel(sev: Severity): string {
+function severityLabelText(sev: Severity): string {
   if (sev === 'good') return 'Healthy'
   if (sev === 'ok') return 'Watch'
   if (sev === 'unmeasured') return 'Unmeasured'
   return 'Concerning'
+}
+
+function cardSeverityClass(sev: Severity): string {
+  if (sev === 'good') return ''
+  if (sev === 'ok') return 'sev-watch'
+  if (sev === 'unmeasured') return 'sev-unmeasured'
+  return 'sev-concerning'
 }
 
 interface StackSynergyCardProps {
@@ -59,14 +69,10 @@ export function StackSynergyCard({ result, honestMode, language, accountId }: St
     return anonymizeProse(result.finding, data.partners)
   }, [result.finding, data, showNames])
 
-  // Honest mode prose. We override the partner-name facts with the
-  // (possibly anonymized) display names so toggling "Show partner names"
-  // also anonymizes the roast.
   const finding = useMemo(() => {
     if (!honestMode) return seriousFinding
     const facts = { ...(result.roastFacts ?? {}) }
     if (data) {
-      // Map raw persona names -> anonymized display names if applicable.
       for (const key of ['best_partner', 'worst_partner'] as const) {
         const raw = facts[key]
         if (typeof raw === 'string') {
@@ -83,56 +89,64 @@ export function StackSynergyCard({ result, honestMode, language, accountId }: St
   }, [honestMode, language, accountId, result, data, displayPartners, seriousFinding])
 
   return (
-    <article className="card flex flex-col">
-      <header className="flex items-start justify-between gap-3">
-        <h3 className="text-lg font-semibold">{result.title}</h3>
-        <span className={severityClass(result.severity)}>
-          {result.severityLabel ?? severityLabel(result.severity)}
+    <article className={`card ${cardSeverityClass(result.severity)}`}>
+      <div className="card-head">
+        <h3 className="card-title">{result.title}</h3>
+        <span className={severityClass(result)}>
+          {result.severityLabel ?? severityLabelText(result.severity)}
         </span>
-      </header>
+      </div>
 
       {!isUnmeasured && (
-        <div className="mt-4 flex items-baseline gap-2">
-          <span className="text-3xl font-semibold tabular-nums">{result.metric}</span>
-          <span className="text-xs text-ink-muted">{result.metricLabel}</span>
-          <span className="ml-auto text-xs text-ink-dim tabular-nums">
+        <>
+          <div className="metric">
+            {result.metric}
+            <small>{result.metricLabel}</small>
+          </div>
+          <div className="baseline">
             vs {result.baseline} {result.baselineLabel}
-          </span>
-        </div>
+          </div>
+        </>
       )}
 
       {data && data.partners.length > 0 && (
-        <div className="mt-3 flex items-center gap-2 text-xs">
-          <button
-            type="button"
-            onClick={() => setShowNames((s) => !s)}
-            className={`px-2 py-1 rounded border transition ${
-              showNames
-                ? 'border-line bg-bg-raised text-ink'
-                : 'border-emerald-700 bg-emerald-900/20 text-emerald-300'
-            }`}
-            aria-pressed={!showNames}
-          >
-            {showNames ? 'Show partner names: ON' : 'Show partner names: OFF'}
-          </button>
-          <span className="text-ink-dim">
+        <>
+          <div className="toggle-row">
+            <label htmlFor="stack-anon">Show partner names</label>
+            <div
+              id="stack-anon"
+              role="switch"
+              aria-checked={showNames}
+              tabIndex={0}
+              className={`toggle-switch ${showNames ? 'on' : ''}`}
+              onClick={() => setShowNames((s) => !s)}
+              onKeyDown={(e) => {
+                if (e.key === ' ' || e.key === 'Enter') {
+                  e.preventDefault()
+                  setShowNames((s) => !s)
+                }
+              }}
+            />
+          </div>
+          <p className="toggle-hint">
             Turn off before screenshotting — protects your friends&apos; privacy.
-          </span>
-        </div>
+          </p>
+        </>
       )}
 
       {!isUnmeasured && displayPartners.length > 0 && (
         <PartnerChart partners={displayPartners} userOverallWr={data!.userOverallWr} />
       )}
 
-      <p className="mt-4 text-sm text-ink leading-relaxed">{finding}</p>
-      <p className="mt-3 text-sm text-ink-muted leading-relaxed">
-        <span className="text-ink-dim text-xs uppercase tracking-wider mr-2">What to do</span>
+      <p className="prose">{finding}</p>
+      <div className="what">
+        <b>What to do</b>
         {result.suggestion}
+      </div>
+      <p className="privacy">
+        Partner data is only visible to you. Names hidden by default in shared reports.
       </p>
-      {result.note && (
-        <p className="mt-3 text-xs text-ink-dim italic leading-relaxed">{result.note}</p>
-      )}
+      {result.note && <div className="footnote">{result.note}</div>}
     </article>
   )
 }
@@ -153,14 +167,14 @@ function PartnerChart({
   const userPct = Math.round(userOverallWr * 100)
 
   return (
-    <div className="mt-4" style={{ height }}>
+    <div style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24, top: 12, bottom: 4 }}>
-          <CartesianGrid stroke="#222632" horizontal={false} />
+          <CartesianGrid stroke="#2A2E3D" horizontal={false} />
           <XAxis
             type="number"
-            stroke="#6b7280"
-            fontSize={11}
+            stroke="#8A8474"
+            fontSize={10}
             domain={[0, 100]}
             ticks={[0, 25, 50, 75, 100]}
             allowDataOverflow
@@ -169,14 +183,14 @@ function PartnerChart({
           <YAxis
             type="category"
             dataKey="label"
-            stroke="#9aa3b2"
-            fontSize={11}
-            width={150}
+            stroke="#C9C2B0"
+            fontSize={10}
+            width={140}
             tickLine={false}
           />
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
-            cursor={{ fill: '#1a1e27' }}
+            cursor={{ fill: '#1a1e2b' }}
             formatter={(value: number, _: string, item: { payload?: { delta: number | null } }) => {
               const d = item.payload?.delta
               const dStr = d == null ? ' (—)' : ` (${d >= 0 ? '+' : ''}${d}pp vs solo)`
@@ -185,18 +199,23 @@ function PartnerChart({
           />
           <ReferenceLine
             x={userPct}
-            stroke="#9aa3b2"
+            stroke="#E94560"
             strokeDasharray="4 4"
-            label={{ value: `solo ${userPct}%`, fill: '#9aa3b2', fontSize: 10, position: 'top' }}
+            label={{
+              value: `solo ${userPct}%`,
+              fill: '#E94560',
+              fontSize: 10,
+              position: 'top',
+              fontFamily: '"JetBrains Mono", monospace',
+            }}
           />
-          <Bar dataKey="wr" name="WR" fill="#ef4444" radius={[0, 3, 3, 0]} />
+          <Bar dataKey="wr" name="WR" fill="#E94560" radius={[0, 3, 3, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
   )
 }
 
-/** Replace each partner's persona name with "Friend N" inside the prose. */
 function anonymizeProse(text: string, partners: StackSynergyPartner[]): string {
   let out = text
   partners.forEach((p, i) => {
@@ -206,4 +225,3 @@ function anonymizeProse(text: string, partners: StackSynergyPartner[]): string {
   })
   return out
 }
-

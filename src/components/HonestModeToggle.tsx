@@ -1,70 +1,28 @@
-import { useEffect, useRef, useState } from 'react'
-
 interface HonestModeToggleProps {
   enabled: boolean
   onToggle: (enabled: boolean) => void
 }
 
 /**
- * Small fire-icon button that opens a panel where the user can opt into
- * roast voice. Off by default; state lives in component memory only (no
- * localStorage, per the embed-safety rule).
+ * Fire-icon button next to the Free/Paid badge in the report header.
+ * Click toggles honest mode in-place — the prototype intentionally drops
+ * the dropdown panel because the cosmos + glow tells the user the mode
+ * has changed.
  *
- * Launch ships English only. Taglish templates exist in the repo
- * (`lib/honest-mode/taglish-templates.ts`) gated behind paid tier; the UI
- * doesn't surface them yet.
- *
- * The icon is intentionally subtle — the spec asks us to NOT auto-suggest
- * enabling it, so it's discoverable but not prompting.
+ * Off by default; state lives in component memory only (no localStorage,
+ * per the embed-safety rule).
  */
 export function HonestModeToggle({ enabled, onToggle }: HonestModeToggleProps) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement | null>(null)
-
-  // Close the panel on outside click.
-  useEffect(() => {
-    if (!open) return
-    function onDoc(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
-  }, [open])
-
   return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className={`text-base px-2 py-1 rounded border transition ${
-          enabled
-            ? 'border-amber-700 bg-amber-900/30 text-amber-300'
-            : 'border-line bg-bg-raised text-ink-muted hover:text-ink'
-        }`}
-        aria-label="Honest mode settings"
-        aria-expanded={open}
-        title="Honest mode"
-      >
-        🔥
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full mt-2 w-72 rounded-lg border border-line bg-bg-raised shadow-lg p-3 z-10 text-sm">
-          <label className="flex items-start gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={enabled}
-              onChange={(e) => onToggle(e.target.checked)}
-              className="mt-0.5"
-            />
-            <span>
-              <span className="font-medium text-ink">Honest mode: roasts based on your data</span>
-              <span className="block text-xs text-ink-dim mt-1">
-                Same analysis, different voice. Roasts your decisions, never you. Off by default.
-              </span>
-            </span>
-          </label>
-        </div>
-      )}
-    </div>
+    <button
+      type="button"
+      className={`dwr-fire-btn ${enabled ? 'on' : ''}`}
+      onClick={() => onToggle(!enabled)}
+      aria-pressed={enabled}
+      aria-label={enabled ? 'Disable honest mode' : 'Enable honest mode'}
+      title={enabled ? 'Disable honest mode' : 'Enable honest mode'}
+    >
+      🔥
+    </button>
   )
 }

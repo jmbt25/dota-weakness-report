@@ -18,11 +18,13 @@ import type {
 } from '../types'
 import { generateRoast } from '../lib/honestMode'
 
-function severityClass(sev: Severity): string {
-  if (sev === 'good') return 'pill-good'
-  if (sev === 'ok') return 'pill-neutral'
-  if (sev === 'unmeasured') return 'pill-muted'
-  return 'pill-bad'
+function severityClass(result: { severity: Severity; severityLabel?: string }): string {
+  if (result.severity === 'good') {
+    return result.severityLabel?.toLowerCase() === 'strong' ? 'pill strong' : 'pill healthy'
+  }
+  if (result.severity === 'ok') return 'pill watch'
+  if (result.severity === 'unmeasured') return 'pill unmeasured'
+  return 'pill concerning'
 }
 
 function severityLabel(sev: Severity): string {
@@ -36,12 +38,20 @@ function badgeText(result: { severity: Severity; severityLabel?: string }): stri
   return result.severityLabel ?? severityLabel(result.severity)
 }
 
+function cardSeverityClass(sev: Severity): string {
+  if (sev === 'good') return ''
+  if (sev === 'ok') return 'sev-watch'
+  if (sev === 'unmeasured') return 'sev-unmeasured'
+  return 'sev-concerning'
+}
+
 const TOOLTIP_STYLE = {
-  background: '#13161d',
-  border: '1px solid #222632',
-  borderRadius: 8,
-  color: '#e6e8ee',
+  background: '#12151f',
+  border: '1px solid #3A3F52',
+  borderRadius: 6,
+  color: '#ECE6D6',
   fontSize: 12,
+  fontFamily: '"JetBrains Mono", monospace',
 }
 
 interface ReportCardProps {
@@ -55,41 +65,38 @@ export function ReportCard({ result, honestMode, language, accountId }: ReportCa
   const { chart, severity } = result
   const isUnmeasured = severity === 'unmeasured'
 
-  // Honest-mode prose: generate lazily; if it returns null (no eligible
-  // template, missing facts, or validator rejection), fall back to the
-  // serious-mode finding silently.
   const finding = useMemo(() => {
     if (!honestMode) return result.finding
     return generateRoast(result, language, accountId) ?? result.finding
   }, [honestMode, language, accountId, result])
 
   return (
-    <article className="card flex flex-col">
-      <header className="flex items-start justify-between gap-3">
-        <h3 className="text-lg font-semibold">{result.title}</h3>
-        <span className={severityClass(severity)}>{badgeText(result)}</span>
-      </header>
+    <article className={`card ${cardSeverityClass(severity)}`}>
+      <div className="card-head">
+        <h3 className="card-title">{result.title}</h3>
+        <span className={severityClass(result)}>{badgeText(result)}</span>
+      </div>
 
       {!isUnmeasured && (
-        <div className="mt-4 flex items-baseline gap-2">
-          <span className="text-3xl font-semibold tabular-nums">{result.metric}</span>
-          <span className="text-xs text-ink-muted">{result.metricLabel}</span>
-          <span className="ml-auto text-xs text-ink-dim tabular-nums">
+        <>
+          <div className="metric">
+            {result.metric}
+            <small>{result.metricLabel}</small>
+          </div>
+          <div className="baseline">
             vs {result.baseline} {result.baselineLabel}
-          </span>
-        </div>
+          </div>
+        </>
       )}
 
       {!isUnmeasured && chart && <ChartBlock chart={chart} />}
 
-      <p className="mt-4 text-sm text-ink leading-relaxed">{finding}</p>
-      <p className="mt-3 text-sm text-ink-muted leading-relaxed">
-        <span className="text-ink-dim text-xs uppercase tracking-wider mr-2">What to do</span>
+      <p className="prose">{finding}</p>
+      <div className="what">
+        <b>What to do</b>
         {result.suggestion}
-      </p>
-      {result.note && (
-        <p className="mt-3 text-xs text-ink-dim italic leading-relaxed">{result.note}</p>
-      )}
+      </div>
+      {result.note && <div className="footnote">{result.note}</div>}
     </article>
   )
 }
@@ -97,12 +104,12 @@ export function ReportCard({ result, honestMode, language, accountId }: ReportCa
 function ChartBlock({ chart }: { chart: ChartPayload }) {
   if (chart.kind === 'stat-blocks') {
     return (
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="stat-pair">
         {chart.blocks.map((b, i) => (
-          <div key={i} className="rounded-lg bg-bg-raised border border-line p-4 flex flex-col">
-            <span className="text-xs uppercase tracking-wider text-ink-dim">{b.label}</span>
-            <span className="mt-1 text-2xl font-semibold tabular-nums leading-none">{b.value}</span>
-            {b.sub && <span className="mt-2 text-xs text-ink-muted leading-snug">{b.sub}</span>}
+          <div key={i} className="stat-block">
+            <div className="v">{b.value}</div>
+            <div className="l">{b.label}</div>
+            {b.sub && <div className="sub">{b.sub}</div>}
           </div>
         ))}
       </div>
@@ -110,7 +117,7 @@ function ChartBlock({ chart }: { chart: ChartPayload }) {
   }
 
   return (
-    <div className="mt-4" style={{ height: chartHeight(chart) }}>
+    <div style={{ height: chartHeight(chart) }}>
       <ResponsiveContainer width="100%" height="100%">
         {renderXyChart(chart)}
       </ResponsiveContainer>
@@ -124,7 +131,7 @@ function chartHeight(chart: ChartBars | { kind: 'series' } | { kind: string }): 
     if (c.horizontal) return Math.max(140, c.data.length * 22 + 24)
     if (c.xMultilineSplit || (c.xTickAngle && Math.abs(c.xTickAngle) >= 30)) return 200
   }
-  return 176
+  return 168
 }
 
 function renderXyChart(chart: Exclude<ChartPayload, { kind: 'stat-blocks' }>) {
@@ -136,21 +143,21 @@ function renderXyChart(chart: Exclude<ChartPayload, { kind: 'stat-blocks' }>) {
   if (horizontal) {
     return (
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 16, top: 4, bottom: 4 }}>
-        <CartesianGrid stroke="#222632" horizontal={false} />
-        <XAxis type="number" stroke="#6b7280" fontSize={11} allowDecimals={false} />
+        <CartesianGrid stroke="#2A2E3D" horizontal={false} />
+        <XAxis type="number" stroke="#8A8474" fontSize={10} allowDecimals={false} />
         <YAxis
           type="category"
           dataKey="label"
-          stroke="#9aa3b2"
-          fontSize={11}
-          width={150}
+          stroke="#C9C2B0"
+          fontSize={10}
+          width={140}
           tickLine={false}
         />
-        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: '#1a1e27' }} />
+        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: '#1a1e2b' }} />
         <Bar
           dataKey="value"
           name={chart.valueName ?? 'Games'}
-          fill="#ef4444"
+          fill="#E94560"
           radius={[0, 3, 3, 0]}
         />
       </BarChart>
@@ -168,17 +175,25 @@ function renderXyChart(chart: Exclude<ChartPayload, { kind: 'stat-blocks' }>) {
 
   return (
     <BarChart data={data} margin={{ top: 4, right: 8, left: -12, bottom: 4 }}>
-      <CartesianGrid stroke="#222632" vertical={false} />
-      <XAxis dataKey="label" stroke="#6b7280" fontSize={11} interval={0} {...xAxisProps} />
-      <YAxis stroke="#6b7280" fontSize={11} domain={yMax != null ? [0, yMax] : undefined} />
-      <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: '#1a1e27' }} />
-      <Legend iconSize={8} wrapperStyle={{ fontSize: 11, color: '#9aa3b2' }} />
-      <Bar dataKey="value" name={chart.valueName ?? 'You'} fill="#ef4444" radius={[3, 3, 0, 0]} />
+      <CartesianGrid stroke="#2A2E3D" vertical={false} />
+      <XAxis dataKey="label" stroke="#8A8474" fontSize={10} interval={0} {...xAxisProps} />
+      <YAxis stroke="#8A8474" fontSize={10} domain={yMax != null ? [0, yMax] : undefined} />
+      <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: '#1a1e2b' }} />
+      <Legend
+        iconSize={8}
+        wrapperStyle={{
+          fontSize: 10,
+          color: '#8A8474',
+          fontFamily: '"JetBrains Mono", monospace',
+          letterSpacing: '0.04em',
+        }}
+      />
+      <Bar dataKey="value" name={chart.valueName ?? 'You'} fill="#E94560" radius={[3, 3, 0, 0]} />
       {showBaseline && (
         <Bar
           dataKey="baseline"
           name={chart.baselineName ?? 'Baseline'}
-          fill="#475569"
+          fill="#5B3A8F"
           radius={[3, 3, 0, 0]}
         />
       )}
@@ -205,8 +220,9 @@ function MultilineTick({ split, x = 0, y = 0, payload }: MultilineTickProps) {
           y={0}
           dy={12 + i * 12}
           textAnchor="middle"
-          fill={i === 0 ? '#9aa3b2' : '#6b7280'}
-          fontSize={11}
+          fill={i === 0 ? '#C9C2B0' : '#8A8474'}
+          fontSize={10}
+          fontFamily='"JetBrains Mono", monospace'
         >
           {line}
         </text>
