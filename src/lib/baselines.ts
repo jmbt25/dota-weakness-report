@@ -1,70 +1,114 @@
-// Hardcoded role/rank averages from publicly available Dota 2 stats.
-// These are intentionally rough — they exist so the report can render plausible
-// findings before live baselines are wired up.
+// Rank-aware baselines. Numbers are rounded ballparks pulled from publicly
+// available Dota 2 stat aggregations (Stratz/Dotabuff bracket averages).
 //
-// TODO: replace with dynamic baseline (e.g. fetch from OpenDota /heroStats,
-// /benchmarks/{match_id}, or a self-hosted aggregate computed nightly).
+// TODO: replace with dynamic baseline (e.g. nightly aggregate from OpenDota
+// /heroStats + /benchmarks/{match_id}, or a self-hosted JSON file we
+// regenerate per patch).
 
-import type { Role } from '../types'
+import type { RankBucket, Role } from '../types'
 
 export interface FarmBaseline {
-  /** Expected GPM at 10:00 */
   gpm10: number
-  /** Expected GPM at 20:00 */
   gpm20: number
-  /** Expected XPM at 10:00 */
   xpm10: number
-  /** Expected XPM at 20:00 */
   xpm20: number
 }
 
 export interface DeathBaseline {
-  /** Average deaths per 5-minute bucket, indexed by bucket (0-4 min, 5-9, 10-14, ...) */
+  /** Average deaths per 5-minute window (10 windows covering 0-50 min, then a "50+" tail). */
   perBucket: number[]
+  /** Average total deaths/game for this rank+role. */
+  perGame: number
 }
 
 export interface RoleBaseline {
   farm: FarmBaseline
   deaths: DeathBaseline
-  /** Lane win rate baseline (0-1) */
+  /** Lane win rate baseline (0-1). Lane is roughly zero-sum, so this stays near 0.5. */
   laneWinRate: number
-  /** Match win rate when winning lane (0-1) */
+  /** Match win rate when winning lane (0-1). Higher ranks convert better. */
   winGivenLaneWon: number
 }
 
-// TODO: replace with dynamic baseline (per rank tier, per patch).
-// Numbers below are deliberately rounded ballparks for ~Crusader/Archon (rank ~25-35).
-const CORE_BASELINE: RoleBaseline = {
-  farm: { gpm10: 380, gpm20: 480, xpm10: 420, xpm20: 540 },
-  deaths: { perBucket: [0.3, 0.6, 0.9, 1.0, 1.0, 0.9, 0.7, 0.5, 0.3, 0.2] },
-  laneWinRate: 0.5,
-  winGivenLaneWon: 0.62,
+// Death distribution shape. Total ≈ perGame; weighted toward mid-game.
+const DEATH_SHAPE = [0.06, 0.10, 0.14, 0.16, 0.16, 0.13, 0.10, 0.08, 0.04, 0.02, 0.01]
+function deathDist(perGame: number): DeathBaseline {
+  return {
+    perGame,
+    perBucket: DEATH_SHAPE.map((w) => Number((perGame * w).toFixed(2))),
+  }
 }
 
-const SUPPORT_BASELINE: RoleBaseline = {
-  farm: { gpm10: 230, gpm20: 290, xpm10: 320, xpm20: 410 },
-  deaths: { perBucket: [0.4, 0.8, 1.1, 1.2, 1.1, 1.0, 0.8, 0.6, 0.4, 0.3] },
-  laneWinRate: 0.5,
-  winGivenLaneWon: 0.60,
+const CORE: Record<RankBucket, RoleBaseline> = {
+  low: {
+    farm: { gpm10: 350, gpm20: 440, xpm10: 400, xpm20: 510 },
+    deaths: deathDist(8.0),
+    laneWinRate: 0.5,
+    winGivenLaneWon: 0.58,
+  },
+  mid: {
+    farm: { gpm10: 400, gpm20: 500, xpm10: 440, xpm20: 560 },
+    deaths: deathDist(7.0),
+    laneWinRate: 0.5,
+    winGivenLaneWon: 0.62,
+  },
+  high: {
+    farm: { gpm10: 460, gpm20: 580, xpm10: 490, xpm20: 620 },
+    deaths: deathDist(6.0),
+    laneWinRate: 0.5,
+    winGivenLaneWon: 0.66,
+  },
+  top: {
+    farm: { gpm10: 520, gpm20: 660, xpm10: 540, xpm20: 700 },
+    deaths: deathDist(5.0),
+    laneWinRate: 0.5,
+    winGivenLaneWon: 0.70,
+  },
 }
 
-export function getRoleBaseline(role: Role): RoleBaseline {
-  if (role === 'support') return SUPPORT_BASELINE
-  // Treat 'unknown' as core — most pubs default to core-ish behavior.
-  return CORE_BASELINE
+const SUPPORT: Record<RankBucket, RoleBaseline> = {
+  low: {
+    farm: { gpm10: 220, gpm20: 280, xpm10: 320, xpm20: 410 },
+    deaths: deathDist(9.5),
+    laneWinRate: 0.5,
+    winGivenLaneWon: 0.56,
+  },
+  mid: {
+    farm: { gpm10: 250, gpm20: 320, xpm10: 350, xpm20: 450 },
+    deaths: deathDist(8.5),
+    laneWinRate: 0.5,
+    winGivenLaneWon: 0.60,
+  },
+  high: {
+    farm: { gpm10: 290, gpm20: 380, xpm10: 390, xpm20: 510 },
+    deaths: deathDist(7.5),
+    laneWinRate: 0.5,
+    winGivenLaneWon: 0.64,
+  },
+  top: {
+    farm: { gpm10: 330, gpm20: 430, xpm10: 430, xpm20: 570 },
+    deaths: deathDist(6.5),
+    laneWinRate: 0.5,
+    winGivenLaneWon: 0.68,
+  },
 }
 
-// Item timing benchmarks — "good" timings (in seconds from match start) for
-// commonly-built core items. Used by the item-timing analysis.
-//
-// TODO: replace with dynamic baseline (e.g. OpenDota /heroes/{id}/itemPopularity
-// + percentile-based timing instead of hand-tuned guesses).
-//
-// Keys are OpenDota purchase_log item names (without "item_" prefix).
+export function getBaseline(role: Role, bucket: RankBucket): RoleBaseline {
+  const set = role === 'support' ? SUPPORT : CORE
+  return set[bucket]
+}
+
+/**
+ * Item timing benchmarks — "good" timings (in seconds from match start) for
+ * commonly-built items, calibrated against mid-bracket averages.
+ *
+ * TODO: replace with dynamic baseline (per-hero, per-rank from
+ * /heroes/{id}/itemPopularity + percentile timings).
+ */
 export const ITEM_GOOD_TIMING_SEC: Record<string, number> = {
-  bfury: 22 * 60,           // Battlefury
-  blink: 18 * 60,            // Blink Dagger
-  ultimate_scepter: 25 * 60, // Aghs scepter
+  bfury: 22 * 60,
+  blink: 18 * 60,
+  ultimate_scepter: 25 * 60,
   shivas_guard: 28 * 60,
   black_king_bar: 22 * 60,
   manta: 20 * 60,
@@ -100,30 +144,42 @@ export const ITEM_GOOD_TIMING_SEC: Record<string, number> = {
   diffusal_blade: 16 * 60,
 }
 
-export interface RankBracket {
-  /** Inclusive lower bound (rank_tier value, e.g. 31 = Archon 1) */
-  min: number
-  /** Inclusive upper bound */
-  max: number
-  label: string
-}
-
 // rank_tier in OpenDota is encoded as <medal_digit><star_digit>.
 // 1x = Herald, 2x = Guardian, 3x = Crusader, 4x = Archon, 5x = Legend,
 // 6x = Ancient, 7x = Divine, 8x = Immortal.
-export const RANK_BRACKETS: RankBracket[] = [
-  { min: 10, max: 19, label: 'Herald' },
-  { min: 20, max: 29, label: 'Guardian' },
-  { min: 30, max: 39, label: 'Crusader' },
-  { min: 40, max: 49, label: 'Archon' },
-  { min: 50, max: 59, label: 'Legend' },
-  { min: 60, max: 69, label: 'Ancient' },
-  { min: 70, max: 79, label: 'Divine' },
-  { min: 80, max: 99, label: 'Immortal' },
-]
+export function rankBucketFromTier(rankTier?: number | null): RankBucket {
+  if (!rankTier) return 'mid'
+  const medal = Math.floor(rankTier / 10)
+  if (medal <= 3) return 'low'
+  if (medal <= 5) return 'mid'
+  if (medal <= 7) return 'high'
+  return 'top'
+}
 
 export function rankLabel(rankTier?: number | null): string {
   if (!rankTier) return 'Uncalibrated'
-  const bracket = RANK_BRACKETS.find((b) => rankTier >= b.min && rankTier <= b.max)
-  return bracket?.label ?? 'Unknown'
+  const medal = Math.floor(rankTier / 10)
+  const star = rankTier % 10
+  const names = [
+    '',
+    'Herald',
+    'Guardian',
+    'Crusader',
+    'Archon',
+    'Legend',
+    'Ancient',
+    'Divine',
+    'Immortal',
+  ]
+  const name = names[medal]
+  if (!name) return 'Unknown'
+  if (medal === 8) return 'Immortal'
+  return star > 0 ? `${name} ${star}` : name
+}
+
+export function rankBucketLabel(bucket: RankBucket): string {
+  if (bucket === 'low') return 'Herald–Crusader'
+  if (bucket === 'mid') return 'Archon–Legend'
+  if (bucket === 'high') return 'Ancient–Divine'
+  return 'Immortal'
 }

@@ -11,5 +11,9 @@ export function validateLicenseKey(key: string): boolean {
   return /^[A-Za-z0-9-]+$/.test(trimmed)
 }
 
-export const FREE_TIER_MATCH_LIMIT = 5
+// We give the full 20-match window to free users so the report has enough
+// signal for the hero-pool / tilt analyses (those need ~15+ games to be
+// meaningful). The license input is kept for a future actually-paywalled
+// feature (deeper pattern matching, hero-specific drilldowns, history).
+export const FREE_TIER_MATCH_LIMIT = 20
 export const PAID_TIER_MATCH_LIMIT = 20

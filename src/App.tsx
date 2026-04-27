@@ -1,14 +1,21 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Hero } from './components/Hero'
 import { Loader } from './components/Loader'
 import { ReportGrid } from './components/ReportGrid'
 import { Footer } from './components/Footer'
-import { fetchAllMatchDetails, fetchPlayerMatches, fetchPlayerProfile } from './api/opendota'
+import {
+  fetchAllMatchDetails,
+  fetchHeroes,
+  fetchPlayerMatches,
+  fetchPlayerProfile,
+  parseMatches,
+} from './api/opendota'
 import { parseAccountInput } from './lib/parseInput'
 import { runAllAnalyses } from './analyses'
 import { inferRole } from './lib/matchHelpers'
-import { rankLabel } from './lib/baselines'
-import { FREE_TIER_MATCH_LIMIT, PAID_TIER_MATCH_LIMIT } from './lib/license'
+import { rankBucketFromTier, rankBucketLabel, rankLabel } from './lib/baselines'
+import { getHeroName, setHeroes } from './lib/heroes'
+import { PAID_TIER_MATCH_LIMIT } from './lib/license'
 import type {
   AnalysisResult,
   ODMatchDetail,
@@ -19,10 +26,10 @@ import type {
 
 interface ReportState {
   profile: ODPlayerProfile
-  matches: ODMatchSummary[] // sliced to the tier limit
+  matches: ODMatchSummary[]
   details: Record<number, ODMatchDetail>
   results: AnalysisResult[]
-  totalAvailable: number // total matches OpenDota returned before slicing
+  totalAvailable: number
 }
 
 type AppStatus =
@@ -35,8 +42,19 @@ function App() {
   const [status, setStatus] = useState<AppStatus>({ kind: 'idle' })
   const [isPaid, setIsPaid] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
+  const heroesLoadedRef = useRef(false)
 
-  const matchLimit = isPaid ? PAID_TIER_MATCH_LIMIT : FREE_TIER_MATCH_LIMIT
+  // Fetch the hero index once on mount; falls back to "Hero N" if it fails.
+  useEffect(() => {
+    if (heroesLoadedRef.current) return
+    heroesLoadedRef.current = true
+    fetchHeroes()
+      .then((heroes) => setHeroes(heroes))
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.warn('Hero index unavailable; falling back to numeric IDs.', err)
+      })
+  }, [])
 
   async function analyze(raw: string) {
     abortRef.current?.abort()
@@ -64,7 +82,7 @@ function App() {
         return
       }
 
-      const matches = allMatches.slice(0, matchLimit)
+      const matches = allMatches
       const ids = matches.map((m) => m.match_id)
 
       setStatus({ kind: 'loading', stage: 'Fetching match details…', done: 0, total: ids.length })
@@ -75,6 +93,34 @@ function App() {
         ac.signal
       )
 
+      // Auto-request parses for any matches that aren't already parsed.
+      const unparsedCount = matches.filter((m) => {
+        const d = details[m.match_id]
+        return !d || d.version == null
+      }).length
+
+      if (unparsedCount > 0) {
+        setStatus({
+          kind: 'loading',
+          stage: `Parsing replays (this can take a minute)…`,
+          done: 0,
+          total: unparsedCount,
+        })
+        await parseMatches(matches, details, {
+          concurrency: 5,
+          pollIntervalMs: 5000,
+          timeoutMs: 90_000,
+          onProgress: ({ done, total }) =>
+            setStatus({
+              kind: 'loading',
+              stage: `Parsing match ${Math.min(done + 1, total)}/${total}…`,
+              done,
+              total,
+            }),
+          signal: ac.signal,
+        })
+      }
+
       setStatus({ kind: 'loading', stage: 'Crunching analyses…' })
       const inferredRole = inferRole(matches, details, parsed.accountId)
       const reportInput: ReportInput = {
@@ -83,6 +129,8 @@ function App() {
         details,
         rankTier: profile.rank_tier ?? null,
         inferredRole,
+        rankBucket: rankBucketFromTier(profile.rank_tier),
+        heroName: getHeroName,
       }
       const results = runAllAnalyses(reportInput)
 
@@ -99,22 +147,13 @@ function App() {
     } catch (err) {
       if ((err as Error).name === 'AbortError') return
       const message =
-        err instanceof Error
-          ? err.message
-          : 'Something went wrong fetching your data.'
+        err instanceof Error ? err.message : 'Something went wrong fetching your data.'
       setStatus({ kind: 'error', message })
     }
   }
 
   function unlock(key: string) {
     setIsPaid(true)
-    // Re-run with the larger window if we already have a report.
-    if (status.kind === 'ready') {
-      // Use the same account ID we already fetched.
-      const accountId = status.report.profile.profile?.account_id
-      if (accountId) analyze(String(accountId))
-    }
-    // (The key is intentionally unused for now; validateLicenseKey already accepted it.)
     void key
   }
 
@@ -134,7 +173,10 @@ function App() {
 
       {status.kind === 'ready' && (
         <>
-          <ProfileBar profile={status.report.profile} matchCount={status.report.matches.length} />
+          <ProfileBar
+            profile={status.report.profile}
+            matchCount={status.report.matches.length}
+          />
           <ReportGrid
             results={status.report.results}
             matchCount={status.report.matches.length}
@@ -151,24 +193,34 @@ function App() {
   )
 }
 
-function ProfileBar({ profile, matchCount }: { profile: ODPlayerProfile; matchCount: number }) {
+function ProfileBar({
+  profile,
+  matchCount,
+}: {
+  profile: ODPlayerProfile
+  matchCount: number
+}) {
   const name = profile.profile?.personaname ?? 'Anonymous player'
   const rank = useMemo(() => rankLabel(profile.rank_tier), [profile.rank_tier])
+  const bucket = useMemo(
+    () => rankBucketLabel(rankBucketFromTier(profile.rank_tier)),
+    [profile.rank_tier]
+  )
   return (
-    <section className="max-w-6xl mx-auto px-6 pt-2 pb-6">
-      <div className="flex items-center gap-4">
+    <section className="max-w-6xl mx-auto px-6 pt-4 pb-8 w-full">
+      <div className="flex items-center gap-5 card">
         {profile.profile?.avatarfull && (
           <img
             src={profile.profile.avatarfull}
             alt=""
-            className="h-12 w-12 rounded-lg border border-line"
+            className="h-16 w-16 rounded-lg border border-line"
             referrerPolicy="no-referrer"
           />
         )}
-        <div>
-          <div className="text-lg font-medium">{name}</div>
-          <div className="text-xs text-ink-muted">
-            {rank} · {matchCount} matches analyzed
+        <div className="min-w-0">
+          <div className="text-xl font-semibold truncate">{name}</div>
+          <div className="text-sm text-ink-muted mt-0.5">
+            {rank} · baselines tuned for <span className="text-ink">{bucket}</span> · {matchCount} matches analyzed
           </div>
         </div>
       </div>

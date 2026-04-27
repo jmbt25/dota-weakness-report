@@ -1,32 +1,38 @@
 import type { AnalysisResult, ReportInput } from '../types'
-import { getRoleBaseline } from '../lib/baselines'
+import { getBaseline } from '../lib/baselines'
 import { findPlayerInMatch, isParsed } from '../lib/matchHelpers'
+import { isFarmCore } from '../lib/heroes'
 
 /**
- * Farm efficiency: average GPM/XPM at the 10-minute and 20-minute marks vs.
- * the role baseline. We use the per-minute `gold_t` / `xp_t` arrays from
- * parsed matches (they are cumulative totals indexed by minute).
+ * Average GPM/XPM at the 10-min and 20-min marks vs. the rank+role baseline.
+ * Uses cumulative `gold_t` / `xp_t` arrays from parsed matches.
  *
- * Falls back to whole-match GPM/XPM for unparsed matches.
+ * Without any parsed match the result is reported as 'unmeasured' rather than
+ * making up numbers from whole-match averages — the rank baselines are
+ * calibrated against minute-window GPM, so a whole-match comparison would be
+ * misleading.
  */
 export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
-  const { matches, details, accountId, inferredRole } = input
-  const base = getRoleBaseline(inferredRole).farm
+  const { matches, details, accountId, inferredRole, rankBucket } = input
+  const base = getBaseline(inferredRole, rankBucket).farm
 
   const samples10gpm: number[] = []
   const samples20gpm: number[] = []
   const samples10xpm: number[] = []
   const samples20xpm: number[] = []
-  let fallbackUsed = 0
+  let parsedCount = 0
+  let topHeroId: number | null = null
+  const heroGames = new Map<number, number>()
 
   for (const m of matches) {
+    heroGames.set(m.hero_id, (heroGames.get(m.hero_id) ?? 0) + 1)
     const detail = details[m.match_id]
     if (!detail) continue
     const player = findPlayerInMatch(detail, accountId)
     if (!player) continue
 
     if (isParsed(detail) && player.gold_t && player.xp_t) {
-      // gold_t[10] = cumulative gold at minute 10 → GPM = total/10
+      parsedCount++
       const g10 = player.gold_t[10]
       const g20 = player.gold_t[20]
       const x10 = player.xp_t[10]
@@ -35,13 +41,25 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
       if (typeof g20 === 'number') samples20gpm.push(g20 / 20)
       if (typeof x10 === 'number') samples10xpm.push(x10 / 10)
       if (typeof x20 === 'number') samples20xpm.push(x20 / 20)
-    } else {
-      fallbackUsed++
-      // Use the whole-match averages as a proxy for both buckets.
-      samples10gpm.push(player.gold_per_min)
-      samples20gpm.push(player.gold_per_min)
-      samples10xpm.push(player.xp_per_min)
-      samples20xpm.push(player.xp_per_min)
+    }
+  }
+  // Identify top hero for suggestion targeting.
+  let topGames = 0
+  for (const [id, games] of heroGames) {
+    if (games > topGames) { topGames = games; topHeroId = id }
+  }
+
+  if (parsedCount === 0 || samples10gpm.length === 0) {
+    return {
+      id: 'farm-efficiency',
+      title: 'Farm efficiency',
+      metric: 0,
+      metricLabel: '',
+      baseline: base.gpm20,
+      baselineLabel: 'GPM @20',
+      severity: 'unmeasured',
+      finding: 'Farm efficiency needs per-minute GPM/XPM data, which only parsed matches expose.',
+      suggestion: 'Once your matches finish parsing, re-run the report — this card will fill in.',
     }
   }
 
@@ -51,7 +69,6 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
   const xpm10 = Math.round(avg(samples10xpm))
   const xpm20 = Math.round(avg(samples20xpm))
 
-  // Severity is driven by the worse of the two GPM windows vs baseline.
   const ratio10 = gpm10 / base.gpm10
   const ratio20 = gpm20 / base.gpm20
   const worst = Math.min(ratio10, ratio20)
@@ -60,30 +77,29 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
     : worst >= 0.85 ? 'ok'
     : 'concerning'
 
-  const fallbackNote =
-    fallbackUsed === matches.length
-      ? ' (Approximated using whole-match GPM/XPM — none of these matches have parsed replays.)'
-      : fallbackUsed > 0
-        ? ` (${fallbackUsed} of ${matches.length} matches were unparsed and used whole-match averages.)`
-        : ''
+  const userPlaysFarmCore = topHeroId != null && isFarmCore(topHeroId) && inferredRole !== 'support'
 
   let finding: string
   let suggestion: string
   if (severity === 'concerning') {
     if (ratio10 < ratio20) {
-      finding = `Your 10-min GPM (${gpm10}) is well below the ${inferredRole} baseline (${base.gpm10}). The lane stage is bleeding economy.${fallbackNote}`
+      finding = `Your 10-min GPM (${gpm10}) is below the ${gpm10}/${base.gpm10} ${inferredRole} target. The lane stage is bleeding economy.`
       suggestion = inferredRole === 'support'
         ? 'Even as a 4 or 5, target ~25 last hits by 10 min when your carry is missing CS, and grab pull camps on cycle.'
         : 'Cut creep aggression so the wave settles in your favor. Free farm > a few fancy trades.'
     } else {
-      finding = `Your 20-min GPM (${gpm20}) is below the ${inferredRole} baseline (${base.gpm20}). You win lane but stall after.${fallbackNote}`
+      finding = `Your 20-min GPM (${gpm20}) is below the ${base.gpm20} ${inferredRole} target. You stall after the lane.`
       suggestion = 'After laning, transition to ancient stacks/jungle camps between objectives instead of TPing across the map for fights you can’t win.'
     }
   } else if (severity === 'ok') {
-    finding = `Farm is roughly average for ${inferredRole}: ${gpm10} GPM @10 vs ${base.gpm10} baseline, ${gpm20} GPM @20 vs ${base.gpm20}.${fallbackNote}`
-    suggestion = 'Try a hand of midas timing on one farm-heavy hero — it tends to lift mid-game GPM more than another raw farming item.'
+    finding = `Farm is roughly average for your bracket: ${gpm10} GPM @10 vs ${base.gpm10}, ${gpm20} GPM @20 vs ${base.gpm20}.`
+    suggestion = userPlaysFarmCore
+      ? 'Try a Hand of Midas timing on your most-played hero — it tends to lift mid-game GPM more than another raw farming item.'
+      : inferredRole === 'support'
+        ? 'Stack ancients between waves on cycle. The 80-100 GPM you’d add is worth more than another rotation half the time.'
+        : 'Watch your laning replay back. Most of the gap is one or two missed pulls/stacks per game.'
   } else {
-    finding = `Strong farm: ${gpm10} GPM @10 (vs ${base.gpm10}) and ${gpm20} GPM @20 (vs ${base.gpm20}).${fallbackNote}`
+    finding = `Strong farm: ${gpm10} GPM @10 (vs ${base.gpm10}) and ${gpm20} GPM @20 (vs ${base.gpm20}).`
     suggestion = 'Make sure that farm converts to fight pressure — track your damage/networth ratio next.'
   }
 
@@ -93,10 +109,13 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
     metric: gpm20,
     metricLabel: 'GPM @20',
     baseline: base.gpm20,
-    baselineLabel: 'baseline GPM @20',
+    baselineLabel: 'GPM @20',
     severity,
     finding,
     suggestion,
+    note: parsedCount < matches.length
+      ? `${parsedCount}/${matches.length} matches had parsed replays.`
+      : undefined,
     chart: {
       kind: 'series',
       valueName: 'You',

@@ -6,7 +6,7 @@ import { didWin } from '../lib/matchHelpers'
  *   - longest consecutive loss streak in the window
  *   - win rate on the very next game after each loss vs. overall WR
  *
- * If post-loss WR is meaningfully below overall WR (delta >= 10pp), and
+ * If post-loss WR is meaningfully below overall WR (delta >= 10pp) and
  * there's a streak of 3+, we flag tilt.
  *
  * Matches are returned by OpenDota newest-first. We process oldest-first so
@@ -27,7 +27,6 @@ export function analyzeTilt(input: ReportInput): AnalysisResult {
     const won = didWin(m)
     if (won) totalWins++
 
-    // Was the previous game a loss? Then this game counts as "post-loss".
     if (i > 0 && !didWin(ordered[i - 1])) {
       postLossGames++
       if (won) postLossWins++
@@ -43,7 +42,7 @@ export function analyzeTilt(input: ReportInput): AnalysisResult {
 
   const overallWR = ordered.length > 0 ? totalWins / ordered.length : 0
   const postLossWR = postLossGames > 0 ? postLossWins / postLossGames : 0
-  const deltaPp = (overallWR - postLossWR) * 100 // positive = tilt
+  const deltaPp = (overallWR - postLossWR) * 100
 
   const severity =
     longestLossStreak >= 4 && deltaPp >= 15 ? 'concerning'
@@ -76,6 +75,7 @@ export function analyzeTilt(input: ReportInput): AnalysisResult {
     chart: {
       kind: 'bars',
       valueName: 'WR %',
+      yMax: 100,
       data: [
         { label: 'Overall', value: Math.round(overallWR * 100) },
         { label: 'After a loss', value: Math.round(postLossWR * 100) },

@@ -1,7 +1,7 @@
 // OpenDota response types — only the fields we use.
 // Reference: https://docs.opendota.com/
 
-export type Severity = 'good' | 'ok' | 'concerning'
+export type Severity = 'good' | 'ok' | 'concerning' | 'unmeasured'
 
 export interface ODMatchSummary {
   match_id: number
@@ -17,6 +17,8 @@ export interface ODMatchSummary {
   lobby_type?: number
   average_rank?: number | null
   leaver_status?: number
+  // Present on the matches list; null until parsed.
+  version?: number | null
 }
 
 export interface ODPurchaseLogEntry {
@@ -87,22 +89,38 @@ export interface ODPlayerProfile {
   leaderboard_rank?: number | null
 }
 
+export interface ODHero {
+  id: number
+  name: string // e.g. "npc_dota_hero_antimage"
+  localized_name: string // display name, e.g. "Anti-Mage"
+  primary_attr: string
+  attack_type: string
+  roles: string[]
+}
+
 // Domain types
 
 export type Role = 'core' | 'support' | 'unknown'
 
+/** Bucket of rank tiers used by baselines. */
+export type RankBucket = 'low' | 'mid' | 'high' | 'top'
+
 export interface AnalysisResult {
   id: AnalysisId
   title: string
+  /** Hidden when severity is 'unmeasured'. */
   metric: number
   metricLabel: string
   baseline: number
+  /** Short label after the baseline value. Should NOT contain the word "baseline". */
   baselineLabel: string
   severity: Severity
   finding: string
   suggestion: string
-  // Optional payload for the chart on this card
+  /** Optional payload for the chart on this card. */
   chart?: ChartPayload
+  /** Optional disclaimer shown below the prose (e.g. "approximated, no parsed data"). */
+  note?: string
 }
 
 export type AnalysisId =
@@ -113,16 +131,35 @@ export type AnalysisId =
   | 'hero-pool'
   | 'tilt'
 
-export type ChartPayload =
-  | { kind: 'bars'; data: { label: string; value: number; baseline?: number }[]; valueName?: string; baselineName?: string }
-  | { kind: 'series'; data: { x: number | string; you: number; baseline?: number }[]; valueName?: string; baselineName?: string }
-  | { kind: 'pie'; data: { label: string; value: number }[] }
+export interface ChartBars {
+  kind: 'bars'
+  data: { label: string; value: number; baseline?: number }[]
+  valueName?: string
+  baselineName?: string
+  /** Force a y-axis maximum (e.g. 100 for percentage charts). */
+  yMax?: number
+  /** Render bars horizontally. Useful for hero lists where labels need room. */
+  horizontal?: boolean
+}
+
+export interface ChartSeries {
+  kind: 'series'
+  data: { x: number | string; you: number; baseline?: number }[]
+  valueName?: string
+  baselineName?: string
+  yMax?: number
+}
+
+export type ChartPayload = ChartBars | ChartSeries
 
 export interface ReportInput {
   accountId: number
   matches: ODMatchSummary[]
   details: Record<number, ODMatchDetail>
-  // Optional baseline overrides resolved from rank/role
   rankTier?: number | null
   inferredRole: Role
+  /** Resolved bucket for baseline lookup. */
+  rankBucket: RankBucket
+  /** Hero ID → localized name. Falls back to "Hero N" if missing. */
+  heroName: (id: number) => string
 }

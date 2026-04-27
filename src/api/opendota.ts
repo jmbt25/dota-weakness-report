@@ -1,7 +1,7 @@
 // Browser → OpenDota client. Free tier is 60 req/min. We throttle below that
-// (50/min) to leave headroom for retries and other tabs hitting the same IP.
+// (~50/min) to leave headroom for retries.
 
-import type { ODMatchDetail, ODMatchSummary, ODPlayerProfile } from '../types'
+import type { ODHero, ODMatchDetail, ODMatchSummary, ODPlayerProfile } from '../types'
 
 const BASE_URL = 'https://api.opendota.com/api'
 
@@ -12,11 +12,11 @@ const MIN_GAP_MS = 1200
 class RateLimiter {
   private nextAllowedAt = 0
 
-  async acquire(): Promise<void> {
+  async acquire(signal?: AbortSignal): Promise<void> {
     const now = Date.now()
     const wait = Math.max(0, this.nextAllowedAt - now)
     this.nextAllowedAt = Math.max(now, this.nextAllowedAt) + MIN_GAP_MS
-    if (wait > 0) await new Promise((r) => setTimeout(r, wait))
+    if (wait > 0) await sleep(wait, signal)
   }
 }
 
@@ -30,23 +30,52 @@ class HttpError extends Error {
   }
 }
 
-async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
-  await limiter.acquire()
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(new DOMException('Aborted', 'AbortError'))
+    const t = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort)
+      resolve()
+    }, ms)
+    const onAbort = () => {
+      clearTimeout(t)
+      reject(new DOMException('Aborted', 'AbortError'))
+    }
+    signal?.addEventListener('abort', onAbort, { once: true })
+  })
+}
+
+async function request<T>(
+  method: 'GET' | 'POST',
+  path: string,
+  signal?: AbortSignal
+): Promise<T> {
+  await limiter.acquire(signal)
   if (signal?.aborted) throw new DOMException('Aborted', 'AbortError')
 
-  // Single retry on 429 with Retry-After honoring (capped).
   for (let attempt = 0; attempt < 2; attempt++) {
-    const res = await fetch(`${BASE_URL}${path}`, { signal })
-    if (res.ok) return (await res.json()) as T
+    const res = await fetch(`${BASE_URL}${path}`, { method, signal })
+    if (res.ok) {
+      // Some POSTs return empty bodies; tolerate that.
+      const text = await res.text()
+      return (text ? JSON.parse(text) : {}) as T
+    }
     if (res.status === 429 && attempt === 0) {
       const retryAfter = Number(res.headers.get('Retry-After')) || 5
-      await new Promise((r) => setTimeout(r, Math.min(retryAfter, 10) * 1000))
+      await sleep(Math.min(retryAfter, 10) * 1000, signal)
       continue
     }
     const body = await res.text().catch(() => '')
-    throw new HttpError(res.status, `OpenDota ${path} → ${res.status} ${body.slice(0, 200)}`)
+    throw new HttpError(res.status, `OpenDota ${method} ${path} → ${res.status} ${body.slice(0, 200)}`)
   }
-  throw new HttpError(0, `OpenDota ${path} failed`)
+  throw new HttpError(0, `OpenDota ${method} ${path} failed`)
+}
+
+const get = <T,>(path: string, signal?: AbortSignal) => request<T>('GET', path, signal)
+const post = <T,>(path: string, signal?: AbortSignal) => request<T>('POST', path, signal)
+
+export async function fetchHeroes(signal?: AbortSignal): Promise<ODHero[]> {
+  return get<ODHero[]>('/heroes', signal)
 }
 
 export async function fetchPlayerProfile(
@@ -72,6 +101,22 @@ export async function fetchMatchDetail(
   signal?: AbortSignal
 ): Promise<ODMatchDetail> {
   return get<ODMatchDetail>(`/matches/${matchId}`, signal)
+}
+
+export interface ParseRequestResponse {
+  job?: { jobId: number }
+}
+
+/**
+ * Ask OpenDota to parse this match's replay. Returns immediately — actual
+ * parsing happens server-side; clients poll `fetchMatchDetail` to detect
+ * completion (the `version` field becomes non-null).
+ */
+export async function requestMatchParse(
+  matchId: number,
+  signal?: AbortSignal
+): Promise<ParseRequestResponse> {
+  return post<ParseRequestResponse>(`/request/${matchId}`, signal)
 }
 
 export interface MatchFetchProgress {
@@ -101,6 +146,108 @@ export async function fetchAllMatchDetails(
     onProgress({ done, total: matchIds.length })
   }
   return out
+}
+
+/**
+ * For each match without parsed data, POST a parse request and then poll
+ * `/matches/{id}` every 5s until parsed or timeout. Runs up to `concurrency`
+ * matches in parallel; the underlying rate limiter still serializes the
+ * actual HTTP calls.
+ *
+ * Mutates the `details` map in place so the caller's reference is updated.
+ */
+export interface ParseProgress {
+  done: number
+  total: number
+}
+
+export async function parseMatches(
+  matches: ODMatchSummary[],
+  details: Record<number, ODMatchDetail>,
+  options: {
+    concurrency?: number
+    pollIntervalMs?: number
+    timeoutMs?: number
+    onProgress?: (p: ParseProgress) => void
+    signal?: AbortSignal
+  } = {}
+): Promise<void> {
+  const concurrency = options.concurrency ?? 5
+  const pollIntervalMs = options.pollIntervalMs ?? 5000
+  const timeoutMs = options.timeoutMs ?? 90_000
+
+  const needsParse = matches
+    .map((m) => m.match_id)
+    .filter((id) => {
+      const d = details[id]
+      return !d || d.version == null
+    })
+
+  const total = needsParse.length
+  let done = 0
+  options.onProgress?.({ done, total })
+  if (total === 0) return
+
+  const queue = [...needsParse]
+
+  async function worker() {
+    while (queue.length > 0) {
+      if (options.signal?.aborted) return
+      const id = queue.shift()
+      if (id == null) return
+      try {
+        await parseOne(id, pollIntervalMs, timeoutMs, details, options.signal)
+      } catch (err) {
+        // Parse failure on one match shouldn't kill the whole batch.
+        if ((err as Error).name !== 'AbortError') {
+          // eslint-disable-next-line no-console
+          console.warn(`Parse for match ${id} did not complete:`, err)
+        }
+      } finally {
+        done++
+        options.onProgress?.({ done, total })
+      }
+    }
+  }
+
+  const workers: Promise<void>[] = []
+  for (let i = 0; i < Math.min(concurrency, needsParse.length); i++) {
+    workers.push(worker())
+  }
+  await Promise.all(workers)
+}
+
+async function parseOne(
+  matchId: number,
+  pollIntervalMs: number,
+  timeoutMs: number,
+  details: Record<number, ODMatchDetail>,
+  signal?: AbortSignal
+): Promise<void> {
+  // Kick off the parse job. Some matches (very old, abandoned, or already
+  // queued) may return errors — we still poll afterwards in case the data
+  // appears anyway.
+  try {
+    await requestMatchParse(matchId, signal)
+  } catch (err) {
+    if ((err as Error).name === 'AbortError') throw err
+    // Continue to polling — sometimes the POST 4xx's but the match is parsable.
+  }
+
+  const started = Date.now()
+  while (Date.now() - started < timeoutMs) {
+    await sleep(pollIntervalMs, signal)
+    let detail: ODMatchDetail
+    try {
+      detail = await fetchMatchDetail(matchId, signal)
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') throw err
+      continue // transient — try again next poll
+    }
+    details[matchId] = detail
+    if (detail.version != null) return
+  }
+  // Timed out — we leave whatever last detail we have in place.
 }
 
 export { HttpError }
