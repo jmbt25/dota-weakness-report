@@ -89,6 +89,11 @@ export function analyzeTilt(input: ReportInput): AnalysisResult {
     severityLabel,
     finding,
     suggestion,
+    roastFacts: {
+      streak: longestLossStreak,
+      post_loss: Math.round(postLossWR * 100),
+      overall: Math.round(overallWR * 100),
+    },
     chart: {
       kind: 'bars',
       valueName: 'WR %',

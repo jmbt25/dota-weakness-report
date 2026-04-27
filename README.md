@@ -9,17 +9,27 @@ straight from your browser. No backend, no accounts, no tracking.
 
 ## What it analyzes
 
-For your last 5 (free) or 20 (paid) matches:
+For your last 20 (free) or 100 (paid) matches:
 
 1. **Death timing distribution** — when in the game you tend to die
 2. **Farm efficiency** — GPM/XPM at the 10- and 20-minute marks vs. role baseline
 3. **Item timing** — your top 3 heroes' core item timings vs. benchmark
-4. **Lane outcome** — lane win rate and how it correlates with match wins
-5. **Hero pool concentration** — distinct heroes played, win rate on most-played
-6. **Loss streak / tilt detection** — longest streak and post-loss win rate
+4. **Situational items** — whether you build counters when the enemy lineup demands them
+5. **Lane outcome** — lane win rate and how it correlates with match wins
+6. **Hero pool concentration** — distinct heroes played, win rate on most-played
+7. **Stack synergy** — WR with each detected party teammate vs. solo
+8. **Loss streak / tilt detection** — longest streak and post-loss win rate
 
 Baselines in v1 are hardcoded role/rank averages. Search the codebase for
 `TODO: replace with dynamic baseline` for the spots to wire up live data.
+
+### Honest mode
+
+A toggle next to the Free/Paid badge swaps the descriptive prose to a
+roast voice that cites your stats. Off by default. Launch ships English
+only — Taglish templates are preserved in
+`src/lib/honest-mode/taglish-templates.ts` and will be wired up as a
+paid-tier feature.
 
 ## Run locally
 

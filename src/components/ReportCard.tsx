@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   Bar,
   BarChart,
@@ -8,7 +9,14 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import type { AnalysisResult, ChartBars, ChartPayload, Severity } from '../types'
+import type {
+  AnalysisResult,
+  ChartBars,
+  ChartPayload,
+  HonestLanguage,
+  Severity,
+} from '../types'
+import { generateRoast } from '../lib/honestMode'
 
 function severityClass(sev: Severity): string {
   if (sev === 'good') return 'pill-good'
@@ -36,9 +44,24 @@ const TOOLTIP_STYLE = {
   fontSize: 12,
 }
 
-export function ReportCard({ result }: { result: AnalysisResult }) {
+interface ReportCardProps {
+  result: AnalysisResult
+  honestMode: boolean
+  language: HonestLanguage
+  accountId: number
+}
+
+export function ReportCard({ result, honestMode, language, accountId }: ReportCardProps) {
   const { chart, severity } = result
   const isUnmeasured = severity === 'unmeasured'
+
+  // Honest-mode prose: generate lazily; if it returns null (no eligible
+  // template, missing facts, or validator rejection), fall back to the
+  // serious-mode finding silently.
+  const finding = useMemo(() => {
+    if (!honestMode) return result.finding
+    return generateRoast(result, language, accountId) ?? result.finding
+  }, [honestMode, language, accountId, result])
 
   return (
     <article className="card flex flex-col">
@@ -59,7 +82,7 @@ export function ReportCard({ result }: { result: AnalysisResult }) {
 
       {!isUnmeasured && chart && <ChartBlock chart={chart} />}
 
-      <p className="mt-4 text-sm text-ink leading-relaxed">{result.finding}</p>
+      <p className="mt-4 text-sm text-ink leading-relaxed">{finding}</p>
       <p className="mt-3 text-sm text-ink-muted leading-relaxed">
         <span className="text-ink-dim text-xs uppercase tracking-wider mr-2">What to do</span>
         {result.suggestion}

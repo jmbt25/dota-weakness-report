@@ -23,6 +23,7 @@
   .pill-neutral { @apply pill bg-sky-500/10     text-sky-300     border border-sky-500/20; }
   .pill-muted   { @apply pill bg-bg-raised      text-ink-muted   border border-line; }
   .pill-bad     { @apply pill bg-red-500/10     text-red-400     border border-red-500/20; }
+  .pill-amber   { @apply pill bg-amber-500/10   text-amber-300   border border-amber-500/20; }
   .input-base {
     @apply w-full bg-bg-raised border border-line rounded-lg px-4 py-3 text-ink placeholder:text-ink-dim focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20;
   }

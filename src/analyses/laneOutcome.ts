@@ -27,6 +27,7 @@ export function analyzeLaneOutcome(input: ReportInput): AnalysisResult {
   let matchesWonGivenLaneWon = 0
   let lanesWonInOverall = 0
   let overallWins = 0
+  const laneEffSamples: number[] = []
 
   // Production-visible diagnostics — first 8 parsed matches.
   const debugSamples: {
@@ -61,13 +62,30 @@ export function analyzeLaneOutcome(input: ReportInput): AnalysisResult {
       roamingMatches++
       continue
     }
-    if (player.lane_outcome == null) {
+
+    // Primary: lane_outcome (1=won, 2=tied, 3=lost). When the OpenDota
+    // response omits this field (which happens on a meaningful fraction
+    // of parsed matches), fall back to lane_efficiency_pct thresholds.
+    // TODO: thresholds picked from spec; want to verify against bracket
+    // distribution of lane_efficiency_pct on real data.
+    let outcome: 1 | 2 | 3 | null = null
+    if (player.lane_outcome === 1 || player.lane_outcome === 2 || player.lane_outcome === 3) {
+      outcome = player.lane_outcome
+    } else if (typeof player.lane_efficiency_pct === 'number') {
+      const eff = player.lane_efficiency_pct
+      if (eff >= 55) outcome = 1
+      else if (eff >= 45) outcome = 2
+      else outcome = 3
+    }
+
+    if (outcome == null) {
       nullOutcomeMatches++
       continue
     }
 
     lanesEvaluated++
-    const wonLane = player.lane_outcome === 1
+    if (typeof player.lane_efficiency_pct === 'number') laneEffSamples.push(player.lane_efficiency_pct)
+    const wonLane = outcome === 1
     if (wonLane) {
       lanesWon++
       lanesWonInOverall++
@@ -114,7 +132,10 @@ export function analyzeLaneOutcome(input: ReportInput): AnalysisResult {
       baseline: Math.round(baseline.laneWinRate * 100),
       baselineLabel: '% baseline',
       severity: 'unmeasured',
-      finding: `Only ${lanesEvaluated} match${lanesEvaluated === 1 ? '' : 'es'} produced a lane outcome — need at least ${MIN_LANES_FOR_ANALYSIS} for a stable read.`,
+      finding:
+        nullOutcomeMatches >= parsedMatches && parsedMatches >= MIN_LANES_FOR_ANALYSIS
+          ? "Lane outcome data isn't in OpenDota's free response right now (lane_outcome and lane_efficiency_pct are both missing on this account's parsed matches)."
+          : `Only ${lanesEvaluated} match${lanesEvaluated === 1 ? '' : 'es'} produced a lane outcome — need at least ${MIN_LANES_FOR_ANALYSIS} for a stable read.`,
       suggestion: 'Once more of your matches finish parsing, re-run the report.',
       note: `${parsedMatches}/${matches.length} parsed · ${roamingMatches} roaming · ${nullOutcomeMatches} no lane data.`,
     }
@@ -123,32 +144,43 @@ export function analyzeLaneOutcome(input: ReportInput): AnalysisResult {
   const laneWR = lanesWon / lanesEvaluated
   const winGivenLane = lanesWonInOverall > 0 ? matchesWonGivenLaneWon / lanesWonInOverall : 0
 
+  // v6 calibration vs. the 0.5 baseline: > 0.55 Strong, 0.45-0.55 Healthy,
+  // 0.375-0.45 Watch, < 0.375 Concerning.
   const severity =
-    laneWR < 0.4 ? 'concerning'
-    : laneWR < baseline.laneWinRate ? 'ok'
+    laneWR < 0.375 ? 'concerning'
+    : laneWR < 0.45 ? 'ok'
     : 'good'
+
+  const avgLaneEff =
+    laneEffSamples.length > 0
+      ? Math.round(laneEffSamples.reduce((a, b) => a + b, 0) / laneEffSamples.length)
+      : null
+  const laneEffPhrase =
+    avgLaneEff != null ? ` Lane efficiency averages ${avgLaneEff}%.` : ''
 
   let finding: string
   let suggestion: string
   if (severity === 'concerning') {
-    finding = `You win lane ${(laneWR * 100).toFixed(0)}% of the time (${lanesWon}/${lanesEvaluated} fixed-lane matches) — well below the ~${(baseline.laneWinRate * 100).toFixed(0)}% bracket baseline.`
+    finding = `You win lane ${(laneWR * 100).toFixed(0)}% of the time (${lanesWon}/${lanesEvaluated} fixed-lane matches) — well below the ~${(baseline.laneWinRate * 100).toFixed(0)}% bracket baseline.${laneEffPhrase}`
+    const effHint = avgLaneEff != null && avgLaneEff < 90 ? ` (You're at ${avgLaneEff}% lane efficiency — anything below 100% means you're behind expected farm at minute 10.)` : ''
     suggestion = inferredRole === 'support'
-      ? 'Your laning fundamentals are the cheapest MMR upgrade available. Practice creep aggro pulling and zoning the offlaner — a single full pull every 53 seconds turns most lanes around.'
+      ? `Your laning fundamentals are the cheapest MMR upgrade available — a full pull every 53s turns most lanes around.${effHint}`
       : inferredRole === 'core'
-        ? 'You\'re losing CS or trades. Watch your replay until the 6-min mark — most of your deficit is one identifiable mistake (greedy CS, overextending, no ward).'
-        : 'Lane fundamentals are the cheapest MMR upgrade. Whether you\'re carrying or supporting, focus on the first 6 minutes — that\'s where most of the deficit comes from.'
+        ? `You're losing CS or trades. Watch one of your replays through the 6-min mark — most of your deficit is one identifiable mistake.${effHint}`
+        : `Lane fundamentals are the cheapest MMR upgrade. Focus on the first 6 minutes — that's where most of the deficit comes from.${effHint}`
   } else if (severity === 'ok') {
-    finding = `Lane WR is ${(laneWR * 100).toFixed(0)}% (${lanesWon}/${lanesEvaluated} fixed-lane matches), baseline ~${(baseline.laneWinRate * 100).toFixed(0)}%. When you do win lane, you convert ${(winGivenLane * 100).toFixed(0)}% into match wins.`
+    finding = `Lane WR is ${(laneWR * 100).toFixed(0)}% (${lanesWon}/${lanesEvaluated} fixed-lane matches), baseline ~${(baseline.laneWinRate * 100).toFixed(0)}%. When you do win lane, you convert ${(winGivenLane * 100).toFixed(0)}% into match wins.${laneEffPhrase}`
     suggestion = winGivenLane < baseline.winGivenLaneWon
-      ? 'You win lane but lose mid-game. Focus on the first Roshan timing and tempo objectives instead of farming a 4th item.'
-      : 'Lane is fine. Push it harder — turn even lanes into winning ones with cycle pulls and runic shrine pickups.'
+      ? `You win lane (${(laneWR * 100).toFixed(0)}%) but lose mid-game (only ${(winGivenLane * 100).toFixed(0)}% of won lanes convert). Focus on the first Roshan timing instead of farming a 4th item.`
+      : `Lane is fine at ${(laneWR * 100).toFixed(0)}%. Push it harder — turn even lanes into winning ones with cycle pulls and rune control.`
   } else {
-    finding = `Strong laning: ${lanesWon}/${lanesEvaluated} fixed lanes won, ${(winGivenLane * 100).toFixed(0)}% match WR when lane is won (overall ${(overallWR * 100).toFixed(0)}%).`
-    suggestion = 'Lane is a strength. Next bottleneck is probably mid-game decision making — track lane-to-Roshan timing.'
+    finding = `Strong laning: ${lanesWon}/${lanesEvaluated} fixed lanes won, ${(winGivenLane * 100).toFixed(0)}% match WR when lane is won (overall ${(overallWR * 100).toFixed(0)}%).${laneEffPhrase}`
+    suggestion = `Lane (${(laneWR * 100).toFixed(0)}% WR) is a strength. Next bottleneck is mid-game — track your lane-to-Roshan timing on next 5 matches.`
   }
 
+  // "Strong" when laneWR > 0.55 (10%+ above the 0.5 baseline).
   const severityLabel =
-    severity === 'good' && laneWR >= baseline.laneWinRate + 0.1 ? 'Strong' : undefined
+    severity === 'good' && laneWR > 0.55 ? 'Strong' : undefined
 
   return {
     id: 'lane-outcome',
@@ -162,6 +194,11 @@ export function analyzeLaneOutcome(input: ReportInput): AnalysisResult {
     finding,
     suggestion,
     note: `${parsedMatches}/${matches.length} parsed · ${roamingMatches} roaming excluded · ${lanesEvaluated} fixed-lane matches.`,
+    roastFacts: {
+      wins: lanesWon,
+      total_lanes: lanesEvaluated,
+      wr_pct: Math.round(laneWR * 100),
+    },
     chart: {
       kind: 'stat-blocks',
       blocks: [

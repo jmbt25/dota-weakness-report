@@ -130,8 +130,11 @@ export function analyzeDeathTiming(input: ReportInput): AnalysisResult {
     }
   }
 
+  // v6 calibration: <0.9 = good (Strong), 0.9-1.1 = good (Healthy),
+  // 1.1-1.25 = ok (Watch), >1.25 = concerning. (Lower deaths is better, so
+  // ratio < 1 means user dies less than baseline.)
   const severity =
-    totalRatio >= 1.3 ? 'concerning'
+    totalRatio >= 1.25 ? 'concerning'
     : totalRatio >= 1.1 ? 'ok'
     : 'good'
 
@@ -143,28 +146,39 @@ export function analyzeDeathTiming(input: ReportInput): AnalysisResult {
         ? `${timingsFromParse}/${matchesUsed} matches contributed parsed death timing; the rest are smeared.`
         : `${parsedCount}/${matchesUsed} matches had parsed replays.`
 
+  const worstBucketDeaths = youPerBucket[worstIdx] ?? 0
+  const worstBucketBaseline = baseline.deaths.perBucket[worstIdx] ?? 0
+  const worstBucketPhrase = `${worstBucketDeaths.toFixed(1)} deaths/game in the ${bucketLabel(worstIdx)}-min window (vs ${worstBucketBaseline.toFixed(1)} baseline)`
+
   let finding: string
   let suggestion: string
   if (severity === 'concerning') {
-    finding = `You die ${youPerGame.toFixed(1)} times per game vs. a ${baseTotal.toFixed(1)} baseline for your rank+role. The ${bucketLabel(worstIdx)}-min window is the worst.`
+    finding = `You die ${youPerGame.toFixed(1)} times per game vs. a ${baseTotal.toFixed(1)} baseline for your rank+role. Worst window: ${worstBucketPhrase}.`
     suggestion =
       worstIdx <= 2
-        ? 'Most of those deaths happen during laning. Tighten up positioning, ward your defensive triangle, and don’t commit to trades you can’t end.'
+        ? `Most of those deaths happen during laning (${worstBucketDeaths.toFixed(1)}/game pre-10 min). Tighten positioning, ward your defensive triangle, and don't commit to trades you can't end.`
         : worstIdx >= 6
-          ? 'Late-game deaths are usually catch-out deaths. Stop solo-farming the map once Roshan is up, and group with at least one teammate.'
-          : 'Mid-game deaths usually come from contesting objectives without vision. Drop a sentry/observer pair before pushing or smoking.'
+          ? `${worstBucketDeaths.toFixed(1)} deaths/game ${bucketLabel(worstIdx)} min in are catch-out deaths. Stop solo-farming once Roshan is up — group with at least one teammate.`
+          : `${worstBucketDeaths.toFixed(1)} deaths/game in the ${bucketLabel(worstIdx)}-min window means you're contesting objectives without vision. Drop a sentry/observer pair before pushing or smoking.`
   } else if (severity === 'ok') {
-    finding = `Death rate (${youPerGame.toFixed(1)}/game) is slightly above the ${baseTotal.toFixed(1)} baseline. The ${bucketLabel(worstIdx)}-min window is where you die most often.`
-    suggestion = 'Watch the replay of one match where you died most in this window — usually one specific bad rotation explains the pattern.'
+    finding = `Death rate (${youPerGame.toFixed(1)}/game) is slightly above the ${baseTotal.toFixed(1)} baseline. Worst window: ${worstBucketPhrase}.`
+    suggestion = `Pull up one of your matches with deaths in the ${bucketLabel(worstIdx)}-min window — usually one specific bad rotation explains the ${worstBucketDeaths.toFixed(1)}/game pattern.`
   } else {
     finding = `Death rate is healthy: ${youPerGame.toFixed(1)}/game vs. a ${baseTotal.toFixed(1)} baseline.`
-    suggestion = 'Keep prioritizing position over greed. This is one of your strengths.'
+    suggestion = `Even your worst window (${bucketLabel(worstIdx)}-min, ${worstBucketDeaths.toFixed(1)}/game) is at or below baseline. Keep prioritizing position over greed.`
   }
 
-  // Death timing: lower is better, so the "Strong" label fires when the
-  // ratio is meaningfully *below* baseline (≤ 0.85).
+  // Death timing: lower is better, so "Strong" fires when ratio <= 0.9
+  // (10%+ better than baseline).
   const severityLabel =
-    severity === 'good' && totalRatio <= 0.85 ? 'Strong' : undefined
+    severity === 'good' && totalRatio <= 0.9 ? 'Strong' : undefined
+
+  // Late-game ratio for the "your hero is a creep" roast trigger.
+  const lateBuckets = youPerBucket.slice(8) // 40-50 + 50+ tail
+  const lateBaseline = baseline.deaths.perBucket.slice(8)
+  const lateUser = lateBuckets.reduce((a, b) => a + b, 0)
+  const lateBase = lateBaseline.reduce((a, b) => a + b, 0)
+  const lateRatio = lateBase > 0 ? lateUser / lateBase : 0
 
   return {
     id: 'death-timing',
@@ -178,6 +192,12 @@ export function analyzeDeathTiming(input: ReportInput): AnalysisResult {
     finding,
     suggestion,
     note,
+    roastFacts: {
+      deaths_per_game: youPerGame.toFixed(1),
+      baseline_dpg: baseTotal.toFixed(1),
+      worst_window: bucketLabel(worstIdx),
+      late_dpg: lateRatio.toFixed(1),
+    },
     chart: {
       kind: 'bars',
       valueName: 'You',

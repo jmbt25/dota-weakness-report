@@ -3,7 +3,6 @@ import { didWin } from '../lib/matchHelpers'
 import { heroPoolTarget, rankBucketLabel } from '../lib/baselines'
 
 const MIN_GAMES_FOR_ANALYSIS = 15
-const VISIBLE_HEROES_IN_CHART = 8
 
 /**
  * Hero pool concentration. Requires at least 15 games for meaningful signal —
@@ -56,40 +55,38 @@ export function analyzeHeroPool(input: ReportInput): AnalysisResult {
     : 'good'
 
   const bracketName = rankBucketLabel(rankBucket)
+  // Top 4 by name + WR — surfaced in suggestion prose.
+  const top4Summary = sorted
+    .slice(0, 4)
+    .map(([id, s]) => `${heroName(id)} (${s.games}g, ${(s.wins / s.games * 100).toFixed(0)}% WR)`)
+    .join(', ')
   let finding: string
   let suggestion: string
   if (tooThin && topLosing) {
     finding = `${distinct} different heroes in ${matches.length} games, and your most-played (${heroName(topId)}, ${topGames} games) wins only ${(topWR * 100).toFixed(0)}%.`
-    suggestion = `Pick ${target - 1}–${target} heroes you actually want to learn this month and spam the same draft. At ${bracketName}, that focus is worth more than versatility.`
+    suggestion = `Your top 4: ${top4Summary}. Pick the ${target - 1}–${target} of those you actually want to learn this month and spam them — at ${bracketName}, focus on those is worth more than versatility.`
   } else if (tooThin) {
     finding = `You played ${distinct} different heroes in ${matches.length} games — wider than the ${target}-hero target for ${bracketName}.`
-    suggestion = `Cut your pool to ~${target} heroes that share an item build. Decision-making transfers; muscle memory accumulates.`
+    suggestion = `Your top 4: ${top4Summary}. Cut the rest unless they share an item build — reps on these four compound.`
   } else if (topLosing) {
     finding = `${heroName(topId)} is your most-played (${topGames} games) but only wins ${(topWR * 100).toFixed(0)}%.`
-    suggestion = 'Either bench this hero for two weeks or watch a high-rank replay of it. Continuing the loss streak on a comfort pick is the most common MMR sink.'
+    const fallback = sorted[1]
+    const fallbackName = fallback ? `${heroName(fallback[0])} (${fallback[1].games}g, ${(fallback[1].wins / fallback[1].games * 100).toFixed(0)}% WR)` : 'your next-most-played hero'
+    suggestion = `Bench ${heroName(topId)} for two weeks and lean into ${fallbackName} instead — continuing a loss streak on a comfort pick is the most common MMR sink.`
   } else {
     finding = `Hero pool looks healthy: ${distinct} heroes across ${matches.length} games (target ~${target} at ${bracketName}), top hero (${heroName(topId)}) at ${(topWR * 100).toFixed(0)}% WR.`
-    suggestion = 'Nice — focused pool with a winning anchor. Keep it small and only add new heroes when patches force a meta shift.'
+    suggestion = `Top 4 anchors: ${top4Summary}. Keep the pool tight; only add a new hero when a patch forces a meta shift.`
   }
 
-  // Top heroes as a horizontal bar chart, sorted by games played. Top 8 +
-  // an explicit "Other (N heroes, M games)" bucket so it's clear what
-  // fraction of games it represents.
-  const data = sorted.slice(0, VISIBLE_HEROES_IN_CHART).map(([id, s]) => ({
-    label: heroName(id),
+  // One bar per hero, sorted by games descending. We used to lump the
+  // tail into a single "Other" bar, but that bar visually dominated and
+  // hid the long-tail spread that's the actual point of this card.
+  const data = sorted.map(([id, s]) => ({
+    label: `${heroName(id)} (${s.games}g)`,
     value: s.games,
     // Stash WR in baseline so the tooltip can show it (kept off the rendered bar).
     baseline: Math.round((s.wins / s.games) * 100),
   }))
-  const otherEntries = sorted.slice(VISIBLE_HEROES_IN_CHART)
-  const otherGames = otherEntries.reduce((acc, [, s]) => acc + s.games, 0)
-  if (otherEntries.length > 0) {
-    data.push({
-      label: `Other (${otherEntries.length} heroes, ${otherGames} games)`,
-      value: otherGames,
-      baseline: 0,
-    })
-  }
 
   return {
     id: 'hero-pool',
@@ -101,6 +98,12 @@ export function analyzeHeroPool(input: ReportInput): AnalysisResult {
     severity,
     finding,
     suggestion,
+    roastFacts: {
+      hero_count: distinct,
+      games: matches.length,
+      top_hero: heroName(topId),
+      top_wr: Math.round(topWR * 100),
+    },
     chart: {
       kind: 'bars',
       horizontal: true,

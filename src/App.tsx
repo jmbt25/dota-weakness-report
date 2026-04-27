@@ -4,6 +4,7 @@ import { Loader } from './components/Loader'
 import { ReportGrid } from './components/ReportGrid'
 import { Footer } from './components/Footer'
 import { DeepDive } from './components/DeepDive'
+import { HonestModeToggle } from './components/HonestModeToggle'
 import {
   fetchAllMatchDetails,
   fetchHeroes,
@@ -23,6 +24,7 @@ import {
 } from './lib/license'
 import type {
   AnalysisResult,
+  HonestLanguage,
   ODMatchDetail,
   ODMatchSummary,
   ODPlayerProfile,
@@ -46,6 +48,11 @@ type AppStatus =
 function App() {
   const [status, setStatus] = useState<AppStatus>({ kind: 'idle' })
   const [isPaid, setIsPaid] = useState(false)
+  const [honestMode, setHonestMode] = useState(false)
+  // Language is fixed to English at launch. The Taglish templates live in
+  // lib/honest-mode/taglish-templates.ts as a paid-tier feature; once
+  // wired up, this becomes useState<HonestLanguage>('english') again.
+  const language: HonestLanguage = 'english'
   const lastInputRef = useRef<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const heroesLoadedRef = useRef(false)
@@ -199,11 +206,16 @@ function App() {
             profile={status.report.profile}
             matchCount={status.report.matches.length}
             isPaid={isPaid}
+            honestMode={honestMode}
+            onToggleHonestMode={setHonestMode}
           />
           <ReportGrid
             results={status.report.results}
             matchCount={status.report.matches.length}
             isPaid={isPaid}
+            honestMode={honestMode}
+            language={language}
+            accountId={status.report.profile.profile?.account_id ?? 0}
           />
           {isPaid && <DeepDive matches={status.report.matches} />}
         </>
@@ -220,10 +232,14 @@ function ProfileBar({
   profile,
   matchCount,
   isPaid,
+  honestMode,
+  onToggleHonestMode,
 }: {
   profile: ODPlayerProfile
   matchCount: number
   isPaid: boolean
+  honestMode: boolean
+  onToggleHonestMode: (v: boolean) => void
 }) {
   const name = profile.profile?.personaname ?? 'Anonymous player'
   const rank = useMemo(() => rankLabel(profile.rank_tier), [profile.rank_tier])
@@ -232,7 +248,7 @@ function ProfileBar({
     [profile.rank_tier]
   )
   return (
-    <section className="max-w-6xl mx-auto px-6 pt-4 pb-8 w-full">
+    <section className="max-w-7xl mx-auto px-6 pt-4 pb-8 w-full">
       <div className="flex items-center gap-5 card">
         {profile.profile?.avatarfull && (
           <img
@@ -249,6 +265,7 @@ function ProfileBar({
           </div>
         </div>
         <span className={isPaid ? 'pill-good' : 'pill-muted'}>{isPaid ? 'Paid' : 'Free'}</span>
+        <HonestModeToggle enabled={honestMode} onToggle={onToggleHonestMode} />
       </div>
     </section>
   )

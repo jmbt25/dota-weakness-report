@@ -26,10 +26,10 @@ export function Footer({ isPaid, onUnlock }: FooterProps) {
         <div>
           <h3 className="text-lg font-semibold">Unlock the 100-match window + per-hero deep dive</h3>
           <p className="text-sm text-ink-muted mt-2">
-            The free report runs on your last 20 matches — enough sample for the six analyses to mean
-            something. A license key widens the window to 100 matches and unlocks per-hero drilldowns
-            (item build vs. winning builds, fight participation by hero, losing patterns). Pay once,
-            no subscription.
+            The free report runs on your last 20 matches — enough sample for the eight analyses to mean
+            something. A license key widens the window to 100 matches, unlocks per-hero drilldowns
+            (item build vs. winning builds, fight participation by hero, losing patterns), and turns on
+            Taglish honest mode <span aria-label="Philippines flag">🇵🇭</span>. Pay once, no subscription.
           </p>
           {isPaid ? (
             <p className="mt-4 text-sm text-emerald-400">License active. 100-match window + deep dive unlocked.</p>

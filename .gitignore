@@ -144,3 +144,5 @@ vite.config.ts.timestamp-*
 
 # Local-only Claude Code context (per-machine memory file, not for the repo)
 CLAUDE.md
+# Claude Code project-scoped local state (lockfiles, settings.local.json, etc.)
+.claude/

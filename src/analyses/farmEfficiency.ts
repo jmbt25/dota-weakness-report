@@ -23,6 +23,7 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
   const samples20gpm: number[] = []
   const samples10xpm: number[] = []
   const samples20xpm: number[] = []
+  const lhAt10: number[] = []
   let parsedCount = 0
   let topHeroId: number | null = null
   const heroGames = new Map<number, number>()
@@ -44,6 +45,8 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
       if (typeof g20 === 'number') samples20gpm.push(g20 / 20)
       if (typeof x10 === 'number') samples10xpm.push(x10 / 10)
       if (typeof x20 === 'number') samples20xpm.push(x20 / 20)
+      const l10 = player.lh_t?.[10]
+      if (typeof l10 === 'number') lhAt10.push(l10)
     }
   }
   let topGames = 0
@@ -71,15 +74,18 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
   const gpm20 = Math.round(avg(samples20gpm))
   const xpm10 = Math.round(avg(samples10xpm))
   const xpm20 = Math.round(avg(samples20xpm))
+  const avgLh10 = lhAt10.length > 0 ? Math.round(avg(lhAt10)) : null
 
   const ratio10 = gpm10 / base.gpm10
   const ratio20 = gpm20 / base.gpm20
   const worst = Math.min(ratio10, ratio20)
   const best = Math.max(ratio10, ratio20)
 
+  // v6 calibration: >1.10 = Strong, 0.90-1.10 = Healthy,
+  // 0.75-0.90 = Watch, <0.75 = Concerning.
   const severity =
-    worst >= 0.95 ? 'good'
-    : worst >= 0.85 ? 'ok'
+    worst >= 0.90 ? 'good'
+    : worst >= 0.75 ? 'ok'
     : 'concerning'
 
   const numbers = `${gpm10} GPM @10 (vs ${base.gpm10} target), ${gpm20} GPM @20 (vs ${base.gpm20})`
@@ -92,11 +98,11 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
   let suggestion: string
   if (severity === 'concerning') {
     const worseWindow = ratio10 < ratio20 ? 'lane stage' : 'mid-game'
-    finding = `Farm is below the ${roleLabel(inferredRole)} target for your bracket: ${numbers}. The ${worseWindow} is the bigger gap.`
-    suggestion = farmAdvice(inferredRole, worseWindow, userPlaysFarmCore, 'concerning')
+    finding = `Farm is below the ${roleLabel(inferredRole)} target for your bracket: ${numbers}. The ${worseWindow} is the bigger gap.${avgLh10 != null ? ` Avg ${avgLh10} last hits at 10 min.` : ''}`
+    suggestion = farmAdvice(inferredRole, worseWindow, userPlaysFarmCore, 'concerning', avgLh10)
   } else if (severity === 'ok') {
-    finding = `Farm is roughly average for a ${roleLabel(inferredRole)} in your bracket: ${numbers}.`
-    suggestion = farmAdvice(inferredRole, ratio10 < ratio20 ? 'lane stage' : 'mid-game', userPlaysFarmCore, 'ok')
+    finding = `Farm is roughly average for a ${roleLabel(inferredRole)} in your bracket: ${numbers}.${avgLh10 != null ? ` Avg ${avgLh10} last hits at 10 min.` : ''}`
+    suggestion = farmAdvice(inferredRole, ratio10 < ratio20 ? 'lane stage' : 'mid-game', userPlaysFarmCore, 'ok', avgLh10)
   } else {
     // For 'good' severity, supports especially shouldn't be told they have
     // "strong farm" — high GPM as a support typically means stealing core
@@ -113,10 +119,10 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
     }
   }
 
-  // For "good" severity above the baseline by 10%+, surface "Strong" instead
-  // of the default "Healthy" pill.
+  // "Strong" pill when meaningfully above baseline (>10%). Skipped for
+  // supports — high support GPM usually means stealing core farm.
   const severityLabel =
-    severity === 'good' && best >= 1.10 && inferredRole !== 'support' ? 'Strong' : undefined
+    severity === 'good' && best > 1.10 && inferredRole !== 'support' ? 'Strong' : undefined
 
   return {
     id: 'farm-efficiency',
@@ -130,6 +136,11 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
     finding,
     suggestion,
     note: `${parsedCount}/${matches.length} matches had parsed replays · baseline tuned for role: ${roleLabel(inferredRole)}.`,
+    roastFacts: {
+      gpm: gpm20,
+      baseline_gpm: base.gpm20,
+      lh_at_10: avgLh10 ?? 0,
+    },
     chart: {
       kind: 'series',
       valueName: 'You',
@@ -155,22 +166,36 @@ function farmAdvice(
   role: 'core' | 'support' | 'flex' | 'unknown',
   window: 'lane stage' | 'mid-game',
   userPlaysFarmCore: boolean,
-  severity: 'ok' | 'concerning'
+  severity: 'ok' | 'concerning',
+  avgLh10: number | null
 ): string {
+  // Cores at <40 LH @10 are usually losing CS; supports at >25 LH @10 are
+  // typically thriving in lane. Use that to anchor specific suggestions.
+  const lhPhrase =
+    avgLh10 != null
+      ? role === 'support'
+        ? avgLh10 >= 25
+          ? `(your ${avgLh10} LH @10 is high for a support — pull/zone work is paying off)`
+          : `(your ${avgLh10} LH @10 leaves room — one full pull cycle every ~53s is worth ~10 LH)`
+        : avgLh10 < 40
+          ? `(${avgLh10} LH @10 is the bottleneck — at this rank, ~50 LH @10 separates winning lanes from losing ones)`
+          : `(${avgLh10} LH @10 is on-pace; the gap is post-laning)`
+      : ''
+
   if (role === 'support') {
-    return 'Support GPM ceiling is structural — focus instead on efficient stacking, pulling, and rotation timing. Don\'t chase last hits; chase utility timings (smoke, dust, sentry).'
+    return `Support GPM ceiling is structural — focus on stacking, pulling, and rotation timing instead of last hits ${lhPhrase}.`
   }
   if (role === 'flex') {
     return window === 'lane stage'
-      ? 'When you play core, settle the wave for a free farm pattern. When you play support, target one full pull cycle every 53 seconds — that\'s where the support GPM gap closes.'
+      ? `When you play core, settle the wave for a free farm pattern ${lhPhrase}. When you play support, target one full pull cycle every 53 seconds — that's where the support GPM gap closes.`
       : 'When you play core, hit ancient/jungle camps between objectives. When you play support, pivot to kill participation — passive supports flatline at this stage.'
   }
   // core
   if (window === 'lane stage') {
-    return 'Cut creep aggression so the wave settles in your favor. Free farm > a few fancy trades.'
+    return `Cut creep aggression so the wave settles in your favor ${lhPhrase}. Free farm > a few fancy trades.`
   }
   if (severity === 'ok' && userPlaysFarmCore) {
-    return 'Try a Hand of Midas timing on your most-played hero — it tends to lift mid-game GPM more than another raw farming item.'
+    return `Try a Hand of Midas timing on your most-played hero — it tends to lift mid-game GPM more than another raw farming item ${lhPhrase}.`
   }
-  return 'Transition to ancient stacks/jungle camps between objectives instead of TPing across the map for fights you can\'t win.'
+  return `Transition to ancient stacks/jungle camps between objectives instead of TPing across the map for fights you can't win ${lhPhrase}.`
 }

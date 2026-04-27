@@ -38,6 +38,7 @@ export interface ODObjective {
 
 export interface ODMatchPlayer {
   account_id?: number | null
+  personaname?: string | null
   player_slot: number
   hero_id: number
   kills: number
@@ -54,6 +55,9 @@ export interface ODMatchPlayer {
   is_roaming?: boolean | null
   lane_efficiency?: number | null
   lane_efficiency_pct?: number | null
+  /** Party detection (parsed-only on most matches). Same `party_id` = same stack. */
+  party_id?: number | null
+  party_size?: number | null
   /**
    * OpenDota lane outcome (parsed-only). 1 = won, 2 = tied, 3 = lost.
    * Encodings vary slightly by lane (safe/mid/off) but lower is always better.
@@ -129,15 +133,59 @@ export interface AnalysisResult {
   chart?: ChartPayload
   /** Optional disclaimer shown below the prose (e.g. "approximated, no parsed data"). */
   note?: string
+  /** Stack synergy needs an anonymization toggle, so it ships raw partner data. */
+  stackSynergy?: StackSynergyData
+  /**
+   * Honest-mode roast templates pull placeholder values from this map.
+   * Keys are template-defined strings (e.g. "deaths_per_game"); values
+   * are pre-formatted (already rounded / unit-suffixed) for direct
+   * substitution. Optional — analyses opt in when they have data to roast.
+   */
+  roastFacts?: Record<string, string | number>
 }
+
+export type HonestLanguage = 'english' | 'taglish'
 
 export type AnalysisId =
   | 'death-timing'
   | 'farm-efficiency'
   | 'item-timing'
+  | 'situational-items'
   | 'lane-outcome'
   | 'hero-pool'
+  | 'stack-synergy'
   | 'tilt'
+
+export interface StackSynergyPartner {
+  /** Stable per-session key. Account ID when known; otherwise a synthetic id. */
+  id: number
+  personaName: string
+  gamesTogether: number
+  winsTogether: number
+  /** 0..1 */
+  wrTogether: number
+  /** 0..1 — user's WR in matches WITHOUT this partner. Null if no such matches exist. */
+  userWrWithoutPartner: number | null
+  /** Percentage points: (wrTogether - userWrWithoutPartner) * 100. Null when userWrWithoutPartner is null. */
+  deltaPp: number | null
+  /** 95% CI bounds for wrTogether (0..1). */
+  ciLow: number
+  ciHigh: number
+  /** True if the CI for wrTogether does NOT overlap userWrWithoutPartner. False when delta is unknown. */
+  isSignificant: boolean
+  /** Number of user matches in this window WITHOUT this partner. 0 means we can't compute a comparison. */
+  withoutGames: number
+}
+
+export interface StackSynergyData {
+  partners: StackSynergyPartner[]
+  /** 0..1 */
+  userOverallWr: number
+  /** 'high' if party_id-based; 'low' if heuristic fallback. */
+  detectionConfidence: 'high' | 'low'
+  partyMatchCount: number
+  totalMatches: number
+}
 
 export interface ChartBars {
   kind: 'bars'

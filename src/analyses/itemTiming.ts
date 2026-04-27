@@ -99,17 +99,22 @@ export function analyzeItemTiming(input: ReportInput): AnalysisResult {
     (f) =>
       `${heroName(f.heroId)} → ${itemDisplay(f.item)} median ${fmtMin(f.medianSec)} vs target ${fmtMin(f.benchmarkSec)} (${f.games} game${f.games === 1 ? '' : 's'})`
   )
+  // Pick the worst-delta hero/item to anchor specific advice on.
+  const worst = findings.reduce((acc, f) => (f.medianSec - f.benchmarkSec > acc.medianSec - acc.benchmarkSec ? f : acc), findings[0])
+  const worstHeroName = heroName(worst.heroId)
+  const worstItemName = itemDisplay(worst.item)
+  const worstDeltaMin = Math.round((worst.medianSec - worst.benchmarkSec) / 60)
   let finding: string
   let suggestion: string
   if (severity === 'concerning') {
     finding = `Item timings are ${Math.round(worstDelta / 60)}+ min late. ${lines[0]}.`
-    suggestion = 'Cut situational items out of your build — get the core item, then react to the lobby. A 4-min-late Battlefury is just a 4-min-late spike.'
+    suggestion = `On ${worstHeroName}, your ${worstItemName} is landing ${worstDeltaMin} min late — cut situational items out of the build, get ${worstItemName} first, then react to the lobby.`
   } else if (severity === 'ok') {
     finding = `Timings slightly behind benchmark. ${lines.join('; ')}.`
-    suggestion = 'Stack ancients between waves on your top hero — the 2-3 min you’re losing is exactly what a stack camp recovers.'
+    suggestion = `On ${worstHeroName} specifically, you're ${worstDeltaMin} min behind on ${worstItemName} — a stack-camp pull cycle in your jungle every minute is the cheapest way to recover that.`
   } else {
     finding = `Item timings look healthy. ${lines.join('; ')}.`
-    suggestion = 'Solid. Next thing to optimize is item *order* — pick fights when your spike lands, not before.'
+    suggestion = `Timings on ${worstHeroName}'s ${worstItemName} are on-pace — next bottleneck is item *order*: pick fights when your spike lands, not before.`
   }
 
   return {
@@ -123,6 +128,12 @@ export function analyzeItemTiming(input: ReportInput): AnalysisResult {
     finding,
     suggestion,
     note: `${parsedMatchesWithPurchaseLog}/${matches.length} matches had purchase logs.`,
+    roastFacts: {
+      hero: worstHeroName,
+      item: worstItemName,
+      actual_min: Math.round(worst.medianSec / 60),
+      target_min: Math.round(worst.benchmarkSec / 60),
+    },
     chart: {
       kind: 'bars',
       valueName: 'You (min)',
