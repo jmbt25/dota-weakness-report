@@ -24,6 +24,7 @@ import {
   PAID_TIER_MATCH_LIMIT,
 } from './lib/license'
 import type {
+  AnalysisResult,
   HonestLanguage,
   ODMatchDetail,
   ODMatchSummary,
@@ -254,8 +255,24 @@ function App() {
   // Re-run all 9 analyses against the filtered subset. inferRole runs on
   // the filtered subset too, which means "Core only" view shows core
   // baselines and "Support only" shows support baselines automatically.
-  const reportComputed = useMemo(() => {
-    if (status.kind !== 'ready') return null
+  //
+  // Stored in state (not useMemo) on purpose: useMemo is "best-effort
+  // caching" and can drop the cached value across innocuous re-renders.
+  // When that happens, `results` becomes a new array reference, Recharts
+  // inside the bottom-row cards thinks its `data` prop is new, and
+  // ResponsiveContainer briefly measures off-screen children at 0 height
+  // — making the last row collapse until a window resize forces a
+  // repaint. Pinning to useState + useEffect keeps the reference stable
+  // across honest-mode toggles and other unrelated re-renders.
+  const [reportComputed, setReportComputed] = useState<{
+    results: AnalysisResult[]
+    inferredRole: 'core' | 'support' | 'flex' | 'unknown'
+  } | null>(null)
+  useEffect(() => {
+    if (status.kind !== 'ready') {
+      setReportComputed(null)
+      return
+    }
     const { profile, details, accountId } = status.report
     const { role: inferredRole, distribution: roleDistribution } = inferRole(
       filteredMatches,
@@ -273,7 +290,7 @@ function App() {
       heroName: getHeroName,
     }
     const results = runAllAnalyses(reportInput)
-    return { results, inferredRole }
+    setReportComputed({ results, inferredRole })
   }, [status, filteredMatches])
 
   return (
