@@ -60,7 +60,7 @@ export function Hero({ onAnalyze, isLoading, error, showLanding, onHome, loaderS
           <span className="line" />
         </div>
         <p className="dwr-sub">
-          We analyze your last 20 matches and uncover the habits holding you back from climbing.
+          We analyze your last 50 matches and uncover the habits holding you back from climbing.
         </p>
 
         <form className="dwr-form" onSubmit={submit}>
@@ -88,7 +88,7 @@ export function Hero({ onAnalyze, isLoading, error, showLanding, onHome, loaderS
 
         <div className="dwr-free">
           <span className="dot" />
-          FREE FOR 20-MATCH REPORTS · NO SIGNUP
+          FREE FOR 50-MATCH REPORTS · NO SIGNUP
         </div>
 
         {error && <p className="dwr-error">{error}</p>}

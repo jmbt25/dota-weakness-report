@@ -30,7 +30,7 @@ export function Footer({ isPaid, onUnlock, onHome }: FooterProps) {
             Unlock the 100-match window + per-hero deep dive
           </h3>
           <p className="dwr-cta-body">
-            The free report runs on your last 20 matches — enough sample for the eight analyses to
+            The free report runs on your last 50 matches — enough sample for the eight analyses to
             mean something. A license key widens the window to 100 matches and unlocks per-hero
             drilldowns (item build vs. winning builds, fight participation by hero, losing patterns).
             Pay once, no subscription.

@@ -11,15 +11,20 @@ export function validateLicenseKey(key: string): boolean {
   return /^[A-Za-z0-9-]+$/.test(trimmed)
 }
 
-// Free tier is 20 matches — non-negotiable floor because hero-pool and
-// tilt analyses are too noisy below ~15 games. Paid tier widens the
-// window to 100 matches and unlocks the per-hero deep dive.
-export const FREE_TIER_MATCH_LIMIT = 20
+// Free tier is 50 matches. Hero-pool / tilt / stack-synergy analyses run on
+// the full summary list (one cheap API call regardless of N), so widening
+// from 20 → 50 is free in API-cost terms but tightens stack-synergy CIs
+// enough that significant partners actually surface in honest mode.
+// MIN_GAMES_FOR_ANALYSIS (15) is still the noise floor inside heroPool.
+// Paid tier widens to 100 and unlocks the per-hero deep dive.
+export const FREE_TIER_MATCH_LIMIT = 50
 export const PAID_TIER_MATCH_LIMIT = 100
 
 // We cap how many matches actually get detail-fetched + parse-requested.
-// 100 fully-parsed matches would take 30+ minutes in the worst case;
-// past ~30 the parsed-only analyses (lane/farm/item/death timing) hit
-// diminishing returns anyway. Hero-pool and tilt analyses still see all
-// 100 because they read summary fields only.
-export const MAX_DETAIL_FETCH = 30
+// Set to match the free-tier match window (50) so every match in the
+// summary window also gets parsed-data coverage. Worst case (all 50
+// unparsed) is ~5 minutes; typical mostly-parsed accounts ~70s. Paid
+// tier's 100-match summary window still benefits hero-pool / tilt /
+// stack-synergy at no extra parse cost — the parsed cards just see the
+// most-recent 50.
+export const MAX_DETAIL_FETCH = 50

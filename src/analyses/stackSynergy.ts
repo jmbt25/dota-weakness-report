@@ -11,7 +11,6 @@ import { didWin, findPlayerInMatch, isRadiantSlot } from '../lib/matchHelpers'
 const MIN_FOR_DISPLAY = 3
 const MIN_FOR_PROSE = 5
 const MIN_FOR_NORMAL = 10
-const MIN_FOR_CONFIDENT = 20
 
 /**
  * Detect party teammates and compare WR with vs. without each one.
@@ -127,14 +126,19 @@ export function analyzeStackSynergy(input: ReportInput): AnalysisResult {
     }
   }
 
+  const userOverallWr = computeWr(matches)
+
   // Build StackSynergyPartner records.
   const partners: StackSynergyPartner[] = []
   for (const p of activeMap.values()) {
     if (p.games < MIN_FOR_DISPLAY) continue
 
-    // user WR in matches WITHOUT this partner. If 0 such matches exist, the
-    // "vs solo" comparison is undefined — we surface as null rather than
-    // defaulting to 0 (which would falsely make delta = wrTogether * 100).
+    // Track "without partner" sample for transparency in the diagnostic log,
+    // but the delta + significance test now compare wrTogether against the
+    // user's overall WR (the dashed reference line on the chart). Comparing
+    // against userWrWithoutPartner produced runaway deltas when the partner
+    // queued in most of the user's matches (tiny without-sample → 100% or
+    // 0% comparison baseline → ±100pp deltas).
     let withoutGames = 0
     let withoutWins = 0
     for (const [mid, won] of userOutcomes) {
@@ -144,7 +148,7 @@ export function analyzeStackSynergy(input: ReportInput): AnalysisResult {
     }
     const wrTogether = p.wins / p.games
     const userWrWithoutPartner = withoutGames > 0 ? withoutWins / withoutGames : null
-    const deltaPp = userWrWithoutPartner != null ? (wrTogether - userWrWithoutPartner) * 100 : null
+    const deltaPp = (wrTogether - userOverallWr) * 100
 
     // Diagnostic — verify formula on real data.
     // eslint-disable-next-line no-console
@@ -153,19 +157,20 @@ export function analyzeStackSynergy(input: ReportInput): AnalysisResult {
       gamesTogether: p.games,
       winsTogether: p.wins,
       wrTogether: Number(wrTogether.toFixed(3)),
+      userOverallWr: Number(userOverallWr.toFixed(3)),
       withoutGames,
       withoutWins,
       userWrWithoutPartner: userWrWithoutPartner != null ? Number(userWrWithoutPartner.toFixed(3)) : null,
-      deltaPp: deltaPp != null ? Number(deltaPp.toFixed(1)) : null,
+      deltaPp: Number(deltaPp.toFixed(1)),
     })
 
-    // 95% CI for wrTogether.
+    // 95% CI for wrTogether. Significant = the user's overall WR sits
+    // outside the CI of the with-partner WR (i.e. the partner makes a
+    // statistically detectable difference).
     const se = Math.sqrt((wrTogether * (1 - wrTogether)) / p.games)
     const ciLow = Math.max(0, wrTogether - 1.96 * se)
     const ciHigh = Math.min(1, wrTogether + 1.96 * se)
-    const isSignificant =
-      userWrWithoutPartner != null &&
-      (userWrWithoutPartner < ciLow || userWrWithoutPartner > ciHigh)
+    const isSignificant = userOverallWr < ciLow || userOverallWr > ciHigh
 
     partners.push({
       id: p.accountId,
@@ -184,7 +189,6 @@ export function analyzeStackSynergy(input: ReportInput): AnalysisResult {
 
   partners.sort((a, b) => b.gamesTogether - a.gamesTogether)
 
-  const userOverallWr = computeWr(matches)
   const stackSynergy: StackSynergyData = {
     partners,
     userOverallWr,
@@ -218,76 +222,75 @@ export function analyzeStackSynergy(input: ReportInput): AnalysisResult {
   const partnersForHeadline = partners.filter((p) => p.gamesTogether >= MIN_FOR_PROSE)
   const partnersForProse = partners.filter((p) => p.gamesTogether >= MIN_FOR_PROSE)
 
-  // Significance + delta only meaningful for partners where we could compute
-  // a comparison (have at least one without-partner match).
-  const significant = partners.filter(
-    (p) => p.isSignificant && p.gamesTogether >= MIN_FOR_PROSE && p.deltaPp != null
-  )
-  const best = significant.length > 0
-    ? [...significant].sort((a, b) => (b.deltaPp ?? 0) - (a.deltaPp ?? 0))[0]
-    : null
-  const worstSig = significant.length > 0
-    ? [...significant].sort((a, b) => (a.deltaPp ?? 0) - (b.deltaPp ?? 0))[0]
-    : null
-  const worst = worstSig && (worstSig.deltaPp ?? 0) < 0 ? worstSig : null
+  // "Best/worst stack partner" selection (per pre-launch spec):
+  //   1. prefer N >= 10 + significant
+  //   2. relax to N >= 5 + significant if (1) yields nothing
+  //   3. otherwise no best/worst is named (small-sample fallthrough)
+  // Ties broken by absolute deltaPp (bigger swing wins).
+  const sigN10 = partners.filter((p) => p.isSignificant && p.gamesTogether >= MIN_FOR_NORMAL)
+  const sigN5 = partners.filter((p) => p.isSignificant && p.gamesTogether >= MIN_FOR_PROSE)
+  const sigPositiveN10 = sigN10.filter((p) => (p.deltaPp ?? 0) > 0)
+  const sigNegativeN10 = sigN10.filter((p) => (p.deltaPp ?? 0) < 0)
+  const sigPositiveN5 = sigN5.filter((p) => (p.deltaPp ?? 0) > 0)
+  const sigNegativeN5 = sigN5.filter((p) => (p.deltaPp ?? 0) < 0)
 
-  // v7 severity rules:
-  //   Healthy   — best with delta_pp >= +5 AND N >= 10 AND significant,
-  //               AND no partner with delta_pp <= -10 AND N >= 10 AND significant
-  //   Watch     — best is positive (>= +5, N >= 10) BUT at least one
-  //               partner is significantly negative (<= -10, N >= 10)
-  //   Concerning— best with N >= 10 has delta_pp < +5,
-  //               OR all significant partners (N >= 10) trend negative
-  //   (Unmeasured handled earlier when no partner with N >= MIN_FOR_PROSE)
-  //
-  // Partners with null delta (always-stacked) are not counted toward
-  // severity — we can't make a comparison claim about them.
-  const partnersN10 = partners.filter(
-    (p) => p.gamesTogether >= MIN_FOR_NORMAL && p.deltaPp != null
-  )
-  const sigPositiveN10 = partnersN10.filter(
-    (p) => p.isSignificant && (p.deltaPp ?? 0) >= 5
-  )
-  const sigNegativeN10 = partnersN10.filter(
-    (p) => p.isSignificant && (p.deltaPp ?? 0) <= -10
-  )
-  const sigPartnersN10 = partnersN10.filter((p) => p.isSignificant)
-  const bestN10 = partnersN10.length > 0
-    ? [...partnersN10].sort((a, b) => (b.deltaPp ?? 0) - (a.deltaPp ?? 0))[0]
+  const bestPos = sigPositiveN10.length > 0 ? sigPositiveN10 : sigPositiveN5
+  const worstNeg = sigNegativeN10.length > 0 ? sigNegativeN10 : sigNegativeN5
+  const bestSampleSmall = sigPositiveN10.length === 0 && sigPositiveN5.length > 0
+  const worstSampleSmall = sigNegativeN10.length === 0 && sigNegativeN5.length > 0
+
+  const best = bestPos.length > 0
+    ? [...bestPos].sort((a, b) => (b.deltaPp ?? 0) - (a.deltaPp ?? 0))[0]
+    : null
+  const worst = worstNeg.length > 0
+    ? [...worstNeg].sort((a, b) => (a.deltaPp ?? 0) - (b.deltaPp ?? 0))[0]
+    : null
+
+  // Severity rules:
+  //   Healthy   — best (N >= 10, significant) with delta_pp >= +5,
+  //               AND no significant partner (N >= 10) with delta_pp <= -10
+  //   Watch     — best (>= +5, N >= 10) AND at least one significant negative
+  //               (<= -10, N >= 10)
+  //   Concerning— significant negatives exist (N >= 10) but no significant
+  //               positive carry, OR best with N >= 10 has delta < +5 and
+  //               there is a significant negative
+  //   Healthy   — fallback when no significant N>=10 partner exists
+  //               (don't cry wolf on small samples; prose flags the small read)
+  const bestN10 = sigPositiveN10.length > 0
+    ? [...sigPositiveN10].sort((a, b) => (b.deltaPp ?? 0) - (a.deltaPp ?? 0))[0]
     : null
   const bestN10IsCarrying = bestN10 != null && (bestN10.deltaPp ?? 0) >= 5
+  const heavyNegN10 = sigNegativeN10.filter((p) => (p.deltaPp ?? 0) <= -10)
 
   let severity: AnalysisResult['severity']
-  if (bestN10IsCarrying && sigNegativeN10.length === 0) {
+  if (bestN10IsCarrying && heavyNegN10.length === 0) {
     severity = 'good'
-  } else if (bestN10IsCarrying && sigNegativeN10.length > 0) {
+  } else if (bestN10IsCarrying && heavyNegN10.length > 0) {
     severity = 'ok'
-  } else if (
-    sigPartnersN10.length > 0 &&
-    sigPartnersN10.every((p) => (p.deltaPp ?? 0) < 0)
-  ) {
-    severity = 'concerning'
-  } else if (bestN10 != null && (bestN10.deltaPp ?? 0) < 5) {
+  } else if (heavyNegN10.length > 0) {
     severity = 'concerning'
   } else {
-    // No partner with N >= 10 has a computable delta. Don't cry wolf.
+    // No significant N>=10 partner is meaningfully carrying or dragging.
+    // Default to Healthy and let the prose explain the small-sample read.
     severity = 'good'
   }
-  void sigPositiveN10
   // eslint-disable-next-line no-console
   console.debug('[stack-synergy] severity', {
     severity,
-    partnersN10Count: partnersN10.length,
+    sigN10Count: sigN10.length,
     sigPositiveN10: sigPositiveN10.length,
     sigNegativeN10: sigNegativeN10.length,
+    heavyNegN10: heavyNegN10.length,
     bestN10Delta: bestN10?.deltaPp ?? null,
   })
 
   let finding: string
   if (partnersForProse.length === 0) {
     finding = `${partners.length} stack partner${partners.length === 1 ? '' : 's'} detected with ${MIN_FOR_DISPLAY}–${MIN_FOR_PROSE - 1} games together — too small a sample for any individual to draw a conclusion from.`
+  } else if (best == null && worst == null) {
+    finding = `No stack partner with enough games for a stable read. ${partnersForProse.length} partner${partnersForProse.length === 1 ? '' : 's'} cleared the ${MIN_FOR_PROSE}-game floor, but none differ from your ${(userOverallWr * 100).toFixed(0)}% overall WR by more than statistical noise.`
   } else {
-    finding = composeFinding(best, worst, partnersForProse)
+    finding = composeFinding(best, worst, partnersForProse, userOverallWr, bestSampleSmall, worstSampleSmall)
   }
   const suggestion =
     'Stack patterns usually reflect role/style fit, not individual skill — a partner with negative delta might just be queued in the wrong role pair with you.'
@@ -306,15 +309,15 @@ export function analyzeStackSynergy(input: ReportInput): AnalysisResult {
   // are produced inside StackSynergyCard so they honor the anonymization
   // toggle.
   const roastFacts: Record<string, string | number> = {}
-  if (best && best.deltaPp != null) {
+  if (best) {
     roastFacts.best_partner = best.personaName
     roastFacts.best_wr = Math.round(best.wrTogether * 100)
-    roastFacts.best_delta = Math.round(best.deltaPp)
+    roastFacts.best_delta = Math.round(best.deltaPp ?? 0)
   }
-  if (worst && worst.deltaPp != null) {
+  if (worst) {
     roastFacts.worst_partner = worst.personaName
     roastFacts.worst_wr = Math.round(worst.wrTogether * 100)
-    roastFacts.worst_delta = Math.round(worst.deltaPp)
+    roastFacts.worst_delta = Math.round(worst.deltaPp ?? 0)
   }
 
   return {
@@ -385,49 +388,34 @@ function countMatchesWithAnyPartner(partners: StackSynergyPartner[]): number {
 function composeFinding(
   best: StackSynergyPartner | null,
   worst: StackSynergyPartner | null,
-  prose: StackSynergyPartner[]
+  prose: StackSynergyPartner[],
+  userOverallWr: number,
+  bestSampleSmall: boolean,
+  worstSampleSmall: boolean
 ): string {
+  const overallPct = (userOverallWr * 100).toFixed(0)
   const lines: string[] = []
   if (best && best.deltaPp != null) {
-    const sigQual = qualifier(best.gamesTogether)
-    const sign = best.deltaPp >= 0 ? '+' : ''
+    const sigQual = bestSampleSmall ? 'Small sample — ' : ''
     lines.push(
-      `${sigQual}your best stack partner is ${best.personaName} — ${best.gamesTogether} games, ${(best.wrTogether * 100).toFixed(0)}% WR (${sign}${best.deltaPp.toFixed(0)}pp vs your solo WR).`
+      `${sigQual}your best stack partner is ${best.personaName} — ${best.gamesTogether} games, ${(best.wrTogether * 100).toFixed(0)}% WR (+${best.deltaPp.toFixed(0)}pp vs your ${overallPct}% overall WR).`
     )
   }
   if (worst && worst.deltaPp != null) {
-    const sigQual = qualifier(worst.gamesTogether)
+    const sigQual = worstSampleSmall ? 'Small sample — ' : ''
     lines.push(
-      `${sigQual}${worst.personaName} trends below: ${worst.gamesTogether} games, ${(worst.wrTogether * 100).toFixed(0)}% WR (${worst.deltaPp.toFixed(0)}pp).`
-    )
-  }
-  // Mention any partner where we couldn't compute the delta (always queues
-  // with the user) so the "—" in the chart isn't a mystery.
-  const alwaysWith = prose.filter((p) => p.deltaPp == null)
-  if (alwaysWith.length > 0) {
-    const names = alwaysWith.map((p) => p.personaName).join(', ')
-    lines.push(
-      `${names} ${alwaysWith.length === 1 ? 'queues' : 'queue'} with you in every match this window — can't compute a solo comparison.`
+      `${sigQual}${worst.personaName} trends below: ${worst.gamesTogether} games, ${(worst.wrTogether * 100).toFixed(0)}% WR (${worst.deltaPp.toFixed(0)}pp vs overall).`
     )
   }
   if (lines.length === 0) {
     // No significant findings — neutral framing.
     const top = prose[0]
     if (top) {
-      const deltaText =
-        top.deltaPp != null
-          ? `${top.deltaPp >= 0 ? '+' : ''}${top.deltaPp.toFixed(0)}pp`
-          : '—'
+      const deltaText = `${(top.deltaPp ?? 0) >= 0 ? '+' : ''}${(top.deltaPp ?? 0).toFixed(0)}pp`
       lines.push(
-        `${prose.length} stack partner${prose.length === 1 ? '' : 's'} with ≥${MIN_FOR_PROSE} games. Most-frequent: ${top.personaName} (${top.gamesTogether} games, ${(top.wrTogether * 100).toFixed(0)}% WR, ${deltaText}) — within noise of your solo WR.`
+        `${prose.length} stack partner${prose.length === 1 ? '' : 's'} with ≥${MIN_FOR_PROSE} games. Most-frequent: ${top.personaName} (${top.gamesTogether} games, ${(top.wrTogether * 100).toFixed(0)}% WR, ${deltaText}) — within noise of your ${overallPct}% overall WR.`
       )
     }
   }
   return lines.join(' ')
-}
-
-function qualifier(games: number): string {
-  if (games < MIN_FOR_NORMAL) return 'Small sample — '
-  if (games < MIN_FOR_CONFIDENT) return ''
-  return ''
 }

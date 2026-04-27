@@ -208,16 +208,16 @@ export interface StackSynergyPartner {
   winsTogether: number
   /** 0..1 */
   wrTogether: number
-  /** 0..1 — user's WR in matches WITHOUT this partner. Null if no such matches exist. */
+  /** 0..1 — user's WR in matches WITHOUT this partner. Null if no such matches exist. Diagnostic-only; not used for delta. */
   userWrWithoutPartner: number | null
-  /** Percentage points: (wrTogether - userWrWithoutPartner) * 100. Null when userWrWithoutPartner is null. */
+  /** Percentage points: (wrTogether - userOverallWr) * 100. Always defined. */
   deltaPp: number | null
   /** 95% CI bounds for wrTogether (0..1). */
   ciLow: number
   ciHigh: number
-  /** True if the CI for wrTogether does NOT overlap userWrWithoutPartner. False when delta is unknown. */
+  /** True if userOverallWr lies outside the CI for wrTogether (i.e. the partner makes a detectable difference). */
   isSignificant: boolean
-  /** Number of user matches in this window WITHOUT this partner. 0 means we can't compute a comparison. */
+  /** Number of user matches in this window WITHOUT this partner. Diagnostic-only. */
   withoutGames: number
 }
 

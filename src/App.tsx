@@ -37,6 +37,7 @@ interface ReportState {
   details: Record<number, ODMatchDetail>
   results: AnalysisResult[]
   totalAvailable: number
+  inferredRole: 'core' | 'support' | 'flex' | 'unknown'
 }
 
 type AppStatus =
@@ -124,7 +125,13 @@ function App() {
         })
         await parseMatches(matchesToDetailFetch, details, {
           concurrency: 5,
-          pollIntervalMs: 5000,
+          // Parse-phase tuning: skip the first ~15s of polling (OpenDota
+          // parses almost never finish in <15s), then poll every 7s up to
+          // 90s. Faster than the old 5s/90s loop without dropping long-
+          // tail matches that legitimately need the full 90s window
+          // during peak parse-queue hours.
+          initialDelayMs: 15_000,
+          pollIntervalMs: 7_000,
           timeoutMs: 90_000,
           onProgress: ({ done, total }) =>
             setStatus({
@@ -163,6 +170,7 @@ function App() {
           details,
           results,
           totalAvailable: allMatches.length,
+          inferredRole,
         },
       })
     } catch (err) {
@@ -224,6 +232,7 @@ function App() {
           <ProfileBar
             profile={status.report.profile}
             matchCount={status.report.matches.length}
+            inferredRole={status.report.inferredRole}
             isPaid={isPaid}
             honestMode={honestMode}
             onToggleHonestMode={setHonestMode}
@@ -248,12 +257,14 @@ function App() {
 function ProfileBar({
   profile,
   matchCount,
+  inferredRole,
   isPaid,
   honestMode,
   onToggleHonestMode,
 }: {
   profile: ODPlayerProfile
   matchCount: number
+  inferredRole: 'core' | 'support' | 'flex' | 'unknown'
   isPaid: boolean
   honestMode: boolean
   onToggleHonestMode: (v: boolean) => void
@@ -266,6 +277,11 @@ function ProfileBar({
   )
   const initial = (name.trim()[0] ?? 'A').toUpperCase()
   const avatarUrl = profile.profile?.avatarfull
+  const roleLabel =
+    inferredRole === 'core' ? 'Core'
+    : inferredRole === 'support' ? 'Support'
+    : inferredRole === 'flex' ? 'Flex'
+    : null
 
   return (
     <section className="dwr-report-head">
@@ -281,6 +297,12 @@ function ProfileBar({
           <div className="dwr-user-name">{name}</div>
           <div className="dwr-user-meta">
             <span className="rank">{rank}</span>
+            {roleLabel && (
+              <>
+                <span className="sep">·</span>
+                <span>{roleLabel}</span>
+              </>
+            )}
             <span className="sep">·</span>
             <span>baselines tuned for {bucket}</span>
             <span className="sep">·</span>

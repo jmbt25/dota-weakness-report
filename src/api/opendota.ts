@@ -6,8 +6,9 @@ import type { ODHero, ODMatchDetail, ODMatchSummary, ODPlayerProfile } from '../
 const BASE_URL = 'https://api.opendota.com/api'
 
 // Token-bucket-ish rate limiter: enforces a minimum gap between request starts.
-// 60 req/min = 1 req per 1000ms. We use 1200ms to stay safely under.
-const MIN_GAP_MS = 1200
+// 60 req/min = 1 req per 1000ms. We use 1050ms to stay just under the ceiling
+// while leaving a small safety margin for clock drift; 429s are retried once.
+const MIN_GAP_MS = 1050
 
 class RateLimiter {
   private nextAllowedAt = 0
@@ -166,6 +167,10 @@ export async function parseMatches(
   details: Record<number, ODMatchDetail>,
   options: {
     concurrency?: number
+    /** Wait this long after kicking off a parse before the first status check. OpenDota
+     *  parses almost never finish in <15s, so the first few polls are pure waste against
+     *  the rate limiter. Default 15s. */
+    initialDelayMs?: number
     pollIntervalMs?: number
     timeoutMs?: number
     onProgress?: (p: ParseProgress) => void
@@ -173,7 +178,12 @@ export async function parseMatches(
   } = {}
 ): Promise<void> {
   const concurrency = options.concurrency ?? 5
-  const pollIntervalMs = options.pollIntervalMs ?? 5000
+  const initialDelayMs = options.initialDelayMs ?? 15_000
+  const pollIntervalMs = options.pollIntervalMs ?? 7_000
+  // 90s ceiling: OpenDota parses can legitimately take 60-90s during peak
+  // hours, and dropping those long-tail matches degrades report accuracy
+  // for the worst-case users. Keep the timeout generous; speed up via the
+  // initial-delay + slower-poll-cadence levers instead.
   const timeoutMs = options.timeoutMs ?? 90_000
 
   const needsParse = matches
@@ -196,7 +206,7 @@ export async function parseMatches(
       const id = queue.shift()
       if (id == null) return
       try {
-        await parseOne(id, pollIntervalMs, timeoutMs, details, options.signal)
+        await parseOne(id, initialDelayMs, pollIntervalMs, timeoutMs, details, options.signal)
       } catch (err) {
         // Parse failure on one match shouldn't kill the whole batch.
         if ((err as Error).name !== 'AbortError') {
@@ -219,6 +229,7 @@ export async function parseMatches(
 
 async function parseOne(
   matchId: number,
+  initialDelayMs: number,
   pollIntervalMs: number,
   timeoutMs: number,
   details: Record<number, ODMatchDetail>,
@@ -234,10 +245,22 @@ async function parseOne(
     // Continue to polling — sometimes the POST 4xx's but the match is parsable.
   }
 
+  // OpenDota parses typically take 25-45s. Skip the first ~15s of polling
+  // entirely instead of burning rate-limiter slots on guaranteed misses.
+  await sleep(initialDelayMs, signal)
+  let detail: ODMatchDetail | null = null
+  try {
+    detail = await fetchMatchDetail(matchId, signal)
+    details[matchId] = detail
+    if (detail.version != null) return
+  } catch (err) {
+    if ((err as Error).name === 'AbortError') throw err
+    // transient — fall through to polling loop
+  }
+
   const started = Date.now()
   while (Date.now() - started < timeoutMs) {
     await sleep(pollIntervalMs, signal)
-    let detail: ODMatchDetail
     try {
       detail = await fetchMatchDetail(matchId, signal)
     } catch (err) {
