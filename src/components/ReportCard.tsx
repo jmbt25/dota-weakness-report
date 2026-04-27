@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import type { AnalysisResult, Severity } from '../types'
+import type { AnalysisResult, ChartBars, ChartPayload, Severity } from '../types'
 
 function severityClass(sev: Severity): string {
   if (sev === 'good') return 'pill-good'
@@ -53,13 +53,7 @@ export function ReportCard({ result }: { result: AnalysisResult }) {
         </div>
       )}
 
-      {!isUnmeasured && chart && (
-        <div className="mt-4" style={{ height: chartHeight(chart) }}>
-          <ResponsiveContainer width="100%" height="100%">
-            {renderChart(chart)}
-          </ResponsiveContainer>
-        </div>
-      )}
+      {!isUnmeasured && chart && <ChartBlock chart={chart} />}
 
       <p className="mt-4 text-sm text-ink leading-relaxed">{result.finding}</p>
       <p className="mt-3 text-sm text-ink-muted leading-relaxed">
@@ -73,15 +67,40 @@ export function ReportCard({ result }: { result: AnalysisResult }) {
   )
 }
 
-function chartHeight(chart: NonNullable<AnalysisResult['chart']>): number {
-  if (chart.kind === 'bars' && chart.horizontal) {
-    // ~22px per bar + padding so labels don't crowd.
-    return Math.max(140, chart.data.length * 22 + 24)
+function ChartBlock({ chart }: { chart: ChartPayload }) {
+  if (chart.kind === 'stat-blocks') {
+    return (
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        {chart.blocks.map((b, i) => (
+          <div key={i} className="rounded-lg bg-bg-raised border border-line p-4 flex flex-col">
+            <span className="text-xs uppercase tracking-wider text-ink-dim">{b.label}</span>
+            <span className="mt-1 text-2xl font-semibold tabular-nums leading-none">{b.value}</span>
+            {b.sub && <span className="mt-2 text-xs text-ink-muted leading-snug">{b.sub}</span>}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-4" style={{ height: chartHeight(chart) }}>
+      <ResponsiveContainer width="100%" height="100%">
+        {renderXyChart(chart)}
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+function chartHeight(chart: ChartBars | { kind: 'series' } | { kind: string }): number {
+  if (chart.kind === 'bars') {
+    const c = chart as ChartBars
+    if (c.horizontal) return Math.max(140, c.data.length * 22 + 24)
+    if (c.xMultilineSplit || (c.xTickAngle && Math.abs(c.xTickAngle) >= 30)) return 200
   }
   return 176
 }
 
-function renderChart(chart: NonNullable<AnalysisResult['chart']>) {
+function renderXyChart(chart: Exclude<ChartPayload, { kind: 'stat-blocks' }>) {
   const data = normalizeForBar(chart)
   const horizontal = chart.kind === 'bars' && chart.horizontal === true
   const showBaseline = data.some((d) => d.baseline != null) && !horizontal
@@ -97,7 +116,7 @@ function renderChart(chart: NonNullable<AnalysisResult['chart']>) {
           dataKey="label"
           stroke="#9aa3b2"
           fontSize={11}
-          width={130}
+          width={150}
           tickLine={false}
         />
         <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: '#1a1e27' }} />
@@ -111,10 +130,19 @@ function renderChart(chart: NonNullable<AnalysisResult['chart']>) {
     )
   }
 
+  const tickAngle = chart.kind === 'bars' ? chart.xTickAngle : undefined
+  const multilineSplit = chart.kind === 'bars' ? chart.xMultilineSplit : undefined
+  const xAxisProps =
+    multilineSplit
+      ? { tick: <MultilineTick split={multilineSplit} />, height: 44 }
+      : tickAngle
+        ? { angle: tickAngle, textAnchor: 'end' as const, height: 56 }
+        : {}
+
   return (
-    <BarChart data={data}>
+    <BarChart data={data} margin={{ top: 4, right: 8, left: -12, bottom: 4 }}>
       <CartesianGrid stroke="#222632" vertical={false} />
-      <XAxis dataKey="label" stroke="#6b7280" fontSize={11} interval={0} />
+      <XAxis dataKey="label" stroke="#6b7280" fontSize={11} interval={0} {...xAxisProps} />
       <YAxis stroke="#6b7280" fontSize={11} domain={yMax != null ? [0, yMax] : undefined} />
       <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: '#1a1e27' }} />
       <Legend iconSize={8} wrapperStyle={{ fontSize: 11, color: '#9aa3b2' }} />
@@ -131,7 +159,36 @@ function renderChart(chart: NonNullable<AnalysisResult['chart']>) {
   )
 }
 
-function normalizeForBar(chart: NonNullable<AnalysisResult['chart']>): {
+interface MultilineTickProps {
+  split: string
+  x?: number
+  y?: number
+  payload?: { value?: string }
+}
+
+function MultilineTick({ split, x = 0, y = 0, payload }: MultilineTickProps) {
+  const raw = String(payload?.value ?? '')
+  const lines = raw.split(split)
+  return (
+    <g transform={`translate(${x},${y})`}>
+      {lines.map((line, i) => (
+        <text
+          key={i}
+          x={0}
+          y={0}
+          dy={12 + i * 12}
+          textAnchor="middle"
+          fill={i === 0 ? '#9aa3b2' : '#6b7280'}
+          fontSize={11}
+        >
+          {line}
+        </text>
+      ))}
+    </g>
+  )
+}
+
+function normalizeForBar(chart: Exclude<ChartPayload, { kind: 'stat-blocks' }>): {
   label: string
   value: number
   baseline?: number

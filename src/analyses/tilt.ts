@@ -1,16 +1,20 @@
 import type { AnalysisResult, ReportInput } from '../types'
 import { didWin } from '../lib/matchHelpers'
 
+const SAFE_STREAK = 2
+
 /**
- * Tilt detection. Two signals:
- *   - longest consecutive loss streak in the window
- *   - win rate on the very next game after each loss vs. overall WR
+ * Tilt detection.
  *
- * If post-loss WR is meaningfully below overall WR (delta >= 10pp) and
- * there's a streak of 3+, we flag tilt.
+ * Severity rules (v3):
+ *   - longest_streak ≤ SAFE_STREAK         → Healthy
+ *   - longest_streak > SAFE_STREAK
+ *       AND post-loss WR < overall WR     → Concerning (you tilt-queue)
+ *   - longest_streak > SAFE_STREAK
+ *       AND post-loss WR ≥ overall WR     → Watch (you ride streaks but don't melt)
  *
- * Matches are returned by OpenDota newest-first. We process oldest-first so
- * "next game after a loss" is well-defined.
+ * The post-loss bounce-back is the strongest signal — when it's good, lead
+ * the prose with it.
  */
 export function analyzeTilt(input: ReportInput): AnalysisResult {
   const { matches } = input
@@ -42,24 +46,29 @@ export function analyzeTilt(input: ReportInput): AnalysisResult {
 
   const overallWR = ordered.length > 0 ? totalWins / ordered.length : 0
   const postLossWR = postLossGames > 0 ? postLossWins / postLossGames : 0
-  const deltaPp = (overallWR - postLossWR) * 100
+  const bouncesBack = postLossWR >= overallWR
 
-  const severity =
-    longestLossStreak >= 4 && deltaPp >= 15 ? 'concerning'
-    : longestLossStreak >= 3 && deltaPp >= 8 ? 'ok'
-    : 'good'
+  let severity: AnalysisResult['severity']
+  if (longestLossStreak <= SAFE_STREAK) severity = 'good'
+  else if (bouncesBack) severity = 'ok'
+  else severity = 'concerning'
+
+  const overallPct = (overallWR * 100).toFixed(0)
+  const postPct = (postLossWR * 100).toFixed(0)
 
   let finding: string
   let suggestion: string
   if (severity === 'concerning') {
-    finding = `${longestLossStreak}-game loss streak in this window, and your post-loss WR (${(postLossWR * 100).toFixed(0)}%) is ${deltaPp.toFixed(0)}pp below your overall WR (${(overallWR * 100).toFixed(0)}%). That's a tilt pattern.`
+    const deltaPp = (overallWR - postLossWR) * 100
+    finding = `${longestLossStreak}-game loss streak, and your post-loss WR (${postPct}%) is ${deltaPp.toFixed(0)}pp below your overall WR (${overallPct}%). That's a tilt pattern.`
     suggestion = 'Hard rule: after two losses, log off. The third game is statistically your worst, and it’s costing you the MMR you earned today.'
   } else if (severity === 'ok') {
-    finding = `Some tilt risk: longest streak ${longestLossStreak} losses, post-loss WR ${(postLossWR * 100).toFixed(0)}% vs overall ${(overallWR * 100).toFixed(0)}%.`
-    suggestion = 'Take a 10-minute break between matches when the previous one was a loss. Replay review > queueing tilted.'
+    // Lead with the bounce-back since it's the standout signal here.
+    finding = `Bounce-back is solid (post-loss WR ${postPct}% vs overall ${overallPct}%), but you hit a ${longestLossStreak}-game streak — a couple of long losing skids in this window.`
+    suggestion = 'Mental holds up after individual losses; the work is recognizing when a streak is forming early. Take a 10-min break after two consecutive losses, not five.'
   } else {
-    finding = `Mental looks solid: longest streak ${longestLossStreak}, post-loss WR (${(postLossWR * 100).toFixed(0)}%) is on par with overall WR (${(overallWR * 100).toFixed(0)}%).`
-    suggestion = 'You bounce back well after losses. Keep the queue discipline — it’s rarer than people think.'
+    finding = `Mental looks solid: longest streak ${longestLossStreak}, post-loss WR (${postPct}%) is on par with overall WR (${overallPct}%).`
+    suggestion = 'You bounce back well after losses and don’t hit deep streaks. Keep the queue discipline — it’s rarer than people think.'
   }
 
   return {
@@ -67,7 +76,7 @@ export function analyzeTilt(input: ReportInput): AnalysisResult {
     title: 'Loss streak / tilt',
     metric: longestLossStreak,
     metricLabel: 'longest streak',
-    baseline: 2,
+    baseline: SAFE_STREAK,
     baselineLabel: 'safe streak',
     severity,
     finding,

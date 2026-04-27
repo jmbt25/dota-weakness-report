@@ -4,11 +4,10 @@ import { ReportCard } from './ReportCard'
 interface ReportGridProps {
   results: AnalysisResult[]
   matchCount: number
-  totalAvailable: number
   isPaid: boolean
 }
 
-export function ReportGrid({ results, matchCount, totalAvailable, isPaid }: ReportGridProps) {
+export function ReportGrid({ results, matchCount, isPaid }: ReportGridProps) {
   return (
     <section className="max-w-6xl mx-auto px-6 pb-16">
       <div className="flex items-end justify-between mb-6">
@@ -16,9 +15,9 @@ export function ReportGrid({ results, matchCount, totalAvailable, isPaid }: Repo
           <h2 className="text-2xl font-semibold">Your weakness report</h2>
           <p className="text-sm text-ink-muted mt-1">
             Based on your last {matchCount} match{matchCount === 1 ? '' : 'es'}.
-            {!isPaid && totalAvailable > matchCount && (
+            {!isPaid && (
               <>
-                {' '}<span className="text-amber-400">Unlock {totalAvailable - matchCount} more with a license key below.</span>
+                {' '}<span className="text-sky-300">Widen the window to 100 matches and unlock the per-hero deep dive with a license key below.</span>
               </>
             )}
           </p>

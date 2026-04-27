@@ -1,19 +1,20 @@
 import type { AnalysisResult, ReportInput } from '../types'
 import { didWin } from '../lib/matchHelpers'
+import { heroPoolTarget, rankBucketLabel } from '../lib/baselines'
 
 const MIN_GAMES_FOR_ANALYSIS = 15
-const SPREAD_THIN_THRESHOLD = 12
+const VISIBLE_HEROES_IN_CHART = 8
 
 /**
  * Hero pool concentration. Requires at least 15 games for meaningful signal —
  * below that, spread/win rate numbers are too noisy.
  *
- * Flags:
- *   1. Spread too thin — >12 unique heroes in 20 games means little mastery.
- *   2. Most-played hero is sub-50% — the hero you grind most should be winning.
+ * Recommended max pool size scales with rank: lower brackets get a wider
+ * recommendation (more experimentation pays off when fundamentals matter
+ * more than specialization), higher brackets get tighter ones.
  */
 export function analyzeHeroPool(input: ReportInput): AnalysisResult {
-  const { matches, heroName } = input
+  const { matches, heroName, rankBucket } = input
 
   if (matches.length < MIN_GAMES_FOR_ANALYSIS) {
     return {
@@ -29,6 +30,7 @@ export function analyzeHeroPool(input: ReportInput): AnalysisResult {
     }
   }
 
+  const target = heroPoolTarget(rankBucket)
   const heroStats = new Map<number, { games: number; wins: number }>()
   for (const m of matches) {
     const cur = heroStats.get(m.hero_id) ?? { games: 0, wins: 0 }
@@ -44,7 +46,8 @@ export function analyzeHeroPool(input: ReportInput): AnalysisResult {
   const topGames = top[1].games
   const topWR = top[1].wins / top[1].games
 
-  const tooThin = distinct > SPREAD_THIN_THRESHOLD
+  // "Spread thin" if pool exceeds the rank-appropriate target.
+  const tooThin = distinct > target
   const topLosing = topGames >= 3 && topWR < 0.5
 
   const severity =
@@ -52,40 +55,49 @@ export function analyzeHeroPool(input: ReportInput): AnalysisResult {
     : tooThin || topLosing ? 'ok'
     : 'good'
 
+  const bracketName = rankBucketLabel(rankBucket)
   let finding: string
   let suggestion: string
   if (tooThin && topLosing) {
     finding = `${distinct} different heroes in ${matches.length} games, and your most-played (${heroName(topId)}, ${topGames} games) wins only ${(topWR * 100).toFixed(0)}%.`
-    suggestion = 'Pick 3 heroes you actually want to learn this month. Spam the same draft until your win rate climbs to 55%+ — variety is costing you reps.'
+    suggestion = `Pick ${target - 1}–${target} heroes you actually want to learn this month and spam the same draft. At ${bracketName}, that focus is worth more than versatility.`
   } else if (tooThin) {
-    finding = `You played ${distinct} different heroes in ${matches.length} games — that's a wide pool to be climbing on.`
-    suggestion = 'Cut your pool to ~5 heroes that share an item build. The decision-making transfers; the muscle memory accumulates.'
+    finding = `You played ${distinct} different heroes in ${matches.length} games — wider than the ${target}-hero target for ${bracketName}.`
+    suggestion = `Cut your pool to ~${target} heroes that share an item build. Decision-making transfers; muscle memory accumulates.`
   } else if (topLosing) {
     finding = `${heroName(topId)} is your most-played (${topGames} games) but only wins ${(topWR * 100).toFixed(0)}%.`
     suggestion = 'Either bench this hero for two weeks or watch a high-rank replay of it. Continuing the loss streak on a comfort pick is the most common MMR sink.'
   } else {
-    finding = `Hero pool looks healthy: ${distinct} heroes across ${matches.length} games, top hero (${heroName(topId)}) at ${(topWR * 100).toFixed(0)}% WR.`
-    suggestion = 'Nice — focused pool with a winning anchor. Keep this small and only add new heroes when patches force a meta shift.'
+    finding = `Hero pool looks healthy: ${distinct} heroes across ${matches.length} games (target ~${target} at ${bracketName}), top hero (${heroName(topId)}) at ${(topWR * 100).toFixed(0)}% WR.`
+    suggestion = 'Nice — focused pool with a winning anchor. Keep it small and only add new heroes when patches force a meta shift.'
   }
 
-  // Top heroes as a horizontal bar chart, sorted by games played.
-  // We trim to the top 8 to keep the card readable.
-  const data = sorted.slice(0, 8).map(([id, s]) => ({
+  // Top heroes as a horizontal bar chart, sorted by games played. Top 8 +
+  // an explicit "Other (N heroes, M games)" bucket so it's clear what
+  // fraction of games it represents.
+  const data = sorted.slice(0, VISIBLE_HEROES_IN_CHART).map(([id, s]) => ({
     label: heroName(id),
     value: s.games,
-    // Stash WR in baseline so the tooltip can show it (stays out of the bar render).
+    // Stash WR in baseline so the tooltip can show it (kept off the rendered bar).
     baseline: Math.round((s.wins / s.games) * 100),
   }))
-  const otherGames = sorted.slice(8).reduce((acc, [, s]) => acc + s.games, 0)
-  if (otherGames > 0) data.push({ label: `Other (${sorted.length - 8})`, value: otherGames, baseline: 0 })
+  const otherEntries = sorted.slice(VISIBLE_HEROES_IN_CHART)
+  const otherGames = otherEntries.reduce((acc, [, s]) => acc + s.games, 0)
+  if (otherEntries.length > 0) {
+    data.push({
+      label: `Other (${otherEntries.length} heroes, ${otherGames} games)`,
+      value: otherGames,
+      baseline: 0,
+    })
+  }
 
   return {
     id: 'hero-pool',
     title: 'Hero pool',
     metric: distinct,
     metricLabel: `distinct / ${matches.length} games`,
-    baseline: SPREAD_THIN_THRESHOLD,
-    baselineLabel: 'max recommended',
+    baseline: target,
+    baselineLabel: `target at ${bracketName}`,
     severity,
     finding,
     suggestion,

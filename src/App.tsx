@@ -3,6 +3,7 @@ import { Hero } from './components/Hero'
 import { Loader } from './components/Loader'
 import { ReportGrid } from './components/ReportGrid'
 import { Footer } from './components/Footer'
+import { DeepDive } from './components/DeepDive'
 import {
   fetchAllMatchDetails,
   fetchHeroes,
@@ -15,7 +16,11 @@ import { runAllAnalyses } from './analyses'
 import { inferRole } from './lib/matchHelpers'
 import { rankBucketFromTier, rankBucketLabel, rankLabel } from './lib/baselines'
 import { getHeroName, setHeroes } from './lib/heroes'
-import { PAID_TIER_MATCH_LIMIT } from './lib/license'
+import {
+  FREE_TIER_MATCH_LIMIT,
+  MAX_DETAIL_FETCH,
+  PAID_TIER_MATCH_LIMIT,
+} from './lib/license'
 import type {
   AnalysisResult,
   ODMatchDetail,
@@ -41,6 +46,7 @@ type AppStatus =
 function App() {
   const [status, setStatus] = useState<AppStatus>({ kind: 'idle' })
   const [isPaid, setIsPaid] = useState(false)
+  const lastInputRef = useRef<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const heroesLoadedRef = useRef(false)
 
@@ -56,10 +62,11 @@ function App() {
       })
   }, [])
 
-  async function analyze(raw: string) {
+  async function analyze(raw: string, paid: boolean = isPaid) {
     abortRef.current?.abort()
     const ac = new AbortController()
     abortRef.current = ac
+    lastInputRef.current = raw
 
     const parsed = parseAccountInput(raw)
     if (!parsed.ok) {
@@ -67,12 +74,14 @@ function App() {
       return
     }
 
+    const matchLimit = paid ? PAID_TIER_MATCH_LIMIT : FREE_TIER_MATCH_LIMIT
+
     try {
       setStatus({ kind: 'loading', stage: 'Looking up profile…' })
       const profile = await fetchPlayerProfile(parsed.accountId, ac.signal)
 
-      setStatus({ kind: 'loading', stage: 'Fetching recent matches…' })
-      const allMatches = await fetchPlayerMatches(parsed.accountId, PAID_TIER_MATCH_LIMIT, ac.signal)
+      setStatus({ kind: 'loading', stage: `Fetching last ${matchLimit} matches…` })
+      const allMatches = await fetchPlayerMatches(parsed.accountId, matchLimit, ac.signal)
 
       if (allMatches.length === 0) {
         setStatus({
@@ -83,7 +92,12 @@ function App() {
       }
 
       const matches = allMatches
-      const ids = matches.map((m) => m.match_id)
+      // Cap detail-fetch to MAX_DETAIL_FETCH most-recent matches. Hero-pool /
+      // tilt analyses still see the full window via the summary list; the
+      // parsed-only analyses (lane/farm/item/death-timing) operate on this
+      // detail subset.
+      const matchesToDetailFetch = matches.slice(0, MAX_DETAIL_FETCH)
+      const ids = matchesToDetailFetch.map((m) => m.match_id)
 
       setStatus({ kind: 'loading', stage: 'Fetching match details…', done: 0, total: ids.length })
       const details = await fetchAllMatchDetails(
@@ -93,8 +107,7 @@ function App() {
         ac.signal
       )
 
-      // Auto-request parses for any matches that aren't already parsed.
-      const unparsedCount = matches.filter((m) => {
+      const unparsedCount = matchesToDetailFetch.filter((m) => {
         const d = details[m.match_id]
         return !d || d.version == null
       }).length
@@ -106,7 +119,7 @@ function App() {
           done: 0,
           total: unparsedCount,
         })
-        await parseMatches(matches, details, {
+        await parseMatches(matchesToDetailFetch, details, {
           concurrency: 5,
           pollIntervalMs: 5000,
           timeoutMs: 90_000,
@@ -155,6 +168,10 @@ function App() {
   function unlock(key: string) {
     setIsPaid(true)
     void key
+    // Re-run the analysis in paid mode if a report is already on-screen.
+    if (status.kind === 'ready' && lastInputRef.current) {
+      analyze(lastInputRef.current, true)
+    }
   }
 
   const errorMessage = status.kind === 'error' ? status.message : null
@@ -162,7 +179,7 @@ function App() {
   return (
     <div className="min-h-full flex flex-col">
       <Hero
-        onAnalyze={analyze}
+        onAnalyze={(raw) => analyze(raw)}
         isLoading={status.kind === 'loading'}
         error={errorMessage}
       />
@@ -176,13 +193,14 @@ function App() {
           <ProfileBar
             profile={status.report.profile}
             matchCount={status.report.matches.length}
+            isPaid={isPaid}
           />
           <ReportGrid
             results={status.report.results}
             matchCount={status.report.matches.length}
-            totalAvailable={status.report.totalAvailable}
             isPaid={isPaid}
           />
+          {isPaid && <DeepDive matches={status.report.matches} />}
         </>
       )}
 
@@ -196,9 +214,11 @@ function App() {
 function ProfileBar({
   profile,
   matchCount,
+  isPaid,
 }: {
   profile: ODPlayerProfile
   matchCount: number
+  isPaid: boolean
 }) {
   const name = profile.profile?.personaname ?? 'Anonymous player'
   const rank = useMemo(() => rankLabel(profile.rank_tier), [profile.rank_tier])
@@ -217,12 +237,13 @@ function ProfileBar({
             referrerPolicy="no-referrer"
           />
         )}
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="text-xl font-semibold truncate">{name}</div>
           <div className="text-sm text-ink-muted mt-0.5">
             {rank} · baselines tuned for <span className="text-ink">{bucket}</span> · {matchCount} matches analyzed
           </div>
         </div>
+        <span className={isPaid ? 'pill-good' : 'pill-muted'}>{isPaid ? 'Paid' : 'Free'}</span>
       </div>
     </section>
   )

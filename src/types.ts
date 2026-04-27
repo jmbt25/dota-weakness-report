@@ -54,6 +54,12 @@ export interface ODMatchPlayer {
   is_roaming?: boolean | null
   lane_efficiency?: number | null
   lane_efficiency_pct?: number | null
+  /**
+   * OpenDota lane outcome (parsed-only). 1 = won, 2 = tied, 3 = lost.
+   * Encodings vary slightly by lane (safe/mid/off) but lower is always better.
+   * Null when the match isn't parsed or the lane couldn't be classified.
+   */
+  lane_outcome?: number | null
   // Per-minute time series (parsed matches only)
   gold_t?: number[]
   xp_t?: number[]
@@ -140,6 +146,10 @@ export interface ChartBars {
   yMax?: number
   /** Render bars horizontally. Useful for hero lists where labels need room. */
   horizontal?: boolean
+  /** X-axis tick rotation in degrees, e.g. -30. Adds bottom padding when set. */
+  xTickAngle?: number
+  /** Replace each tick label with up to 2 lines, useful for "Item · Hero" labels. */
+  xMultilineSplit?: string
 }
 
 export interface ChartSeries {
@@ -150,7 +160,13 @@ export interface ChartSeries {
   yMax?: number
 }
 
-export type ChartPayload = ChartBars | ChartSeries
+/** Two large stat blocks side by side — used when a chart would be overkill. */
+export interface ChartStatBlocks {
+  kind: 'stat-blocks'
+  blocks: { label: string; value: string; sub?: string }[]
+}
+
+export type ChartPayload = ChartBars | ChartSeries | ChartStatBlocks
 
 export interface ReportInput {
   accountId: number

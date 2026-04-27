@@ -123,8 +123,11 @@ export function analyzeItemTiming(input: ReportInput): AnalysisResult {
       kind: 'bars',
       valueName: 'You (min)',
       baselineName: 'Target (min)',
+      // Two-line tick labels: item name on top, hero name underneath. The
+      // ReportCard renders these by splitting on this separator.
+      xMultilineSplit: '\n',
       data: findings.map((f) => ({
-        label: `${itemDisplay(f.item)} · ${heroName(f.heroId)}`,
+        label: `${itemDisplay(f.item)}\n${heroName(f.heroId)}`,
         value: Math.round(f.medianSec / 60),
         baseline: Math.round(f.benchmarkSec / 60),
       })),

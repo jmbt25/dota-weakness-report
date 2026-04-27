@@ -177,6 +177,17 @@ export function rankLabel(rankTier?: number | null): string {
   return star > 0 ? `${name} ${star}` : name
 }
 
+/**
+ * Recommended max hero pool size by rank. Lower ranks get a wider
+ * recommendation because role experimentation is part of climbing; high
+ * ranks reward specialization.
+ */
+export function heroPoolTarget(bucket: RankBucket): number {
+  if (bucket === 'low') return 8
+  if (bucket === 'mid') return 7
+  return 5
+}
+
 export function rankBucketLabel(bucket: RankBucket): string {
   if (bucket === 'low') return 'Herald–Crusader'
   if (bucket === 'mid') return 'Archon–Legend'

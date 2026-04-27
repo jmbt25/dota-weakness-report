@@ -29,3 +29,20 @@ export function isFarmCore(id: number): boolean {
   if (!hero) return false
   return hero.roles.includes('Carry')
 }
+
+/**
+ * Heuristic classification of a hero as core-vs-support.
+ *
+ * Returns 'support' if "Support" is in the role list AND "Carry" is not.
+ * Pure flex picks (Beastmaster, Mirana etc) end up as 'core' — close enough
+ * for the role-detection heuristic that drives baseline selection.
+ */
+export function heroPlaystyle(id: number): 'core' | 'support' | 'unknown' {
+  const hero = heroById?.get(id)
+  if (!hero) return 'unknown'
+  const roles = hero.roles
+  const isSupport = roles.includes('Support')
+  const isCarry = roles.includes('Carry')
+  if (isSupport && !isCarry) return 'support'
+  return 'core'
+}

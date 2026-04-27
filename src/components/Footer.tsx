@@ -24,13 +24,15 @@ export function Footer({ isPaid, onUnlock }: FooterProps) {
     <footer className="border-t border-line mt-8">
       <div className="max-w-6xl mx-auto px-6 py-10 grid gap-8 md:grid-cols-2">
         <div>
-          <h3 className="text-lg font-semibold">Unlock the full 20-match report</h3>
+          <h3 className="text-lg font-semibold">Unlock the 100-match window + per-hero deep dive</h3>
           <p className="text-sm text-ink-muted mt-2">
-            The free report runs on your last 5 matches. A license key unlocks the full 20-match window — same
-            analyses, much more signal. Pay once, no subscription.
+            The free report runs on your last 20 matches — enough sample for the six analyses to mean
+            something. A license key widens the window to 100 matches and unlocks per-hero drilldowns
+            (item build vs. winning builds, fight participation by hero, losing patterns). Pay once,
+            no subscription.
           </p>
           {isPaid ? (
-            <p className="mt-4 text-sm text-emerald-400">License active. Full report unlocked.</p>
+            <p className="mt-4 text-sm text-emerald-400">License active. 100-match window + deep dive unlocked.</p>
           ) : (
             <form onSubmit={submit} className="mt-4 flex flex-col sm:flex-row gap-3">
               <input

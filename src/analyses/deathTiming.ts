@@ -7,9 +7,16 @@ const BUCKET_MIN = 5
 const NUM_BUCKETS = 11
 const TAIL_BUCKET = NUM_BUCKETS - 1
 
+/** Long-form label used in prose ("the 25–30 min window"). */
 function bucketLabel(i: number): string {
   if (i === TAIL_BUCKET) return '50+'
   return `${i * BUCKET_MIN}–${(i + 1) * BUCKET_MIN}`
+}
+
+/** Short axis label — bucket start only — to prevent overlap on the small chart. */
+function bucketTick(i: number): string {
+  if (i === TAIL_BUCKET) return '50+'
+  return String(i * BUCKET_MIN)
 }
 
 /**
@@ -128,7 +135,7 @@ export function analyzeDeathTiming(input: ReportInput): AnalysisResult {
       valueName: 'You',
       baselineName: 'Baseline',
       data: youPerBucket.map((v, i) => ({
-        label: bucketLabel(i),
+        label: bucketTick(i),
         value: Math.round(v * 100) / 100,
         baseline: baseline.deaths.perBucket[i] ?? 0,
       })),

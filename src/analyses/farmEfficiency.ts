@@ -83,20 +83,22 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
   let suggestion: string
   if (severity === 'concerning') {
     if (ratio10 < ratio20) {
-      finding = `Your 10-min GPM (${gpm10}) is below the ${gpm10}/${base.gpm10} ${inferredRole} target. The lane stage is bleeding economy.`
+      finding = `Your 10-min GPM (${gpm10}) is below the ${base.gpm10} ${inferredRole} target. The lane stage is bleeding economy.`
       suggestion = inferredRole === 'support'
-        ? 'Even as a 4 or 5, target ~25 last hits by 10 min when your carry is missing CS, and grab pull camps on cycle.'
+        ? 'Focus on stacking, pulling, and rotation timing — your GPM ceiling is structural, not mechanical. Hit the 10-min pull window and the courier-snap gold scales the rest.'
         : 'Cut creep aggression so the wave settles in your favor. Free farm > a few fancy trades.'
     } else {
       finding = `Your 20-min GPM (${gpm20}) is below the ${base.gpm20} ${inferredRole} target. You stall after the lane.`
-      suggestion = 'After laning, transition to ancient stacks/jungle camps between objectives instead of TPing across the map for fights you can’t win.'
+      suggestion = inferredRole === 'support'
+        ? 'After laning, GPM growth is mostly hero-kill participation. Be the first to TP into kills your team is starting; passive supports flatline here.'
+        : 'After laning, transition to ancient stacks/jungle camps between objectives instead of TPing across the map for fights you can’t win.'
     }
   } else if (severity === 'ok') {
     finding = `Farm is roughly average for your bracket: ${gpm10} GPM @10 vs ${base.gpm10}, ${gpm20} GPM @20 vs ${base.gpm20}.`
-    suggestion = userPlaysFarmCore
-      ? 'Try a Hand of Midas timing on your most-played hero — it tends to lift mid-game GPM more than another raw farming item.'
-      : inferredRole === 'support'
-        ? 'Stack ancients between waves on cycle. The 80-100 GPM you’d add is worth more than another rotation half the time.'
+    suggestion = inferredRole === 'support'
+      ? 'Focus on stacking, pulling, and rotation timing — your GPM ceiling is structural, not mechanical. The next 30 GPM comes from hitting more rotations on cooldown.'
+      : userPlaysFarmCore
+        ? 'Try a Hand of Midas timing on your most-played hero — it tends to lift mid-game GPM more than another raw farming item.'
         : 'Watch your laning replay back. Most of the gap is one or two missed pulls/stacks per game.'
   } else {
     finding = `Strong farm: ${gpm10} GPM @10 (vs ${base.gpm10}) and ${gpm20} GPM @20 (vs ${base.gpm20}).`

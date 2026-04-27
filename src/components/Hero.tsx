@@ -25,7 +25,7 @@ export function Hero({ onAnalyze, isLoading, error }: HeroProps) {
       </h1>
       <p className="mt-4 text-ink-muted max-w-xl mx-auto">
         Paste your Steam ID or Dota profile URL. We pull your last 20 matches from OpenDota and grade
-        six things — death timing, farm, item builds, lane, hero pool, and tilt.
+        six things — death timing, farm, item builds, lane, hero pool, and tilt. Free, no signup.
       </p>
 
       <form onSubmit={submit} className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -45,7 +45,7 @@ export function Hero({ onAnalyze, isLoading, error }: HeroProps) {
       </form>
       {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
       <p className="mt-3 text-xs text-ink-dim">
-        Free to run on your last 5 matches. Unlock the full 20 with a license key below.
+        Free for 20-match reports. Unlock the 100-match window and per-hero deep dive with a license key below.
       </p>
     </header>
   )
