@@ -10,6 +10,9 @@ interface ReportGridProps {
   honestMode: boolean
   language: HonestLanguage
   accountId: number
+  /** 'core' or 'support' when the role-split filter is active. Drives the
+   * stack-synergy footnote so users know the partner sample is filtered. */
+  roleFilter?: 'all' | 'core' | 'support'
 }
 
 export function ReportGrid({
@@ -19,6 +22,7 @@ export function ReportGrid({
   honestMode,
   language,
   accountId,
+  roleFilter = 'all',
 }: ReportGridProps) {
   return (
     <>
@@ -51,6 +55,8 @@ export function ReportGrid({
                 honestMode={honestMode}
                 language={language}
                 accountId={accountId}
+                roleFilter={roleFilter}
+                roleFilterMatchCount={matchCount}
               />
             )
           }

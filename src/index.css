@@ -857,6 +857,47 @@
   border-color: rgba(74, 222, 128, 0.4);
   background: rgba(74, 222, 128, 0.08);
 }
+
+/* Role-split segmented toggle (only renders when both subsets >= 10 games) */
+.dwr-role-filter {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--bg-raised);
+  overflow: hidden;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.dwr-role-filter-opt {
+  background: none;
+  border: 0;
+  padding: 7px 12px;
+  cursor: pointer;
+  color: var(--ink-muted);
+  transition: color 180ms, background-color 180ms;
+  border-right: 1px solid var(--line-strong);
+}
+.dwr-role-filter-opt:last-child { border-right: 0; }
+.dwr-role-filter-opt:hover { color: var(--ink); }
+.dwr-role-filter-opt.active {
+  color: var(--ink);
+  background: linear-gradient(180deg, rgba(233, 69, 96, 0.18), rgba(91, 58, 143, 0.18));
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.dwr-role-filter-opt .count { color: var(--ink-dim); margin-left: 2px; }
+.dwr-role-filter-opt.active .count { color: var(--ink-soft); }
+.dwr-role-filter-opt:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  position: relative;
+  z-index: 1;
+}
+@media (max-width: 720px) {
+  .dwr-role-filter { font-size: 9px; }
+  .dwr-role-filter-opt { padding: 6px 8px; }
+}
 .dwr-fire-btn {
   width: 38px;
   height: 38px;

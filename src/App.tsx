@@ -15,7 +15,7 @@ import {
 } from './api/opendota'
 import { parseAccountInput } from './lib/parseInput'
 import { runAllAnalyses } from './analyses'
-import { inferRole } from './lib/matchHelpers'
+import { computeRoleSplit, inferRole, type RoleSplit } from './lib/matchHelpers'
 import { rankBucketFromTier, rankBucketLabel, rankLabel } from './lib/baselines'
 import { getHeroName, setHeroes } from './lib/heroes'
 import {
@@ -24,7 +24,6 @@ import {
   PAID_TIER_MATCH_LIMIT,
 } from './lib/license'
 import type {
-  AnalysisResult,
   HonestLanguage,
   ODMatchDetail,
   ODMatchSummary,
@@ -36,9 +35,8 @@ interface ReportState {
   profile: ODPlayerProfile
   matches: ODMatchSummary[]
   details: Record<number, ODMatchDetail>
-  results: AnalysisResult[]
   totalAvailable: number
-  inferredRole: 'core' | 'support' | 'flex' | 'unknown'
+  accountId: number
 }
 
 type AppStatus =
@@ -47,10 +45,13 @@ type AppStatus =
   | { kind: 'error'; message: string }
   | { kind: 'ready'; report: ReportState }
 
+type RoleFilter = 'all' | 'core' | 'support'
+
 function App() {
   const [status, setStatus] = useState<AppStatus>({ kind: 'idle' })
   const [isPaid, setIsPaid] = useState(false)
   const [honestMode, setHonestMode] = useState(false)
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
   // Language is fixed to English at launch. The Taglish templates live in
   // lib/honest-mode/taglish-templates.ts as a paid-tier feature; once
   // wired up, this becomes useState<HonestLanguage>('english') again.
@@ -167,22 +168,11 @@ function App() {
       }
 
       setStatus({ kind: 'loading', stage: 'Crunching analyses…' })
-      const { role: inferredRole, distribution: roleDistribution } = inferRole(
-        matches,
-        details,
-        parsed.accountId
-      )
-      const reportInput: ReportInput = {
-        accountId: parsed.accountId,
-        matches,
-        details,
-        rankTier: profile.rank_tier ?? null,
-        inferredRole,
-        roleDistribution,
-        rankBucket: rankBucketFromTier(profile.rank_tier),
-        heroName: getHeroName,
-      }
-      const results = runAllAnalyses(reportInput)
+
+      // Reset the role filter on every fresh analysis so a new account
+      // doesn't inherit the previous run's filter (which might be invalid
+      // for the new player's match shape).
+      setRoleFilter('all')
 
       setStatus({
         kind: 'ready',
@@ -190,9 +180,8 @@ function App() {
           profile,
           matches,
           details,
-          results,
           totalAvailable: allMatches.length,
-          inferredRole,
+          accountId: parsed.accountId,
         },
       })
     } catch (err) {
@@ -215,6 +204,7 @@ function App() {
     abortRef.current?.abort()
     lastInputRef.current = null
     setHonestMode(false)
+    setRoleFilter('all')
     setStatus({ kind: 'idle' })
     navigate('/')
   }
@@ -235,6 +225,56 @@ function App() {
   }, [status.kind])
 
   const isChangelog = route === '/changelog'
+
+  // Per-match role classification for the role-split toggle. Computed
+  // once per report from the full match window — independent of the
+  // current filter.
+  const roleSplit = useMemo<RoleSplit | null>(() => {
+    if (status.kind !== 'ready') return null
+    return computeRoleSplit(
+      status.report.matches,
+      status.report.details,
+      status.report.accountId
+    )
+  }, [status])
+
+  // Filter the match list to whatever the user picked. If the toggle
+  // isn't eligible (rare role mix), we lock to 'all' so a stale filter
+  // can't silently empty the report.
+  const effectiveFilter: RoleFilter = roleSplit?.isEligible ? roleFilter : 'all'
+
+  const filteredMatches = useMemo<ODMatchSummary[]>(() => {
+    if (status.kind !== 'ready') return []
+    if (effectiveFilter === 'all' || !roleSplit) return status.report.matches
+    return status.report.matches.filter(
+      (m) => roleSplit.byMatch[m.match_id] === effectiveFilter
+    )
+  }, [status, roleSplit, effectiveFilter])
+
+  // Re-run all 9 analyses against the filtered subset. inferRole runs on
+  // the filtered subset too, which means "Core only" view shows core
+  // baselines and "Support only" shows support baselines automatically.
+  const reportComputed = useMemo(() => {
+    if (status.kind !== 'ready') return null
+    const { profile, details, accountId } = status.report
+    const { role: inferredRole, distribution: roleDistribution } = inferRole(
+      filteredMatches,
+      details,
+      accountId
+    )
+    const reportInput: ReportInput = {
+      accountId,
+      matches: filteredMatches,
+      details,
+      rankTier: profile.rank_tier ?? null,
+      inferredRole,
+      roleDistribution,
+      rankBucket: rankBucketFromTier(profile.rank_tier),
+      heroName: getHeroName,
+    }
+    const results = runAllAnalyses(reportInput)
+    return { results, inferredRole }
+  }, [status, filteredMatches])
 
   return (
     <div className="dwr" data-honest={honestMode ? 'true' : 'false'}>
@@ -257,25 +297,30 @@ function App() {
             }
           />
 
-          {isReady && (
+          {isReady && reportComputed && roleSplit && (
             <>
               <ProfileBar
                 profile={status.report.profile}
-                matchCount={status.report.matches.length}
-                inferredRole={status.report.inferredRole}
+                matchCount={filteredMatches.length}
+                totalMatches={status.report.matches.length}
+                inferredRole={reportComputed.inferredRole}
                 isPaid={isPaid}
                 honestMode={honestMode}
                 onToggleHonestMode={setHonestMode}
+                roleSplit={roleSplit}
+                roleFilter={effectiveFilter}
+                onRoleFilterChange={setRoleFilter}
               />
               <ReportGrid
-                results={status.report.results}
-                matchCount={status.report.matches.length}
+                results={reportComputed.results}
+                matchCount={filteredMatches.length}
                 isPaid={isPaid}
                 honestMode={honestMode}
                 language={language}
                 accountId={status.report.profile.profile?.account_id ?? 0}
+                roleFilter={effectiveFilter}
               />
-              {isPaid && <DeepDive matches={status.report.matches} />}
+              {isPaid && <DeepDive matches={filteredMatches} />}
             </>
           )}
         </>
@@ -295,17 +340,25 @@ function App() {
 function ProfileBar({
   profile,
   matchCount,
+  totalMatches,
   inferredRole,
   isPaid,
   honestMode,
   onToggleHonestMode,
+  roleSplit,
+  roleFilter,
+  onRoleFilterChange,
 }: {
   profile: ODPlayerProfile
   matchCount: number
+  totalMatches: number
   inferredRole: 'core' | 'support' | 'flex' | 'unknown'
   isPaid: boolean
   honestMode: boolean
   onToggleHonestMode: (v: boolean) => void
+  roleSplit: RoleSplit
+  roleFilter: RoleFilter
+  onRoleFilterChange: (f: RoleFilter) => void
 }) {
   const name = profile.profile?.personaname ?? 'Anonymous player'
   const rank = useMemo(() => rankLabel(profile.rank_tier), [profile.rank_tier])
@@ -315,11 +368,17 @@ function ProfileBar({
   )
   const initial = (name.trim()[0] ?? 'A').toUpperCase()
   const avatarUrl = profile.profile?.avatarfull
+  // When the user is filtering to Core or Support, the role label shows
+  // the filtered count to make it obvious what subset they're viewing.
   const roleLabel =
-    inferredRole === 'core' ? 'Core'
-    : inferredRole === 'support' ? 'Support'
-    : inferredRole === 'flex' ? 'Flex'
-    : null
+    roleFilter === 'core'
+      ? `Core (${matchCount} games)`
+      : roleFilter === 'support'
+      ? `Support (${matchCount} games)`
+      : inferredRole === 'core' ? 'Core'
+      : inferredRole === 'support' ? 'Support'
+      : inferredRole === 'flex' ? 'Flex'
+      : null
 
   return (
     <section className="dwr-report-head">
@@ -348,11 +407,60 @@ function ProfileBar({
           </div>
         </div>
         <div className="dwr-badges">
+          {roleSplit.isEligible && (
+            <RoleFilterToggle
+              filter={roleFilter}
+              onChange={onRoleFilterChange}
+              totalCount={totalMatches}
+              coreCount={roleSplit.coreCount}
+              supportCount={roleSplit.supportCount}
+            />
+          )}
           <span className={`dwr-badge ${isPaid ? 'paid' : ''}`}>{isPaid ? 'Paid' : 'Free'}</span>
           <HonestModeToggle enabled={honestMode} onToggle={onToggleHonestMode} />
         </div>
       </div>
     </section>
+  )
+}
+
+function RoleFilterToggle({
+  filter,
+  onChange,
+  totalCount,
+  coreCount,
+  supportCount,
+}: {
+  filter: RoleFilter
+  onChange: (f: RoleFilter) => void
+  totalCount: number
+  coreCount: number
+  supportCount: number
+}) {
+  const opts: { value: RoleFilter; label: string; count: number }[] = [
+    { value: 'all', label: 'All games', count: totalCount },
+    { value: 'core', label: 'Core only', count: coreCount },
+    { value: 'support', label: 'Support only', count: supportCount },
+  ]
+  return (
+    <div
+      className="dwr-role-filter"
+      role="radiogroup"
+      aria-label="Filter analyses by role"
+    >
+      {opts.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          role="radio"
+          aria-checked={filter === o.value}
+          className={`dwr-role-filter-opt ${filter === o.value ? 'active' : ''}`}
+          onClick={() => onChange(o.value)}
+        >
+          {o.label} <span className="count">({o.count})</span>
+        </button>
+      ))}
+    </div>
   )
 }
 

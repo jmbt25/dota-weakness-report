@@ -49,9 +49,20 @@ interface StackSynergyCardProps {
   honestMode: boolean
   language: HonestLanguage
   accountId: number
+  /** When the role-split filter is active, the partner counts are over a
+   * filtered subset — say so in a footnote. */
+  roleFilter?: 'all' | 'core' | 'support'
+  roleFilterMatchCount?: number
 }
 
-export function StackSynergyCard({ result, honestMode, language, accountId }: StackSynergyCardProps) {
+export function StackSynergyCard({
+  result,
+  honestMode,
+  language,
+  accountId,
+  roleFilter = 'all',
+  roleFilterMatchCount,
+}: StackSynergyCardProps) {
   const [showNames, setShowNames] = useState(true)
   const data = result.stackSynergy
   const isUnmeasured = result.severity === 'unmeasured'
@@ -146,6 +157,11 @@ export function StackSynergyCard({ result, honestMode, language, accountId }: St
       <p className="privacy">
         Partner data is only visible to you. Names hidden by default in shared reports.
       </p>
+      {roleFilter !== 'all' && roleFilterMatchCount != null && (
+        <div className="footnote">
+          Filtered to your {roleFilterMatchCount} games as {roleFilter}.
+        </div>
+      )}
       {result.note && <div className="footnote">{result.note}</div>}
     </article>
   )
