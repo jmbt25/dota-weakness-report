@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+  }
+  body {
+    background-color: #0b0d12;
+    color: #e6e8ee;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-bg-panel border border-line rounded-xl p-5;
+  }
+  .pill {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+  .pill-good { @apply pill bg-emerald-500/10 text-emerald-400 border border-emerald-500/20; }
+  .pill-ok   { @apply pill bg-amber-500/10  text-amber-400  border border-amber-500/20; }
+  .pill-bad  { @apply pill bg-red-500/10    text-red-400    border border-red-500/20; }
+  .input-base {
+    @apply w-full bg-bg-raised border border-line rounded-lg px-4 py-3 text-ink placeholder:text-ink-dim focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-5 py-3 rounded-lg bg-accent text-white font-medium hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg border border-line text-ink-muted hover:text-ink hover:border-ink-muted transition-colors;
+  }
+}

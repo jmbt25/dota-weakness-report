@@ -1,0 +1,7 @@
+name = "dota-weakness-report"
+compatibility_date = "2025-01-01"
+
+[assets]
+directory = "./dist"
+# SPA fallback: serve index.html for any path the static bundle doesn't have.
+not_found_handling = "single-page-application"
