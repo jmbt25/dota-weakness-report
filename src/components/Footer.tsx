@@ -1,14 +1,19 @@
 import { useState } from 'react'
 import { ApertureSigil } from './ApertureSigil'
 import { validateLicenseKey } from '../lib/license'
+import { APP_VERSION } from '../lib/version'
 
 interface FooterProps {
   isPaid: boolean
   onUnlock: (key: string) => void
   onHome?: () => void
+  onChangelog?: () => void
+  // Hide the upsell CTA on content pages (changelog, etc.). The
+  // license form belongs on the landing/report flow only.
+  showCta?: boolean
 }
 
-export function Footer({ isPaid, onUnlock, onHome }: FooterProps) {
+export function Footer({ isPaid, onUnlock, onHome, onChangelog, showCta = true }: FooterProps) {
   const [key, setKey] = useState('')
   const [err, setErr] = useState<string | null>(null)
 
@@ -24,59 +29,61 @@ export function Footer({ isPaid, onUnlock, onHome }: FooterProps) {
 
   return (
     <>
-      <section className="dwr-cta">
-        <div>
-          <h3 className="dwr-cta-title">
-            Unlock the 100-match window + per-hero deep dive
-          </h3>
-          <p className="dwr-cta-body">
-            The free report runs on your last 50 matches — enough sample for the eight analyses to
-            mean something. A license key widens the window to 100 matches and unlocks per-hero
-            drilldowns (item build vs. winning builds, fight participation by hero, losing patterns).
-            Pay once, no subscription.
-          </p>
-          {isPaid ? (
-            <p className="dwr-cta-active">
-              License active. 100-match window + deep dive unlocked.
+      {showCta && (
+        <section className="dwr-cta">
+          <div>
+            <h3 className="dwr-cta-title">
+              Unlock the 100-match window + per-hero deep dive
+            </h3>
+            <p className="dwr-cta-body">
+              The free report runs on your last 50 matches — enough sample for the eight analyses to
+              mean something. A license key widens the window to 100 matches and unlocks per-hero
+              drilldowns (item build vs. winning builds, fight participation by hero, losing patterns).
+              Pay once, no subscription.
             </p>
-          ) : (
-            <form onSubmit={submit} className="dwr-form" style={{ marginTop: 18 }}>
-              <div className="dwr-input-wrap">
-                <input
-                  type="text"
-                  value={key}
-                  onChange={(e) => setKey(e.target.value)}
-                  placeholder="XXXX-XXXX-XXXX-XXXX"
-                  className="dwr-input"
-                  spellCheck={false}
-                  autoComplete="off"
-                  style={{ paddingLeft: 18 }}
-                />
-              </div>
-              <button type="submit" className="dwr-btn">Unlock</button>
-            </form>
-          )}
-          {err && <p className="dwr-error">{err}</p>}
-          <p
-            className="dwr-cta-meta"
-            style={{ marginTop: 16, textAlign: 'left' }}
-          >
-            License keys are sold via Gumroad (coming soon). Validation is local — no data leaves
-            your browser.
-          </p>
-        </div>
+            {isPaid ? (
+              <p className="dwr-cta-active">
+                License active. 100-match window + deep dive unlocked.
+              </p>
+            ) : (
+              <form onSubmit={submit} className="dwr-form" style={{ marginTop: 18 }}>
+                <div className="dwr-input-wrap">
+                  <input
+                    type="text"
+                    value={key}
+                    onChange={(e) => setKey(e.target.value)}
+                    placeholder="XXXX-XXXX-XXXX-XXXX"
+                    className="dwr-input"
+                    spellCheck={false}
+                    autoComplete="off"
+                    style={{ paddingLeft: 18 }}
+                  />
+                </div>
+                <button type="submit" className="dwr-btn">Unlock</button>
+              </form>
+            )}
+            {err && <p className="dwr-error">{err}</p>}
+            <p
+              className="dwr-cta-meta"
+              style={{ marginTop: 16, textAlign: 'left' }}
+            >
+              License keys are sold via Gumroad (coming soon). Validation is local — no data leaves
+              your browser.
+            </p>
+          </div>
 
-        <div className="dwr-cta-meta">
-          <p>
-            Match data from the{' '}
-            <a href="https://docs.opendota.com/" target="_blank" rel="noreferrer">
-              OpenDota API
-            </a>
-            . Not affiliated with Valve.
-          </p>
-          <p style={{ marginTop: 8 }}>Static site, no accounts, no tracking.</p>
-        </div>
-      </section>
+          <div className="dwr-cta-meta">
+            <p>
+              Match data from the{' '}
+              <a href="https://docs.opendota.com/" target="_blank" rel="noreferrer">
+                OpenDota API
+              </a>
+              . Not affiliated with Valve.
+            </p>
+            <p style={{ marginTop: 8 }}>Static site, no accounts, no tracking.</p>
+          </div>
+        </section>
+      )}
 
       <footer className="dwr-footer">
         <button
@@ -89,6 +96,19 @@ export function Footer({ isPaid, onUnlock, onHome }: FooterProps) {
           <span className="dwr-wm sm"><span>DWR</span></span>
         </button>
         <div className="links">
+          <button
+            type="button"
+            className="dwr-version"
+            onClick={onChangelog}
+            aria-label={`Version ${APP_VERSION} — view changelog`}
+          >
+            v{APP_VERSION}
+          </button>
+          <span className="sep" aria-hidden="true">·</span>
+          <button type="button" className="dwr-link-btn" onClick={onChangelog}>
+            CHANGELOG
+          </button>
+          <span className="sep" aria-hidden="true">·</span>
           <a href="https://docs.opendota.com/" target="_blank" rel="noreferrer">OpenDota</a>
         </div>
       </footer>

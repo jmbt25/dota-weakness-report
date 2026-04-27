@@ -5,6 +5,7 @@ import { ReportGrid } from './components/ReportGrid'
 import { Footer } from './components/Footer'
 import { DeepDive } from './components/DeepDive'
 import { HonestModeToggle } from './components/HonestModeToggle'
+import { ChangelogPage } from './components/ChangelogPage'
 import {
   fetchAllMatchDetails,
   fetchHeroes,
@@ -54,9 +55,30 @@ function App() {
   // lib/honest-mode/taglish-templates.ts as a paid-tier feature; once
   // wired up, this becomes useState<HonestLanguage>('english') again.
   const language: HonestLanguage = 'english'
+  const [route, setRoute] = useState<string>(() =>
+    typeof window !== 'undefined' ? window.location.pathname : '/'
+  )
   const lastInputRef = useRef<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const heroesLoadedRef = useRef(false)
+
+  // Browser back/forward syncs into our route state. We only push state
+  // from goHome()/goChangelog(); everything else is read-only.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onPop = () => setRoute(window.location.pathname)
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+
+  function navigate(path: string) {
+    if (typeof window === 'undefined') return
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, '', path)
+    }
+    setRoute(path)
+    window.scrollTo({ top: 0, behavior: 'auto' })
+  }
 
   // Fetch the hero index once on mount; falls back to "Hero N" if it fails.
   useEffect(() => {
@@ -194,9 +216,11 @@ function App() {
     lastInputRef.current = null
     setHonestMode(false)
     setStatus({ kind: 'idle' })
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'auto' })
-    }
+    navigate('/')
+  }
+
+  function goChangelog() {
+    navigate('/changelog')
   }
 
   const errorMessage = status.kind === 'error' ? status.message : null
@@ -210,46 +234,60 @@ function App() {
     }
   }, [status.kind])
 
+  const isChangelog = route === '/changelog'
+
   return (
     <div className="dwr" data-honest={honestMode ? 'true' : 'false'}>
       <div className="cosmos" />
 
-      <Hero
-        onAnalyze={(raw) => analyze(raw)}
-        isLoading={status.kind === 'loading'}
-        error={errorMessage}
-        showLanding={!isReady}
-        onHome={goHome}
-        loaderSlot={
-          status.kind === 'loading' ? (
-            <Loader stage={status.stage} done={status.done} total={status.total} />
-          ) : null
-        }
-      />
-
-      {isReady && (
+      {isChangelog ? (
+        <ChangelogPage onHome={goHome} />
+      ) : (
         <>
-          <ProfileBar
-            profile={status.report.profile}
-            matchCount={status.report.matches.length}
-            inferredRole={status.report.inferredRole}
-            isPaid={isPaid}
-            honestMode={honestMode}
-            onToggleHonestMode={setHonestMode}
+          <Hero
+            onAnalyze={(raw) => analyze(raw)}
+            isLoading={status.kind === 'loading'}
+            error={errorMessage}
+            showLanding={!isReady}
+            onHome={goHome}
+            loaderSlot={
+              status.kind === 'loading' ? (
+                <Loader stage={status.stage} done={status.done} total={status.total} />
+              ) : null
+            }
           />
-          <ReportGrid
-            results={status.report.results}
-            matchCount={status.report.matches.length}
-            isPaid={isPaid}
-            honestMode={honestMode}
-            language={language}
-            accountId={status.report.profile.profile?.account_id ?? 0}
-          />
-          {isPaid && <DeepDive matches={status.report.matches} />}
+
+          {isReady && (
+            <>
+              <ProfileBar
+                profile={status.report.profile}
+                matchCount={status.report.matches.length}
+                inferredRole={status.report.inferredRole}
+                isPaid={isPaid}
+                honestMode={honestMode}
+                onToggleHonestMode={setHonestMode}
+              />
+              <ReportGrid
+                results={status.report.results}
+                matchCount={status.report.matches.length}
+                isPaid={isPaid}
+                honestMode={honestMode}
+                language={language}
+                accountId={status.report.profile.profile?.account_id ?? 0}
+              />
+              {isPaid && <DeepDive matches={status.report.matches} />}
+            </>
+          )}
         </>
       )}
 
-      <Footer isPaid={isPaid} onUnlock={unlock} onHome={goHome} />
+      <Footer
+        isPaid={isPaid}
+        onUnlock={unlock}
+        onHome={goHome}
+        onChangelog={goChangelog}
+        showCta={!isChangelog}
+      />
     </div>
   )
 }
