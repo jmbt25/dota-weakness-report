@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { AnalysisResult, HonestLanguage, Severity, VisionData, WardPlacement } from '../types'
 import { generateRoast } from '../lib/honestMode'
+import { CardSkeleton } from './CardSkeleton'
+import type { ReportPhase } from './ProgressStrip'
 
 const MINIMAP_SRC = '/dota-minimap.jpg'
 
@@ -53,9 +55,10 @@ interface VisionCardProps {
   honestMode: boolean
   language: HonestLanguage
   accountId: number
+  phase?: ReportPhase
 }
 
-export function VisionCard({ result, honestMode, language, accountId }: VisionCardProps) {
+export function VisionCard({ result, honestMode, language, accountId, phase }: VisionCardProps) {
   const data = result.vision
   const isUnmeasured = result.severity === 'unmeasured'
 
@@ -63,6 +66,14 @@ export function VisionCard({ result, honestMode, language, accountId }: VisionCa
     if (!honestMode) return result.finding
     return generateRoast(result, language, accountId) ?? result.finding
   }, [honestMode, language, accountId, result])
+
+  // Vision is the most parse-dependent card (needs ward logs from parsed
+  // replays). Skeleton in until the first eligible parsed match lands.
+  // Placed AFTER all hooks so the skeleton-vs-real swap doesn't change
+  // hook count between renders (Rules of Hooks).
+  if (isUnmeasured && phase && phase !== 'done') {
+    return <CardSkeleton title={result.title} />
+  }
 
   return (
     <article className={`card ${cardSeverityClass(result.severity)}`}>

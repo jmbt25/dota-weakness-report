@@ -11,6 +11,8 @@ import {
 } from 'recharts'
 import type { AnalysisResult, HonestLanguage, Severity, StackSynergyPartner } from '../types'
 import { generateRoast } from '../lib/honestMode'
+import { CardSkeleton } from './CardSkeleton'
+import type { ReportPhase } from './ProgressStrip'
 
 const TOOLTIP_STYLE = {
   background: '#12151f',
@@ -53,6 +55,7 @@ interface StackSynergyCardProps {
    * filtered subset — say so in a footnote. */
   roleFilter?: 'all' | 'core' | 'support'
   roleFilterMatchCount?: number
+  phase?: ReportPhase
 }
 
 export function StackSynergyCard({
@@ -62,6 +65,7 @@ export function StackSynergyCard({
   accountId,
   roleFilter = 'all',
   roleFilterMatchCount,
+  phase,
 }: StackSynergyCardProps) {
   const [showNames, setShowNames] = useState(true)
   const data = result.stackSynergy
@@ -98,6 +102,16 @@ export function StackSynergyCard({
     const roast = generateRoast(result, language, accountId, facts)
     return roast ?? seriousFinding
   }, [honestMode, language, accountId, result, data, displayPartners, seriousFinding])
+
+  // Progressive renderer: stack synergy needs party_id from parsed match
+  // details, so during fetch/parse phases we show the shared "waiting"
+  // skeleton. Placed AFTER all hooks to satisfy the Rules of Hooks — the
+  // skeleton-vs-real swap mid-stream would otherwise change hook count
+  // between renders. Once any partner data resolves the analysis returns
+  // a non-unmeasured result and this branch falls through.
+  if (isUnmeasured && phase && phase !== 'done') {
+    return <CardSkeleton title={result.title} />
+  }
 
   return (
     <article className={`card ${cardSeverityClass(result.severity)}`}>

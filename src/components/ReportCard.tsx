@@ -17,6 +17,8 @@ import type {
   Severity,
 } from '../types'
 import { generateRoast } from '../lib/honestMode'
+import { CardSkeleton } from './CardSkeleton'
+import type { ReportPhase } from './ProgressStrip'
 
 function severityClass(result: { severity: Severity; severityLabel?: string }): string {
   if (result.severity === 'good') {
@@ -59,9 +61,10 @@ interface ReportCardProps {
   honestMode: boolean
   language: HonestLanguage
   accountId: number
+  phase?: ReportPhase
 }
 
-export function ReportCard({ result, honestMode, language, accountId }: ReportCardProps) {
+export function ReportCard({ result, honestMode, language, accountId, phase }: ReportCardProps) {
   const { chart, severity } = result
   const isUnmeasured = severity === 'unmeasured'
 
@@ -69,6 +72,15 @@ export function ReportCard({ result, honestMode, language, accountId }: ReportCa
     if (!honestMode) return result.finding
     return generateRoast(result, language, accountId) ?? result.finding
   }, [honestMode, language, accountId, result])
+
+  // Progressive-render skeleton: while data is still streaming and this
+  // card has nothing to show yet, render a "waiting on first parsed match"
+  // placeholder. Placed AFTER all hooks so the skeleton-vs-real swap
+  // doesn't change hook count between renders (Rules of Hooks). Once the
+  // analysis produces a non-unmeasured result this branch falls through.
+  if (isUnmeasured && phase && phase !== 'done') {
+    return <CardSkeleton title={result.title} />
+  }
 
   return (
     <article className={`card ${cardSeverityClass(severity)}`}>

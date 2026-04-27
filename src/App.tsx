@@ -6,6 +6,7 @@ import { Footer } from './components/Footer'
 import { DeepDive } from './components/DeepDive'
 import { HonestModeToggle } from './components/HonestModeToggle'
 import { ChangelogPage } from './components/ChangelogPage'
+import { ProgressStrip, type ReportPhase } from './components/ProgressStrip'
 import {
   fetchAllMatchDetails,
   fetchHeroes,
@@ -38,13 +39,20 @@ interface ReportState {
   details: Record<number, ODMatchDetail>
   totalAvailable: number
   accountId: number
+  phase: ReportPhase
+  detailsFetched: number
+  totalDetails: number
+  parsedCount: number
+  unparsedRemaining: number
+  stalledCount: number
+  totalToParse: number
 }
 
 type AppStatus =
   | { kind: 'idle' }
-  | { kind: 'loading'; stage: string; done?: number; total?: number }
+  | { kind: 'preparing'; stage: string }
   | { kind: 'error'; message: string }
-  | { kind: 'ready'; report: ReportState }
+  | { kind: 'streaming'; report: ReportState }
 
 type RoleFilter = 'all' | 'core' | 'support'
 
@@ -53,9 +61,6 @@ function App() {
   const [isPaid, setIsPaid] = useState(false)
   const [honestMode, setHonestMode] = useState(false)
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
-  // Language is fixed to English at launch. The Taglish templates live in
-  // lib/honest-mode/taglish-templates.ts as a paid-tier feature; once
-  // wired up, this becomes useState<HonestLanguage>('english') again.
   const language: HonestLanguage = 'english'
   const [route, setRoute] = useState<string>(() =>
     typeof window !== 'undefined' ? window.location.pathname : '/'
@@ -64,8 +69,6 @@ function App() {
   const abortRef = useRef<AbortController | null>(null)
   const heroesLoadedRef = useRef(false)
 
-  // Browser back/forward syncs into our route state. We only push state
-  // from goHome()/goChangelog(); everything else is read-only.
   useEffect(() => {
     if (typeof window === 'undefined') return
     const onPop = () => setRoute(window.location.pathname)
@@ -82,7 +85,6 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'auto' })
   }
 
-  // Fetch the hero index once on mount; falls back to "Hero N" if it fails.
   useEffect(() => {
     if (heroesLoadedRef.current) return
     heroesLoadedRef.current = true
@@ -109,81 +111,133 @@ function App() {
     const matchLimit = paid ? PAID_TIER_MATCH_LIMIT : FREE_TIER_MATCH_LIMIT
 
     try {
-      setStatus({ kind: 'loading', stage: 'Looking up profile…' })
+      setStatus({ kind: 'preparing', stage: 'Looking up profile…' })
       const profile = await fetchPlayerProfile(parsed.accountId, ac.signal)
 
-      setStatus({ kind: 'loading', stage: `Fetching last ${matchLimit} matches…` })
+      setStatus({ kind: 'preparing', stage: `Fetching last ${matchLimit} matches…` })
       const allMatches = await fetchPlayerMatches(parsed.accountId, matchLimit, ac.signal)
 
       if (allMatches.length === 0) {
         setStatus({
           kind: 'error',
-          message: 'No matches found for that account. Make sure your match history is public on Dota 2.',
+          message:
+            'No matches found for that account. Make sure your match history is public on Dota 2.',
         })
         return
       }
 
-      const matches = allMatches
-      const matchesToDetailFetch = matches.slice(0, MAX_DETAIL_FETCH)
+      // Reset the role filter on every fresh analysis so a new account
+      // doesn't inherit the previous run's filter.
+      setRoleFilter('all')
+
+      const matchesToDetailFetch = allMatches.slice(0, MAX_DETAIL_FETCH)
       const ids = matchesToDetailFetch.map((m) => m.match_id)
 
-      setStatus({ kind: 'loading', stage: 'Fetching match details…', done: 0, total: ids.length })
-      const details = await fetchAllMatchDetails(
+      // Render the report skeleton immediately. Tier-1 cards (hero pool,
+      // tilt) work straight off the matches list. Tier-2/3 cards stay in
+      // their "waiting for first parsed match" state until details + parses
+      // arrive below.
+      const initialReport: ReportState = {
+        profile,
+        matches: allMatches,
+        details: {},
+        totalAvailable: allMatches.length,
+        accountId: parsed.accountId,
+        phase: 'fetching-details',
+        detailsFetched: 0,
+        totalDetails: ids.length,
+        parsedCount: 0,
+        unparsedRemaining: 0,
+        stalledCount: 0,
+        totalToParse: 0,
+      }
+      setStatus({ kind: 'streaming', report: initialReport })
+
+      // Mutable details map — fetchAllMatchDetails writes into it via the
+      // callback below, and we publish a fresh shallow copy into React state
+      // on each update so the analyses pipeline re-runs.
+      const liveDetails: Record<number, ODMatchDetail> = {}
+
+      await fetchAllMatchDetails(
         ids,
-        ({ done, total }) =>
-          setStatus({ kind: 'loading', stage: `Fetching match ${done}/${total}…`, done, total }),
+        (id, detail, prog) => {
+          if (detail) liveDetails[id] = detail
+          setStatus((prev) => {
+            if (prev.kind !== 'streaming') return prev
+            return {
+              kind: 'streaming',
+              report: {
+                ...prev.report,
+                details: { ...liveDetails },
+                detailsFetched: prog.done,
+              },
+            }
+          })
+        },
         ac.signal
       )
 
-      const unparsedCount = matchesToDetailFetch.filter((m) => {
-        const d = details[m.match_id]
+      // Detail-fetch phase is done. Some of those matches may already be
+      // parsed (OpenDota cached them) — skip those and only request parses
+      // for the rest.
+      const unparsedIds = matchesToDetailFetch.filter((m) => {
+        const d = liveDetails[m.match_id]
         return !d || d.version == null
-      }).length
+      })
+      const alreadyParsed = matchesToDetailFetch.length - unparsedIds.length
 
-      if (unparsedCount > 0) {
-        setStatus({
-          kind: 'loading',
-          stage: `Parsing replays (this can take a minute)…`,
-          done: 0,
-          total: unparsedCount,
-        })
-        await parseMatches(matchesToDetailFetch, details, {
+      setStatus((prev) => {
+        if (prev.kind !== 'streaming') return prev
+        return {
+          kind: 'streaming',
+          report: {
+            ...prev.report,
+            phase: unparsedIds.length === 0 ? 'done' : 'parsing',
+            parsedCount: alreadyParsed,
+            unparsedRemaining: unparsedIds.length,
+            stalledCount: 0,
+            totalToParse: unparsedIds.length,
+          },
+        }
+      })
+
+      if (unparsedIds.length > 0) {
+        await parseMatches(unparsedIds, liveDetails, {
           concurrency: 5,
-          // Parse-phase tuning: skip the first ~15s of polling (OpenDota
-          // parses almost never finish in <15s), then poll every 7s up to
-          // 90s. Faster than the old 5s/90s loop without dropping long-
-          // tail matches that legitimately need the full 90s window
-          // during peak parse-queue hours.
           initialDelayMs: 15_000,
           pollIntervalMs: 7_000,
           timeoutMs: 90_000,
-          onProgress: ({ done, total }) =>
-            setStatus({
-              kind: 'loading',
-              stage: `Parsing match ${Math.min(done + 1, total)}/${total}…`,
-              done,
-              total,
-            }),
+          // 3-min hard ceiling per the progressive-render spec — after this
+          // we mark the match stalled and let the user refresh to retry.
+          stallTimeoutMs: 180_000,
+          onMatchResolved: (_id, _detail, outcome) => {
+            setStatus((prev) => {
+              if (prev.kind !== 'streaming') return prev
+              const r = prev.report
+              return {
+                kind: 'streaming',
+                report: {
+                  ...r,
+                  details: { ...liveDetails },
+                  unparsedRemaining: Math.max(0, r.unparsedRemaining - 1),
+                  parsedCount: outcome === 'parsed' ? r.parsedCount + 1 : r.parsedCount,
+                  stalledCount: outcome === 'stalled' ? r.stalledCount + 1 : r.stalledCount,
+                },
+              }
+            })
+          },
           signal: ac.signal,
         })
       }
 
-      setStatus({ kind: 'loading', stage: 'Crunching analyses…' })
-
-      // Reset the role filter on every fresh analysis so a new account
-      // doesn't inherit the previous run's filter (which might be invalid
-      // for the new player's match shape).
-      setRoleFilter('all')
-
-      setStatus({
-        kind: 'ready',
-        report: {
-          profile,
-          matches,
-          details,
-          totalAvailable: allMatches.length,
-          accountId: parsed.accountId,
-        },
+      // Final flip to 'done' so the progress strip transitions to its
+      // resting state.
+      setStatus((prev) => {
+        if (prev.kind !== 'streaming') return prev
+        return {
+          kind: 'streaming',
+          report: { ...prev.report, phase: 'done' },
+        }
       })
     } catch (err) {
       if ((err as Error).name === 'AbortError') return
@@ -196,7 +250,7 @@ function App() {
   function unlock(key: string) {
     setIsPaid(true)
     void key
-    if (status.kind === 'ready' && lastInputRef.current) {
+    if (status.kind === 'streaming' && lastInputRef.current) {
       analyze(lastInputRef.current, true)
     }
   }
@@ -215,61 +269,75 @@ function App() {
   }
 
   const errorMessage = status.kind === 'error' ? status.message : null
-  const isReady = status.kind === 'ready'
+  const isPreparing = status.kind === 'preparing'
+  const isStreaming = status.kind === 'streaming'
 
-  // When the report finishes loading, jump back to the top so the user sees
-  // the user card and the first row of analyses without scrolling.
+  // When the report skeleton first appears, jump back to the top so the
+  // user sees the user card and the first row of analyses without scrolling.
+  // We only fire this on the *transition* into streaming, not on every
+  // streaming update — otherwise mid-load updates would yank the page back.
+  const lastStatusKindRef = useRef<AppStatus['kind']>('idle')
   useEffect(() => {
-    if (status.kind === 'ready' && typeof window !== 'undefined') {
+    const prev = lastStatusKindRef.current
+    lastStatusKindRef.current = status.kind
+    if (prev !== 'streaming' && status.kind === 'streaming' && typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'auto' })
     }
   }, [status.kind])
 
   const isChangelog = route === '/changelog'
 
-  // Per-match role classification for the role-split toggle. Computed
-  // once per report from the full match window — independent of the
-  // current filter.
+  // Per-match role classification for the role-split toggle. Recomputed
+  // whenever the live details map changes — early on when most matches
+  // are unparsed, classification falls back to the summary-only KDA
+  // heuristic; as parses complete it gets sharper.
   const roleSplit = useMemo<RoleSplit | null>(() => {
-    if (status.kind !== 'ready') return null
-    return computeRoleSplit(
+    if (status.kind !== 'streaming') return null
+    const split = computeRoleSplit(
       status.report.matches,
       status.report.details,
       status.report.accountId
     )
+    // Diagnostic log so we can see which side of the eligibility threshold
+    // a given account lands on. The toggle only appears when both subsets
+    // are >= ROLE_SPLIT_MIN_GAMES (10), so genuinely flex-mixed accounts
+    // showing 9/41 here would explain a missing toggle.
+    if (status.report.phase === 'done') {
+      // eslint-disable-next-line no-console
+      console.debug('[role-split] eligibility', {
+        coreCount: split.coreCount,
+        supportCount: split.supportCount,
+        isEligible: split.isEligible,
+        totalMatches: status.report.matches.length,
+      })
+    }
+    return split
   }, [status])
 
-  // Filter the match list to whatever the user picked. If the toggle
-  // isn't eligible (rare role mix), we lock to 'all' so a stale filter
-  // can't silently empty the report.
   const effectiveFilter: RoleFilter = roleSplit?.isEligible ? roleFilter : 'all'
 
   const filteredMatches = useMemo<ODMatchSummary[]>(() => {
-    if (status.kind !== 'ready') return []
+    if (status.kind !== 'streaming') return []
     if (effectiveFilter === 'all' || !roleSplit) return status.report.matches
     return status.report.matches.filter(
       (m) => roleSplit.byMatch[m.match_id] === effectiveFilter
     )
   }, [status, roleSplit, effectiveFilter])
 
-  // Re-run all 9 analyses against the filtered subset. inferRole runs on
-  // the filtered subset too, which means "Core only" view shows core
-  // baselines and "Support only" shows support baselines automatically.
-  //
-  // Stored in state (not useMemo) on purpose: useMemo is "best-effort
-  // caching" and can drop the cached value across innocuous re-renders.
-  // When that happens, `results` becomes a new array reference, Recharts
-  // inside the bottom-row cards thinks its `data` prop is new, and
-  // ResponsiveContainer briefly measures off-screen children at 0 height
-  // — making the last row collapse until a window resize forces a
-  // repaint. Pinning to useState + useEffect keeps the reference stable
-  // across honest-mode toggles and other unrelated re-renders.
+  // Re-run all 9 analyses against the filtered subset whenever data
+  // changes. Stored in state (not useMemo) on purpose — see CLAUDE.md
+  // ("Don't move reportComputed back to useMemo") for the bottom-row
+  // flicker root cause. We don't debounce: detail-fetch updates already
+  // arrive ~1/s thanks to the rate limiter, and parse completions are
+  // even sparser. The analyses themselves are cheap (well under 50ms in
+  // aggregate), so running them on each update keeps the cards' footnotes
+  // honest in real time.
   const [reportComputed, setReportComputed] = useState<{
     results: AnalysisResult[]
     inferredRole: 'core' | 'support' | 'flex' | 'unknown'
   } | null>(null)
   useEffect(() => {
-    if (status.kind !== 'ready') {
+    if (status.kind !== 'streaming') {
       setReportComputed(null)
       return
     }
@@ -293,6 +361,8 @@ function App() {
     setReportComputed({ results, inferredRole })
   }, [status, filteredMatches])
 
+  const reportPhase: ReportPhase | null = isStreaming ? status.report.phase : null
+
   return (
     <div className="dwr" data-honest={honestMode ? 'true' : 'false'}>
       <div className="cosmos" />
@@ -303,18 +373,16 @@ function App() {
         <>
           <Hero
             onAnalyze={(raw) => analyze(raw)}
-            isLoading={status.kind === 'loading'}
+            isLoading={isPreparing}
             error={errorMessage}
-            showLanding={!isReady}
+            showLanding={!isStreaming}
             onHome={goHome}
             loaderSlot={
-              status.kind === 'loading' ? (
-                <Loader stage={status.stage} done={status.done} total={status.total} />
-              ) : null
+              isPreparing ? <Loader stage={(status as { stage: string }).stage} /> : null
             }
           />
 
-          {isReady && reportComputed && roleSplit && (
+          {isStreaming && reportComputed && roleSplit && (
             <>
               <ProfileBar
                 profile={status.report.profile}
@@ -328,6 +396,28 @@ function App() {
                 roleFilter={effectiveFilter}
                 onRoleFilterChange={setRoleFilter}
               />
+              {reportPhase && reportPhase !== 'done' && (
+                <ProgressStrip
+                  phase={reportPhase}
+                  detailsFetched={status.report.detailsFetched}
+                  totalDetails={status.report.totalDetails}
+                  parsedCount={status.report.parsedCount}
+                  unparsedRemaining={status.report.unparsedRemaining}
+                  stalledCount={status.report.stalledCount}
+                  totalToParse={status.report.totalToParse}
+                />
+              )}
+              {reportPhase === 'done' && status.report.stalledCount > 0 && (
+                <ProgressStrip
+                  phase="done"
+                  detailsFetched={status.report.detailsFetched}
+                  totalDetails={status.report.totalDetails}
+                  parsedCount={status.report.parsedCount}
+                  unparsedRemaining={0}
+                  stalledCount={status.report.stalledCount}
+                  totalToParse={status.report.totalToParse}
+                />
+              )}
               <ReportGrid
                 results={reportComputed.results}
                 matchCount={filteredMatches.length}
@@ -336,6 +426,7 @@ function App() {
                 language={language}
                 accountId={status.report.profile.profile?.account_id ?? 0}
                 roleFilter={effectiveFilter}
+                phase={reportPhase ?? 'done'}
               />
               {isPaid && <DeepDive matches={filteredMatches} />}
             </>
@@ -385,8 +476,6 @@ function ProfileBar({
   )
   const initial = (name.trim()[0] ?? 'A').toUpperCase()
   const avatarUrl = profile.profile?.avatarfull
-  // When the user is filtering to Core or Support, the role label shows
-  // the filtered count to make it obvious what subset they're viewing.
   const roleLabel =
     roleFilter === 'core'
       ? `Core (${matchCount} games)`
@@ -422,6 +511,11 @@ function ProfileBar({
             <span className="sep">·</span>
             <span>{matchCount} matches analyzed</span>
           </div>
+          {!roleSplit.isEligible && (
+            <div className="dwr-user-hint">
+              Role split view (Core only / Support only) hidden — needs ≥10 games as both core and support. Your mix: {roleSplit.coreCount} core / {roleSplit.supportCount} support.
+            </div>
+          )}
         </div>
         <div className="dwr-badges">
           {roleSplit.isEligible && (

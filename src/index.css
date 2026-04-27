@@ -834,6 +834,16 @@
 .dwr-user-meta .sep { color: var(--line-strong); }
 .dwr-user-meta .rank { color: var(--cosmic-haze); }
 
+.dwr-user-hint {
+  margin-top: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--ink-dim);
+  line-height: 1.4;
+  max-width: 720px;
+}
+
 .dwr-badges {
   margin-left: auto;
   display: flex;
@@ -986,6 +996,13 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  /* Floor against the bottom-row collapse seen on role-filter switch.
+     Recharts' ResponsiveContainer can briefly report 0 height when the
+     analyses pipeline swaps results mid-paint; without a floor the card
+     visually disappears even though its non-chart content is still in
+     the DOM. The number is the smallest comfortable card with head +
+     metric + prose + what-to-do block. */
+  min-height: 280px;
 }
 .card::before {
   content: "";
@@ -1260,6 +1277,211 @@
   margin-top: 6px;
   line-height: 1.4;
   letter-spacing: 0;
+}
+
+/* =============================================================
+   Progressive renderer (v1.1.1) — top-of-report progress banner
+   + per-card "waiting on first parsed match" skeleton.
+   ============================================================= */
+.dwr-progress-banner {
+  max-width: 1280px;
+  margin: 14px auto 0;
+  padding: 16px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(18, 21, 31, 0.96), rgba(11, 13, 20, 0.96));
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-card), inset 0 0 28px rgba(91, 58, 143, 0.08), 0 0 24px rgba(233, 69, 96, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+.dwr-progress-banner::before {
+  /* Faint runic accent on the right edge so the banner feels of-a-piece
+     with the cards below (which use the same SVG corners). */
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><g fill='none' stroke='%235B3A8F' stroke-width='0.6' opacity='0.7'><path d='M40 14 L40 0 L26 0'/><circle cx='34' cy='6' r='2.5'/></g></svg>") top right no-repeat;
+  pointer-events: none;
+}
+@media (max-width: 1024px) {
+  .dwr-progress-banner { margin: 14px 16px 0; }
+}
+@media (max-width: 640px) {
+  .dwr-progress-banner { padding: 14px 16px; }
+}
+
+.dwr-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dwr-progress-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.dwr-progress-pulse {
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  transform: rotate(45deg);
+  box-shadow: 0 0 14px var(--accent-glow);
+  animation: dwr-pulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.dwr-progress-cells {
+  display: inline-flex;
+  gap: 4px;
+}
+.dwr-progress-cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  background: rgba(58, 63, 82, 0.4);
+  border: 1px solid var(--line);
+  transition: background 220ms var(--ease-out), box-shadow 220ms var(--ease-out);
+}
+.dwr-progress-cell.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(233, 69, 96, 0.55);
+}
+.dwr-progress-cell.pulse {
+  animation: dwr-progress-pulse 1.2s ease-in-out infinite;
+  background: rgba(233, 69, 96, 0.4);
+  border-color: rgba(233, 69, 96, 0.5);
+}
+@keyframes dwr-progress-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; box-shadow: 0 0 14px rgba(233, 69, 96, 0.6); }
+}
+
+.dwr-progress-counts {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+.dwr-progress-counts .primary { color: var(--ink); }
+.dwr-progress-counts .eta { color: var(--accent); }
+@media (max-width: 640px) {
+  .dwr-progress-counts {
+    margin-left: 0;
+    width: 100%;
+    font-size: 11px;
+  }
+}
+
+.dwr-progress-help {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  max-width: 880px;
+}
+
+/* Per-card skeleton — shown while data is still streaming and the analysis
+   has nothing concrete to render yet. Layout matches a real card so the
+   grid doesn't reflow when cards swap in. */
+.card.sev-loading {
+  opacity: 0.92;
+}
+.pill.loading {
+  color: var(--ink-muted);
+  border-color: rgba(110, 79, 184, 0.4);
+  background: rgba(91, 58, 143, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.pill.loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
+  animation: dwr-shimmer 1.6s linear infinite;
+}
+.card-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0 8px;
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-line {
+  height: 12px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    rgba(58, 63, 82, 0.35) 0%,
+    rgba(91, 58, 143, 0.18) 50%,
+    rgba(58, 63, 82, 0.35) 100%
+  );
+  background-size: 200% 100%;
+  animation: dwr-shimmer 1.6s linear infinite;
+}
+.skeleton-line.lg { width: 60%; height: 28px; }
+.skeleton-line.md { width: 90%; }
+.skeleton-line.sm { width: 50%; }
+.skeleton-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 90px;
+  margin-top: 6px;
+}
+.skeleton-bar {
+  flex: 1;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(
+    180deg,
+    rgba(91, 58, 143, 0.22) 0%,
+    rgba(58, 63, 82, 0.35) 100%
+  );
+  animation: dwr-skeleton-bar 1.8s ease-in-out infinite;
+}
+.skeleton-bar:nth-child(1) { height: 40%; animation-delay: 0s; }
+.skeleton-bar:nth-child(2) { height: 70%; animation-delay: 0.15s; }
+.skeleton-bar:nth-child(3) { height: 55%; animation-delay: 0.3s; }
+.skeleton-bar:nth-child(4) { height: 85%; animation-delay: 0.45s; }
+@keyframes dwr-skeleton-bar {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 0.95; }
+}
+@keyframes dwr-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.prose.loading-prose {
+  color: var(--ink-dim);
+  font-style: italic;
+  font-size: 11.5px;
 }
 
 /* =============================================================

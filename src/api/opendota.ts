@@ -125,9 +125,16 @@ export interface MatchFetchProgress {
   total: number
 }
 
+/**
+ * Streaming variant: fires `onMatch` after each individual /matches/{id} call
+ * resolves (or fails). Used by the progressive renderer so cards can update
+ * the moment a match's data becomes available — not after the whole batch
+ * finishes. The caller is responsible for accumulating the resulting detail
+ * map in their own state (so React re-renders on each update).
+ */
 export async function fetchAllMatchDetails(
   matchIds: number[],
-  onProgress: (p: MatchFetchProgress) => void,
+  onMatch: (matchId: number, detail: ODMatchDetail | null, progress: MatchFetchProgress) => void,
   signal?: AbortSignal
 ): Promise<Record<number, ODMatchDetail>> {
   const out: Record<number, ODMatchDetail> = {}
@@ -136,15 +143,18 @@ export async function fetchAllMatchDetails(
   // The visible progress UI feels better in order.
   for (const id of matchIds) {
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError')
+    let detail: ODMatchDetail | null = null
     try {
-      out[id] = await fetchMatchDetail(id, signal)
+      detail = await fetchMatchDetail(id, signal)
+      out[id] = detail
     } catch (err) {
+      if ((err as Error).name === 'AbortError') throw err
       // One bad match shouldn't kill the report; just skip it.
       // eslint-disable-next-line no-console
       console.warn(`Failed to fetch match ${id}:`, err)
     }
     done++
-    onProgress({ done, total: matchIds.length })
+    onMatch(id, detail, { done, total: matchIds.length })
   }
   return out
 }
@@ -160,7 +170,10 @@ export async function fetchAllMatchDetails(
 export interface ParseProgress {
   done: number
   total: number
+  stalled: number
 }
+
+export type ParseOutcome = 'parsed' | 'stalled'
 
 export async function parseMatches(
   matches: ODMatchSummary[],
@@ -172,7 +185,17 @@ export async function parseMatches(
      *  the rate limiter. Default 15s. */
     initialDelayMs?: number
     pollIntervalMs?: number
+    /** Per-match polling ceiling. Default 90s — see CLAUDE.md ("Don't lower
+     *  parseMatches timeoutMs below 90s") for the calibration rationale. */
     timeoutMs?: number
+    /** Hard stall ceiling — if a parse hasn't completed after this long, we
+     *  drop it and surface it as stalled so the user can refresh. The 3-min
+     *  default matches the spec ("If a match's parse hasn't completed after
+     *  3 minutes of polling, mark it as stalled"). */
+    stallTimeoutMs?: number
+    /** Fires after each individual match resolves (parsed or stalled), so
+     *  the caller can update React state and re-run analyses live. */
+    onMatchResolved?: (matchId: number, detail: ODMatchDetail | null, outcome: ParseOutcome) => void
     onProgress?: (p: ParseProgress) => void
     signal?: AbortSignal
   } = {}
@@ -180,11 +203,11 @@ export async function parseMatches(
   const concurrency = options.concurrency ?? 5
   const initialDelayMs = options.initialDelayMs ?? 15_000
   const pollIntervalMs = options.pollIntervalMs ?? 7_000
-  // 90s ceiling: OpenDota parses can legitimately take 60-90s during peak
-  // hours, and dropping those long-tail matches degrades report accuracy
-  // for the worst-case users. Keep the timeout generous; speed up via the
-  // initial-delay + slower-poll-cadence levers instead.
   const timeoutMs = options.timeoutMs ?? 90_000
+  // 3-min stall ceiling per the progressive-render spec. Independent of
+  // timeoutMs, which is the per-poll-cycle ceiling — stallTimeoutMs is the
+  // outermost bound after which the worker gives up entirely on this match.
+  const stallTimeoutMs = options.stallTimeoutMs ?? 180_000
 
   const needsParse = matches
     .map((m) => m.match_id)
@@ -195,7 +218,8 @@ export async function parseMatches(
 
   const total = needsParse.length
   let done = 0
-  options.onProgress?.({ done, total })
+  let stalled = 0
+  options.onProgress?.({ done, total, stalled })
   if (total === 0) return
 
   const queue = [...needsParse]
@@ -205,18 +229,27 @@ export async function parseMatches(
       if (options.signal?.aborted) return
       const id = queue.shift()
       if (id == null) return
+      let outcome: ParseOutcome = 'stalled'
       try {
-        await parseOne(id, initialDelayMs, pollIntervalMs, timeoutMs, details, options.signal)
+        outcome = await parseOne(
+          id,
+          initialDelayMs,
+          pollIntervalMs,
+          timeoutMs,
+          stallTimeoutMs,
+          details,
+          options.signal
+        )
       } catch (err) {
-        // Parse failure on one match shouldn't kill the whole batch.
-        if ((err as Error).name !== 'AbortError') {
-          // eslint-disable-next-line no-console
-          console.warn(`Parse for match ${id} did not complete:`, err)
-        }
-      } finally {
-        done++
-        options.onProgress?.({ done, total })
+        if ((err as Error).name === 'AbortError') return
+        // eslint-disable-next-line no-console
+        console.warn(`Parse for match ${id} did not complete:`, err)
+        outcome = 'stalled'
       }
+      done++
+      if (outcome === 'stalled') stalled++
+      options.onMatchResolved?.(id, details[id] ?? null, outcome)
+      options.onProgress?.({ done, total, stalled })
     }
   }
 
@@ -232,9 +265,11 @@ async function parseOne(
   initialDelayMs: number,
   pollIntervalMs: number,
   timeoutMs: number,
+  stallTimeoutMs: number,
   details: Record<number, ODMatchDetail>,
   signal?: AbortSignal
-): Promise<void> {
+): Promise<ParseOutcome> {
+  const stallStart = Date.now()
   // Kick off the parse job. Some matches (very old, abandoned, or already
   // queued) may return errors — we still poll afterwards in case the data
   // appears anyway.
@@ -252,14 +287,14 @@ async function parseOne(
   try {
     detail = await fetchMatchDetail(matchId, signal)
     details[matchId] = detail
-    if (detail.version != null) return
+    if (detail.version != null) return 'parsed'
   } catch (err) {
     if ((err as Error).name === 'AbortError') throw err
     // transient — fall through to polling loop
   }
 
-  const started = Date.now()
-  while (Date.now() - started < timeoutMs) {
+  const pollStart = Date.now()
+  while (Date.now() - pollStart < timeoutMs && Date.now() - stallStart < stallTimeoutMs) {
     await sleep(pollIntervalMs, signal)
     try {
       detail = await fetchMatchDetail(matchId, signal)
@@ -268,9 +303,11 @@ async function parseOne(
       continue // transient — try again next poll
     }
     details[matchId] = detail
-    if (detail.version != null) return
+    if (detail.version != null) return 'parsed'
   }
-  // Timed out — we leave whatever last detail we have in place.
+  // Timed out — leave whatever last detail we have in place and surface
+  // the match as stalled.
+  return 'stalled'
 }
 
 export { HttpError }

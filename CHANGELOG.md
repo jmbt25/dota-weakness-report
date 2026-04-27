@@ -13,6 +13,23 @@ src/lib/version.ts AND add an entry to this file. Both happen in the
 same commit. Newest entries go on top.
 -->
 
+## v1.1.1 — 2026-04-27
+
+Progressive card rendering. Based on r/learndota2 feedback that the wait
+felt too long.
+
+- Tier 1 cards (death timing, hero pool, loss streak, stack synergy)
+  render within 5–10 seconds — they don't depend on parsed replay data.
+- Cards needing parsed data render as soon as the first match's data is
+  available, with footnotes that update live as more matches finish
+  parsing. The full sample is always reflected in real time.
+- Top-of-report progress strip showing parse status and rough ETA.
+- Stalled parses (matches that don't complete after 3 minutes) are
+  surfaced explicitly. Cards still render with whatever data made it
+  through; footnotes show the actual sample size including stalled count.
+- No fake numbers. No artificial thresholds. The card always shows what's
+  true at this moment.
+
 ## v1.1.0 — 2026-04-27
 
 - **Role-split view** for flex players. When you have ≥10 games as core
