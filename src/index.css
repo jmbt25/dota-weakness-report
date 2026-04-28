@@ -763,30 +763,13 @@
 
 /* Footer license CTA */
 .dwr-cta {
-  max-width: 1200px;
+  max-width: 720px;
   margin: 0 auto;
   padding: 48px 32px 16px;
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 48px;
-  align-items: start;
+  text-align: center;
 }
 @media (max-width: 900px) {
-  .dwr-cta { grid-template-columns: 1fr; gap: 24px; padding: 32px 20px 16px; }
-}
-.dwr-cta-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 22px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink);
-  margin: 0 0 12px;
-}
-.dwr-cta-body {
-  font-size: 13px;
-  color: var(--ink-soft);
-  line-height: 1.6;
-  margin: 0;
+  .dwr-cta { padding: 32px 20px 16px; }
 }
 .dwr-cta-meta {
   font-size: 12px;
@@ -794,18 +777,9 @@
   font-family: 'JetBrains Mono', monospace;
   letter-spacing: 0.04em;
   line-height: 1.6;
-  text-align: right;
 }
-@media (max-width: 900px) { .dwr-cta-meta { text-align: left; } }
 .dwr-cta-meta a { color: var(--accent); }
 .dwr-cta-meta a:hover { color: var(--accent-hover); }
-.dwr-cta-active {
-  margin-top: 14px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  color: var(--sev-strong);
-  letter-spacing: 0.04em;
-}
 
 /* =============================================================
    Report page header
@@ -1023,7 +997,6 @@
   line-height: 1.6;
   clear: both;
 }
-.dwr-section-sub .upgrade { color: #38BDF8; }
 
 /* =============================================================
    Card grid + card chrome (runic corners, pills, metric, prose)

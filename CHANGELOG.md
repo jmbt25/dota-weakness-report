@@ -13,6 +13,14 @@ src/lib/version.ts AND add an entry to this file. Both happen in the
 same commit. Newest entries go on top.
 -->
 
+## v1.2.5 — 2026-04-28
+
+Public-launch prep.
+
+- Removed the unbuilt paid-tier UI. Will return when user demand confirms it's worth building.
+- Added GitHub repo link in footer (project is now open source).
+- Added Support link in footer (GitHub Sponsors).
+
 ## v1.2.4 — 2026-04-28
 
 Review-pass fixes.

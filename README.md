@@ -1,73 +1,135 @@
 # Dota Weakness Report
 
-Personalized Dota 2 performance analysis. Paste your Steam ID, get a data-driven
-report on your recurring mistakes and how to fix them.
+A static website that grades your last 50 Dota 2 matches and tells you,
+specifically, what you keep doing wrong. Paste your Steam ID, get a
+nine-card report covering deaths, farm, items, lanes, hero pool, stack
+synergy, vision, and tilt. Live at **[dotaweakness.com](https://dotaweakness.com)**.
 
-The site is local-first and 100% client-side: a static React bundle that fetches
-your match history from the public [OpenDota API](https://docs.opendota.com/)
-straight from your browser. No backend, no accounts, no tracking.
+## What it does
 
-## What it analyzes
+Nine analyses, one card each. Each card surfaces a measured stat against
+a role-aware, rank-aware baseline and grades it Strong / Healthy / Watch
+/ Concerning. Nothing predictive — these are descriptive findings on
+games that already happened.
 
-For your last 20 (free) or 100 (paid) matches:
+- **Death timing** — total deaths/game, plus a distribution across
+  early/mid/late game when parsed timing data is available.
+- **Farm efficiency** — GPM and XPM at the 10- and 20-minute marks vs
+  your bracket's role baseline. Surfaces 5-item power-spike timing for
+  cores.
+- **Item timing** — your top heroes' core item timings vs benchmark.
+- **Situational items** — flags enemy lineups (stunlock, magic burst,
+  evasion, etc.) and checks whether you built the canonical counter.
+- **Lane outcome** — lane win rate plus a "winning lane but losing
+  game" sub-finding. Verdict considers both lane WR and lane efficiency
+  so cores can't get a Strong badge while their farm side is losing.
+- **Hero pool** — distinct heroes played, win rate per hero, and
+  recommended top-picks for your bracket.
+- **Stack synergy** — per-partner WR delta vs your overall WR, with a
+  95% CI and a "show partner names" toggle for screenshot safety.
+- **Loss streak / tilt** — longest streak, post-loss WR, and a WR-by-
+  session-position sub-finding (1st game / 2nd / 3rd / 4th+).
+- **Vision** — observer/sentry placements rendered over the Dota 2
+  minimap, with ward-lifetime and (when death coordinates are in the
+  parsed data) a vision-death mismatch tile.
 
-1. **Death timing distribution** — when in the game you tend to die
-2. **Farm efficiency** — GPM/XPM at the 10- and 20-minute marks vs. role baseline
-3. **Item timing** — your top 3 heroes' core item timings vs. benchmark
-4. **Situational items** — whether you build counters when the enemy lineup demands them
-5. **Lane outcome** — lane win rate and how it correlates with match wins
-6. **Hero pool concentration** — distinct heroes played, win rate on most-played
-7. **Stack synergy** — WR with each detected party teammate vs. solo
-8. **Loss streak / tilt detection** — longest streak and post-loss win rate
+Baselines are tuned per role (core / support / flex) and per rank
+bucket (Herald-Crusader / Archon-Legend / Ancient-Divine / Immortal),
+so an Archon support and a Divine carry don't get judged against the
+same numbers.
 
-Baselines in v1 are hardcoded role/rank averages. Search the codebase for
-`TODO: replace with dynamic baseline` for the spots to wire up live data.
+There's also a fire-icon **Honest Mode** toggle that swaps each card's
+prose to a sharper roast voice. Constrained: every honest-mode line
+must cite a measured stat — templates without a `{stat}` placeholder
+are filtered out. No prescriptions for things we don't measure (no "buy
+TP scrolls" advice from data we don't have).
 
-### Honest mode
+Two extra pages alongside the report:
 
-A toggle next to the Free/Paid badge swaps the descriptive prose to a
-roast voice that cites your stats. Off by default. English only.
+- **[/mmr-math](https://dotaweakness.com/mmr-math)** — at your current
+  WR, how many games to the next bracket? Compares against a 55%
+  benchmark. Branches for Immortal, climbing (>51%), near-breakeven
+  (49-51%), and sub-49% trajectories.
+- **[/meta](https://dotaweakness.com/meta)** — per-bracket meta heroes
+  with a position filter and a "blindspot" section (heroes you've never
+  played that are winning at your rank). Tier formula combines WR lift,
+  pick rate, and week-over-week momentum — refreshed weekly via a
+  GitHub Action that pulls live data from OpenDota's `/heroStats`.
 
-## Run locally
+## How it works
 
-Requires Node 18+.
+Static React + Vite + TypeScript site. No backend, no accounts, no
+server-side state, no tracking. Match data is fetched from the public
+[OpenDota API](https://docs.opendota.com/) directly from your browser
+— rate-limited to ~57 req/min to stay inside their free-tier ceiling.
+
+Charts are Recharts. Routing is a 50-line pathname router, no
+react-router. Production deploy is Cloudflare Workers Static Assets.
+
+Anyone can fork and run it locally. The deploy is a static `dist/`
+folder — drop it on any host that serves files.
+
+## What it doesn't do
+
+- Doesn't replace coaching or replay review. It surfaces patterns; it
+  doesn't watch your games.
+- Sample size floor is 50 matches. Below that the role classifier and
+  several of the analyses get noisy. Results stabilize at 50 but
+  aren't predictive at smaller windows.
+- Death timing distribution falls back to an approximation from total
+  deaths and match duration when parsed timing data isn't available.
+  The card footnote discloses this.
+- Vision-death mismatch metric only renders when at least 10 of your
+  parsed matches carry death coordinates. Older matches frequently
+  don't, and the metric is hidden until the sample is real.
+- Per-hero deep dive (item-build vs winning-build divergence, fight
+  participation, losing patterns) is scaffolded but not implemented.
+
+## Running locally
+
+Requires Node 20+.
 
 ```bash
 npm install
-npm run dev
+npm run dev      # Vite dev server on http://localhost:5173
+npm run build    # type-check + production build to dist/
+npm run preview  # serve the dist/ build locally
 ```
 
-Open [http://localhost:5173](http://localhost:5173).
+No environment variables needed — the OpenDota free tier doesn't
+require an API key.
 
-## Build
+## Contributing
 
-```bash
-npm run build      # outputs to dist/
-npm run preview    # serve the dist/ build locally
-```
+Solo weekend project. Contributions welcome but not actively recruited.
 
-## Project structure
+- Bug reports are most useful when they include the Steam ID you ran
+  the report on (or a representative one) and a screenshot of the card
+  that misbehaved.
+- Open an issue before a large PR so we can talk through scope.
+- Small fixes (typos, baseline tweaks, hero-trait additions) — go
+  ahead and PR directly.
 
-```
-src/
-  api/opendota.ts      # OpenDota API client + rate limiter (60 req/min cap)
-  analyses/            # one file per analysis
-  components/          # React components
-  lib/
-    baselines.ts       # hardcoded role/rank/item baselines (v1 placeholders)
-    parseInput.ts      # accept Steam IDs and Dotabuff/OpenDota/Stratz URLs
-    matchHelpers.ts    # tiny helpers for pulling fields out of OD responses
-    license.ts         # stubbed license key validation
-  App.tsx              # top-level UI and state machine
-  types.ts             # shared types
-```
+The architecture and constraints live in [CHANGELOG.md](CHANGELOG.md);
+that's the best place to start if you want to understand why a piece
+of code is shaped the way it is.
 
-## Deploy
+## Inspirations
 
-See [DEPLOY.md](DEPLOY.md) for step-by-step Cloudflare Pages instructions.
-The same `dist/` output also drops straight into Vercel, Netlify, or
-GitHub Pages.
+Several insights are inspired by the public Dota learning community,
+including Resolut1on, BSJ, and others. Thank you.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+[AGPL-3.0-or-later](LICENSE). Copyright © 2026 jmbt25.
+
+If you fork this and run a modified version on a public server, the
+AGPL requires you to make your source available to users of that
+server. Practically: forking and self-hosting is fine; rebadging the
+live site as your own SaaS without disclosing source isn't.
+
+## Not affiliated with Valve
+
+Hero names, item names, the minimap image, and Dota 2 itself are
+property of Valve. This project uses public data from the OpenDota API
+and does not modify, intercept, or interact with the game client.

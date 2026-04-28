@@ -7,7 +7,6 @@ import type { ReportPhase } from './ProgressStrip'
 interface ReportGridProps {
   results: AnalysisResult[]
   matchCount: number
-  isPaid: boolean
   honestMode: boolean
   language: HonestLanguage
   accountId: number
@@ -23,7 +22,6 @@ interface ReportGridProps {
 export function ReportGrid({
   results,
   matchCount,
-  isPaid,
   honestMode,
   language,
   accountId,
@@ -50,13 +48,6 @@ export function ReportGrid({
         </div>
         <p className="dwr-section-sub">
           Based on your last {matchCount} match{matchCount === 1 ? '' : 'es'}.
-          {!isPaid && (
-            <>
-              {' '}<span className="upgrade">
-                Unlock the 100-match window and per-hero deep dives with a license key below.
-              </span>
-            </>
-          )}
         </p>
       </div>
 

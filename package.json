@@ -1,7 +1,8 @@
 {
   "name": "dota-weakness-report",
   "private": true,
-  "version": "1.2.4",
+  "version": "1.2.5",
+  "license": "AGPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "dev": "vite",

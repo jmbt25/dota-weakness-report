@@ -22,11 +22,7 @@ import { runAllAnalyses } from './analyses'
 import { computeRoleSplit, inferRole, type RoleSplit } from './lib/matchHelpers'
 import { rankBucketFromTier, rankBucketLabel, rankLabel } from './lib/baselines'
 import { getHeroName, setHeroes } from './lib/heroes'
-import {
-  FREE_TIER_MATCH_LIMIT,
-  MAX_DETAIL_FETCH,
-  PAID_TIER_MATCH_LIMIT,
-} from './lib/license'
+import { FREE_TIER_MATCH_LIMIT, MAX_DETAIL_FETCH } from './lib/license'
 import type {
   AnalysisResult,
   HonestLanguage,
@@ -61,7 +57,10 @@ type RoleFilter = 'all' | 'core' | 'support'
 
 function App() {
   const [status, setStatus] = useState<AppStatus>({ kind: 'idle' })
-  const [isPaid, setIsPaid] = useState(false)
+  // Paid tier UI is unwired pending Gumroad — `validateLicenseKey` in
+  // src/lib/license.ts and the FREE/PAID/MAX_DETAIL_FETCH constants are
+  // kept so that re-wiring later is just adding a license input back in.
+  const isPaid = false
   const [honestMode, setHonestMode] = useState(false)
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
   const language: HonestLanguage = 'english'
@@ -99,7 +98,7 @@ function App() {
       })
   }, [])
 
-  async function analyze(raw: string, paid: boolean = isPaid) {
+  async function analyze(raw: string) {
     abortRef.current?.abort()
     const ac = new AbortController()
     abortRef.current = ac
@@ -111,7 +110,7 @@ function App() {
       return
     }
 
-    const matchLimit = paid ? PAID_TIER_MATCH_LIMIT : FREE_TIER_MATCH_LIMIT
+    const matchLimit = FREE_TIER_MATCH_LIMIT
 
     try {
       setStatus({ kind: 'preparing', stage: 'Looking up profile…' })
@@ -247,14 +246,6 @@ function App() {
       const message =
         err instanceof Error ? err.message : 'Something went wrong fetching your data.'
       setStatus({ kind: 'error', message })
-    }
-  }
-
-  function unlock(key: string) {
-    setIsPaid(true)
-    void key
-    if (status.kind === 'streaming' && lastInputRef.current) {
-      analyze(lastInputRef.current, true)
     }
   }
 
@@ -486,7 +477,6 @@ function App() {
               <ReportGrid
                 results={reportComputed.results}
                 matchCount={filteredMatches.length}
-                isPaid={isPaid}
                 honestMode={honestMode}
                 language={language}
                 accountId={status.report.profile.profile?.account_id ?? 0}
@@ -500,8 +490,6 @@ function App() {
       )}
 
       <Footer
-        isPaid={isPaid}
-        onUnlock={unlock}
         onHome={goHome}
         onChangelog={goChangelog}
         showCta={isReportRoute}
