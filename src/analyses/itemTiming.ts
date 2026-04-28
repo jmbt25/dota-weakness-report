@@ -20,6 +20,19 @@ export function analyzeItemTiming(input: ReportInput): AnalysisResult {
     .slice(0, 3)
     .map(([heroId]) => heroId)
 
+  // Purchase-log availability is a property of the match, not of which
+  // hero you played in it. Count it once across the whole filtered match
+  // set so the footnote denominator is consistent regardless of which
+  // heroes happen to be in the top 3 — otherwise role-split values stop
+  // adding up (e.g. core 9/25 + support 12/25 ≠ all-games 13/50).
+  let parsedMatchesWithPurchaseLog = 0
+  for (const m of matches) {
+    const detail = details[m.match_id]
+    if (!detail) continue
+    const player = findPlayerInMatch(detail, accountId)
+    if (player?.purchase_log?.length) parsedMatchesWithPurchaseLog++
+  }
+
   interface HeroFinding {
     heroId: number
     item: string
@@ -28,7 +41,6 @@ export function analyzeItemTiming(input: ReportInput): AnalysisResult {
     games: number
   }
   const findings: HeroFinding[] = []
-  let parsedMatchesWithPurchaseLog = 0
 
   for (const heroId of top3Heroes) {
     const itemTimings = new Map<string, number[]>()
@@ -38,7 +50,6 @@ export function analyzeItemTiming(input: ReportInput): AnalysisResult {
       if (!detail) continue
       const player = findPlayerInMatch(detail, accountId)
       if (!player?.purchase_log?.length) continue
-      parsedMatchesWithPurchaseLog++
       const seen = new Set<string>()
       for (const entry of player.purchase_log) {
         const key = entry.key

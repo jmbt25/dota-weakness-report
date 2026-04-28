@@ -1,7 +1,77 @@
-import type { AnalysisResult, ReportInput } from '../types'
+import type { AnalysisResult, ReportInput, SubFindingPayload } from '../types'
 import { getBaseline } from '../lib/baselines'
 import { findPlayerInMatch, isParsed } from '../lib/matchHelpers'
 import { isFarmCore } from '../lib/heroes'
+
+/**
+ * Per-bracket median time to a 5-item inventory for cores. Rough
+ * estimates from public Dota stat aggregations — replace with dynamic
+ * baselines once we aggregate /heroStats item-timing data.
+ */
+const FIVE_ITEM_BRACKET_MEDIAN_MIN: Record<'low' | 'mid' | 'high' | 'top', number> = {
+  low: 32,
+  mid: 30,
+  high: 27,
+  top: 25,
+}
+
+/**
+ * Items that don't count as a "real" 5-item slot when measuring power
+ * spike timing. Excludes consumables (TPs, regen) and starter trinkets.
+ */
+const NON_INVENTORY_ITEMS = new Set([
+  'tpscroll',
+  'enchanted_mango',
+  'tango',
+  'tango_single',
+  'flask',
+  'clarity',
+  'faerie_fire',
+  'magic_stick',
+  'observer_ward',
+  'sentry_ward',
+  'ward_observer',
+  'ward_sentry',
+  'ward_dispenser',
+  'smoke_of_deceit',
+  'dust',
+  'gem',
+  'cheese',
+  'aegis',
+  'bottle',
+  'tome_of_knowledge',
+  'wind_lace',
+  'iron_branch',
+  'gauntlets',
+  'slippers',
+  'mantle',
+  'circlet',
+  'belt_of_strength',
+  'boots_of_elves',
+  'robe',
+  'crown',
+  'ogre_axe',
+  'blade_of_alacrity',
+  'staff_of_wizardry',
+  'blades_of_attack',
+  'broadsword',
+  'chainmail',
+  'helm_of_iron_will',
+  'quarterstaff',
+  'claymore',
+  'javelin',
+  'mithril_hammer',
+  'platemail',
+  'ring_of_protection',
+  'ring_of_health',
+  'ring_of_regen',
+  'sobi_mask',
+  'recipe_arcane_boots',
+  'recipe_power_treads',
+  'gloves',
+  'lifesteal',
+  'morbid_mask',
+])
 
 /**
  * Average GPM/XPM at the 10-min and 20-min marks vs. the rank+role baseline.
@@ -24,6 +94,7 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
   const samples10xpm: number[] = []
   const samples20xpm: number[] = []
   const lhAt10: number[] = []
+  const fiveItemMinutes: number[] = []
   let parsedCount = 0
   let topHeroId: number | null = null
   const heroGames = new Map<number, number>()
@@ -47,6 +118,8 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
       if (typeof x20 === 'number') samples20xpm.push(x20 / 20)
       const l10 = player.lh_t?.[10]
       if (typeof l10 === 'number') lhAt10.push(l10)
+      const fiveItem = fiveItemTimingMin(player.purchase_log)
+      if (fiveItem != null) fiveItemMinutes.push(fiveItem)
     }
   }
   let topGames = 0
@@ -124,6 +197,44 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
   const severityLabel =
     severity === 'good' && best > 1.10 && inferredRole !== 'support' ? 'Strong' : undefined
 
+  // Power spike sub-finding — compares user's median 5-item timing
+  // against bracket median for cores. Less meaningful for supports
+  // (who rarely hit 5-item timings); we surface the role-aware copy
+  // either way so the card stays informative.
+  let subFinding: SubFindingPayload | undefined
+  if (inferredRole === 'support') {
+    subFinding = {
+      kind: 'value',
+      label: 'Power spike: 5-item timing',
+      value: '—',
+      sub: 'Supports rarely hit 5-item timings. Skipping this metric for your role.',
+    }
+  } else if (fiveItemMinutes.length >= 3) {
+    const userMedian = median(fiveItemMinutes)
+    const bracketMedian = FIVE_ITEM_BRACKET_MEDIAN_MIN[rankBucket]
+    const minLabel = `${userMedian.toFixed(0)} min`
+    const delta = userMedian - bracketMedian
+    const deltaCopy =
+      Math.abs(delta) < 1
+        ? `On pace with the ${bracketMedian}-min bracket median.`
+        : delta > 0
+        ? `${delta.toFixed(0)} min slower than the ${bracketMedian}-min bracket median — your spike arrives after fights are usually decided.`
+        : `${Math.abs(delta).toFixed(0)} min faster than the ${bracketMedian}-min bracket median — you're hitting items before opponents at your rank.`
+    subFinding = {
+      kind: 'value',
+      label: 'Power spike: 5-item timing',
+      value: minLabel,
+      sub: deltaCopy,
+    }
+  } else if (fiveItemMinutes.length > 0) {
+    subFinding = {
+      kind: 'value',
+      label: 'Power spike: 5-item timing',
+      value: '—',
+      sub: `Only ${fiveItemMinutes.length} parsed game${fiveItemMinutes.length === 1 ? '' : 's'} reached a 5-item build — need at least 3 for a stable median.`,
+    }
+  }
+
   return {
     id: 'farm-efficiency',
     title: 'Farm efficiency',
@@ -152,7 +263,35 @@ export function analyzeFarmEfficiency(input: ReportInput): AnalysisResult {
         { x: 'XPM @20', you: xpm20, baseline: base.xpm20 },
       ],
     },
+    subFinding,
   }
+}
+
+/**
+ * Earliest in-game time (minutes) at which the player has 5 distinct
+ * "real" items in their build, by replaying purchase_log forward. Returns
+ * null if they never get there in the parsed window. Items in
+ * `NON_INVENTORY_ITEMS` (consumables, starter components, regen) don't
+ * count toward the 5-item threshold — they don't represent a power spike.
+ */
+function fiveItemTimingMin(
+  purchaseLog: import('../types').ODPurchaseLogEntry[] | undefined
+): number | null {
+  if (!purchaseLog || purchaseLog.length === 0) return null
+  const seen = new Set<string>()
+  for (const e of purchaseLog) {
+    if (NON_INVENTORY_ITEMS.has(e.key)) continue
+    seen.add(e.key)
+    if (seen.size >= 5) return Math.max(0, e.time / 60)
+  }
+  return null
+}
+
+function median(xs: number[]): number {
+  const sorted = [...xs].sort((a, b) => a - b)
+  const n = sorted.length
+  if (n === 0) return 0
+  return n % 2 === 0 ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2 : sorted[(n - 1) / 2]
 }
 
 function roleLabel(role: 'core' | 'support' | 'flex' | 'unknown'): string {

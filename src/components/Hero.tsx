@@ -8,9 +8,11 @@ interface HeroProps {
   showLanding: boolean
   onHome?: () => void
   loaderSlot?: ReactNode
+  /** Suppress Hero's own `<header>` when a parent already renders TopNav. */
+  hideHeader?: boolean
 }
 
-export function Hero({ onAnalyze, isLoading, error, showLanding, onHome, loaderSlot }: HeroProps) {
+export function Hero({ onAnalyze, isLoading, error, showLanding, onHome, loaderSlot, hideHeader }: HeroProps) {
   const [value, setValue] = useState('')
 
   function submit(e: FormEvent) {
@@ -40,9 +42,11 @@ export function Hero({ onAnalyze, isLoading, error, showLanding, onHome, loaderS
 
   return (
     <>
-      <header className="dwr-header">
-        <ApertureSigil size={110} />
-      </header>
+      {!hideHeader && (
+        <header className="dwr-header">
+          <ApertureSigil size={110} />
+        </header>
+      )}
 
       <section className="dwr-hero">
         <div className="dwr-wm" style={{ marginBottom: 24 }}>

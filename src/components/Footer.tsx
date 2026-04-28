@@ -112,6 +112,11 @@ export function Footer({ isPaid, onUnlock, onHome, onChangelog, showCta = true }
           <a href="https://docs.opendota.com/" target="_blank" rel="noreferrer">OpenDota</a>
         </div>
       </footer>
+
+      <p className="dwr-attribution">
+        Some insights inspired by the public Dota learning community,
+        including Resolut1on, BSJ, and others. Thank you.
+      </p>
     </>
   )
 }

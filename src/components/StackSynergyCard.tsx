@@ -67,7 +67,10 @@ export function StackSynergyCard({
   roleFilterMatchCount,
   phase,
 }: StackSynergyCardProps) {
-  const [showNames, setShowNames] = useState(true)
+  // Default OFF: names hidden — screenshot-safe by default. The label
+  // reads "Show partner names" + the switch is off, which matches what
+  // the user actually sees on the page (Friend 1 / Friend 2 / …).
+  const [showNames, setShowNames] = useState(false)
   const data = result.stackSynergy
   const isUnmeasured = result.severity === 'unmeasured'
 
@@ -79,29 +82,71 @@ export function StackSynergyCard({
     }))
   }, [data, showNames])
 
+  // Find the partner the analysis flagged as the negative-delta call-out
+  // (the "trends below" line). They're identified by name in roastFacts —
+  // we look them up to know which name to always anonymize, regardless
+  // of the global "Show partner names" toggle.
+  //
+  // Why force anonymization here even when the toggle is on: the
+  // negative-delta callout is the most socially loaded line on the
+  // page. If a friend opens this report and sees themselves named as
+  // the WR-dropper, that's a real social cost — not one the tool
+  // should quietly inflict. The chart and any positive mentions still
+  // honor the toggle.
+  const worstPartner = useMemo<StackSynergyPartner | null>(() => {
+    if (!data) return null
+    const worstName = result.roastFacts?.worst_partner
+    if (typeof worstName !== 'string') return null
+    return data.partners.find((p) => p.personaName === worstName) ?? null
+  }, [data, result.roastFacts])
+
+  const worstPartnerAnonName = useMemo<string | null>(() => {
+    if (!worstPartner || !data) return null
+    const idx = data.partners.indexOf(worstPartner)
+    return idx >= 0 ? `Friend ${idx + 1}` : null
+  }, [worstPartner, data])
+
   const seriousFinding = useMemo(() => {
-    if (showNames || !data) return result.finding
-    return anonymizeProse(result.finding, data.partners)
-  }, [result.finding, data, showNames])
+    if (!data) return result.finding
+    let text = result.finding
+    // Always anonymize the negative-delta partner regardless of toggle.
+    if (worstPartner && worstPartnerAnonName) {
+      const escaped = worstPartner.personaName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
+      text = text.replace(new RegExp(escaped, 'g'), worstPartnerAnonName)
+    }
+    // Then if the user has the global toggle off, anonymize the rest too.
+    if (!showNames) text = anonymizeProse(text, data.partners)
+    return text
+  }, [result.finding, data, showNames, worstPartner, worstPartnerAnonName])
 
   const finding = useMemo(() => {
     if (!honestMode) return seriousFinding
     const facts = { ...(result.roastFacts ?? {}) }
     if (data) {
-      for (const key of ['best_partner', 'worst_partner'] as const) {
-        const raw = facts[key]
-        if (typeof raw === 'string') {
-          const matchPartner = data.partners.find((p) => p.personaName === raw)
-          if (matchPartner) {
-            const display = displayPartners.find((dp) => dp.id === matchPartner.id)
-            if (display) facts[key] = display.displayName
-          }
+      // best_partner: respects the global toggle.
+      const bestRaw = facts.best_partner
+      if (typeof bestRaw === 'string') {
+        const matchPartner = data.partners.find((p) => p.personaName === bestRaw)
+        if (matchPartner) {
+          const display = displayPartners.find((dp) => dp.id === matchPartner.id)
+          if (display) facts.best_partner = display.displayName
         }
       }
+      // worst_partner: ALWAYS anonymized, toggle or not.
+      if (worstPartnerAnonName) facts.worst_partner = worstPartnerAnonName
     }
     const roast = generateRoast(result, language, accountId, facts)
     return roast ?? seriousFinding
-  }, [honestMode, language, accountId, result, data, displayPartners, seriousFinding])
+  }, [
+    honestMode,
+    language,
+    accountId,
+    result,
+    data,
+    displayPartners,
+    seriousFinding,
+    worstPartnerAnonName,
+  ])
 
   // Progressive renderer: stack synergy needs party_id from parsed match
   // details, so during fetch/parse phases we show the shared "waiting"
@@ -169,7 +214,9 @@ export function StackSynergyCard({
         {result.suggestion}
       </div>
       <p className="privacy">
-        Partner data is only visible to you. Names hidden by default in shared reports.
+        Partner data is only visible to you. Names hidden by default in shared
+        reports. Negative-delta partners stay anonymized even when the toggle
+        is on — your stack reads this report too.
       </p>
       {roleFilter !== 'all' && roleFilterMatchCount != null && (
         <div className="footnote">

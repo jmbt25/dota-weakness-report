@@ -318,6 +318,12 @@ export function analyzeStackSynergy(input: ReportInput): AnalysisResult {
     roastFacts.worst_partner = worst.personaName
     roastFacts.worst_wr = Math.round(worst.wrTogether * 100)
     roastFacts.worst_delta = Math.round(worst.deltaPp ?? 0)
+    // Game / win / loss counts are surfaced so the severe-negative
+    // honest-mode template ("0-7 across 7 games — that's not a trend")
+    // can interpolate the actual record instead of just the WR %.
+    roastFacts.worst_games = worst.gamesTogether
+    roastFacts.worst_wins = worst.winsTogether
+    roastFacts.worst_losses = worst.gamesTogether - worst.winsTogether
   }
 
   return {
@@ -385,6 +391,19 @@ function countMatchesWithAnyPartner(partners: StackSynergyPartner[]): number {
   return max
 }
 
+/**
+ * Returns true when a partner is in the "stack that doesn't work" zone:
+ * 5+ games together AND either a flat-loss WR (≤15%) or a big negative
+ * delta (≤ -30pp). At that point the data isn't a trend, it's a record —
+ * the prose should call that out directly instead of using "trends below".
+ */
+function isSevereNegative(p: StackSynergyPartner): boolean {
+  if (p.gamesTogether < 5) return false
+  const wrPct = p.wrTogether * 100
+  const delta = p.deltaPp ?? 0
+  return wrPct <= 15 || delta <= -30
+}
+
 function composeFinding(
   best: StackSynergyPartner | null,
   worst: StackSynergyPartner | null,
@@ -402,10 +421,21 @@ function composeFinding(
     )
   }
   if (worst && worst.deltaPp != null) {
-    const sigQual = worstSampleSmall ? 'Small sample — ' : ''
-    lines.push(
-      `${sigQual}${worst.personaName} trends below: ${worst.gamesTogether} games, ${(worst.wrTogether * 100).toFixed(0)}% WR (${worst.deltaPp.toFixed(0)}pp vs overall).`
-    )
+    if (isSevereNegative(worst)) {
+      // Sharp framing for flat-loss / big-negative partners — see
+      // isSevereNegative for the threshold. "Trends below" understates
+      // a 0-7 record; calling it a stack that doesn't work is honest
+      // about what the data actually is.
+      const losses = worst.gamesTogether - worst.winsTogether
+      lines.push(
+        `${worst.personaName} across ${worst.gamesTogether} games: ${worst.winsTogether}-${losses}. That's not a trend, that's a stack that doesn't work — try a different role pair or sit it out.`
+      )
+    } else {
+      const sigQual = worstSampleSmall ? 'Small sample — ' : ''
+      lines.push(
+        `${sigQual}${worst.personaName} trends below: ${worst.gamesTogether} games, ${(worst.wrTogether * 100).toFixed(0)}% WR (${worst.deltaPp.toFixed(0)}pp vs overall).`
+      )
+    }
   }
   if (lines.length === 0) {
     // No significant findings — neutral framing.

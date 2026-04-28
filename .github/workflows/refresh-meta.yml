@@ -1,0 +1,49 @@
+name: Refresh meta data
+
+# Pulls fresh OpenDota /heroStats every Monday at 07:00 UTC, regenerates
+# src/data/meta-current.json + meta-previous.json, and pushes the change.
+# The push to main triggers the existing Cloudflare deploy step (set up
+# in the dotaweakness.com Workers config), so users see fresh tier
+# scores within a few minutes of this job's commit.
+#
+# manual dispatch is allowed for ad-hoc refreshes (e.g. mid-week patch).
+
+on:
+  schedule:
+    # Mondays 07:00 UTC. Mid-day Asia / morning Europe / overnight US —
+    # outside the typical Tuesday/Thursday Valve patch window so we're
+    # capturing a settled state rather than a 1-hour-post-patch snapshot.
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  # The job commits the updated JSONs back to main. Default GITHUB_TOKEN
+  # permissions don't include write access — we have to opt in explicitly.
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Refresh meta JSON
+        run: node scripts/refresh-meta.mjs
+
+      - name: Commit and push if changed
+        run: |
+          if [ -z "$(git status --porcelain src/data)" ]; then
+            echo "No data changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/meta-current.json src/data/meta-previous.json
+          git commit -m "chore(meta): weekly refresh $(date -u +%Y-%m-%d)"
+          git push

@@ -1,5 +1,6 @@
-import type { AnalysisResult, ReportInput } from '../types'
+import type { AnalysisResult, ReportInput, SubFindingPayload } from '../types'
 import { didWin } from '../lib/matchHelpers'
+import { computeSessionStats } from '../lib/sessionHelpers'
 
 const SAFE_STREAK = 2
 
@@ -78,6 +79,48 @@ export function analyzeTilt(input: ReportInput): AnalysisResult {
       ? 'Strong'
       : undefined
 
+  // WR-by-session-position sub-finding. Only renders the chart when EVERY
+  // bucket (1st / 2nd / 3rd / 4th+) has >= 8 games — below that, "0% WR
+  // in your 1st game off 4 games" is statistical noise, not a finding.
+  // When the threshold isn't met but there's some session data, we
+  // surface a small note instead so the user knows the metric exists
+  // but their sample is too thin yet.
+  const SESSION_BUCKET_MIN = 8
+  const sessionStats = computeSessionStats(matches)
+  const hasSessionData = sessionStats.longSessionGames > 0
+  // Treat missing buckets (e.g. no 4th-game sessions) as 0 — that's a
+  // bucket below threshold, which correctly suppresses the chart.
+  const minBucketGames =
+    sessionStats.buckets.length === 4
+      ? Math.min(...sessionStats.buckets.map((b) => b.games))
+      : 0
+  const meetsThreshold =
+    hasSessionData &&
+    sessionStats.buckets.length >= 3 &&
+    minBucketGames >= SESSION_BUCKET_MIN
+
+  let subFinding: SubFindingPayload | undefined
+  if (meetsThreshold) {
+    const labelFor = (p: 1 | 2 | 3 | 4) => (p === 4 ? '4th+' : `${p}${p === 1 ? 'st' : p === 2 ? 'nd' : 'rd'}`)
+    subFinding = {
+      kind: 'rows',
+      label: 'WR by session position (3+ games in a row)',
+      rows: sessionStats.buckets.map((b) => ({
+        name: labelFor(b.position),
+        pct: b.wr * 100,
+        sub: `${b.games}g`,
+      })),
+      sub: 'A session is a sequence of games with under 2h between starts.',
+    }
+  } else {
+    subFinding = {
+      kind: 'value',
+      label: 'WR by session position',
+      value: '—',
+      sub: 'Not enough multi-game sessions in this window to detect a session-position pattern. Comes back at higher game counts or after more 3+ game sessions.',
+    }
+  }
+
   return {
     id: 'tilt',
     title: 'Loss streak / tilt',
@@ -103,5 +146,6 @@ export function analyzeTilt(input: ReportInput): AnalysisResult {
         { label: 'After a loss', value: Math.round(postLossWR * 100) },
       ],
     },
+    subFinding,
   }
 }

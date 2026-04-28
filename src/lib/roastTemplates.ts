@@ -32,6 +32,17 @@ const isWatch = (r: AnalysisResult) => r.severity === 'ok'
 const isHealthy = (r: AnalysisResult) => r.severity === 'good'
 const isStrong = (r: AnalysisResult) => r.severityLabel === 'Strong'
 
+/**
+ * Stack synergy — same threshold as `isSevereNegative` in stackSynergy.ts.
+ * When a worst-partner record clears this gate, the dedicated severe
+ * template owns the line; every other worst-partner-mentioning template
+ * yields by including `!isSevereWorst(f)` in its condition.
+ */
+const isSevereWorst = (f: Record<string, string | number>): boolean =>
+  f.worst_partner != null &&
+  Number(f.worst_games ?? 0) >= 5 &&
+  (Number(f.worst_wr ?? 100) <= 15 || Number(f.worst_delta ?? 0) <= -30)
+
 export const ROAST_TEMPLATES: Partial<Record<AnalysisId, RoastTemplate[]>> = {
   // ─── Death timing ─────────────────────────────────────────────────────
   'death-timing': [
@@ -150,6 +161,10 @@ export const ROAST_TEMPLATES: Partial<Record<AnalysisId, RoastTemplate[]>> = {
   ],
 
   // ─── Lane outcome ─────────────────────────────────────────────────────
+  // Divergence templates fire when WR claims healthy but lane efficiency
+  // is below the EFF_DIVERGENCE_THRESHOLD set in laneOutcome.ts — i.e.
+  // you're winning lanes you should be losing on the scoreboard. The
+  // `diverged` fact is set to 1 by the analysis when this happens.
   'lane-outcome': [
     {
       condition: (r) => isConcerning(r),
@@ -162,7 +177,20 @@ export const ROAST_TEMPLATES: Partial<Record<AnalysisId, RoastTemplate[]>> = {
         "{wr_pct}% lane WR ({wins}/{total_lanes}). Most of those losses are pre-decided in the first wave equilibrium.",
     },
     {
-      condition: (r) => isWatch(r),
+      // Divergence variant — only fires when the analysis flagged it
+      // (diverged == 1). The Watch and Healthy templates below explicitly
+      // exclude this case (`diverged === 0`), so when divergence is
+      // active this is the only eligible template — pickTemplate has
+      // exactly one to choose from. That guarantees the honest mode
+      // line is at least as sharp as the default mode prose.
+      condition: (_r, f) => Number(f.diverged ?? 0) === 1,
+      english:
+        "{wr_pct}% lane WR off {efficiency}% efficiency. The W column is a lagging indicator — your farm side is still losing, the scoreboard just hasn't caught up.",
+    },
+    {
+      // Generic Watch — explicitly does NOT fire on divergence (the
+      // dedicated divergence template above owns that case).
+      condition: (r, f) => isWatch(r) && Number(f.diverged ?? 0) === 0,
       english:
         "Lane WR {wr_pct}% ({wins}/{total_lanes}). One pull cycle every 53 seconds and this card flips next week.",
     },
@@ -179,33 +207,39 @@ export const ROAST_TEMPLATES: Partial<Record<AnalysisId, RoastTemplate[]>> = {
   ],
 
   // ─── Hero pool ────────────────────────────────────────────────────────
+  // Templates lean on hero_count, games, top_hero, top_wr — all four are
+  // role-split-sensitive (the top hero in the support subset isn't the
+  // same as in all-games), so each view produces visibly different copy.
   'hero-pool': [
     {
-      condition: (r) => isConcerning(r),
-      english:
-        "{hero_count} different heroes in {games} games. You're not picking heroes, you're speed-dating them.",
-    },
-    {
+      // Concerning + top hero is actively losing — name names.
       condition: (r, f) => isConcerning(r) && Number(f.top_wr ?? 100) < 45,
       english:
-        "Top hero is {top_hero} at {top_wr}% WR. The hero is asking for a divorce.",
+        "{top_hero} is your most-played at {top_wr}% WR across {games} games. {hero_count}-hero spread; the pool is the symptom, that one matchup is the disease.",
+    },
+    {
+      // Concerning generic.
+      condition: (r) => isConcerning(r),
+      english:
+        "{hero_count} heroes / {games} games. {top_hero} leads at {top_wr}% — the rest of the spread is what's dragging the WR.",
     },
     {
       condition: (r) => isWatch(r),
       english:
-        "{hero_count} heroes / {games} games, top hero {top_hero} ({top_wr}%). Pick 5, ignore the rest, climb.",
+        "{hero_count} heroes across {games} games; {top_hero} is the anchor at {top_wr}%. Tighten the pool around them — the long tail is noise.",
     },
     {
       condition: (r) => isHealthy(r),
       english:
-        "{hero_count} heroes / {games} games — focused. Top hero {top_hero} carrying its weight at {top_wr}% WR.",
+        "{hero_count} heroes / {games} games — pool is tight. {top_hero} at {top_wr}% is doing the lifting.",
     },
   ],
 
   // ─── Tilt / loss streak ───────────────────────────────────────────────
-  // v7 variants: high-streak-with-bad-bounce (queue addiction), big
-  // post-loss WR drop (free-fall), borderline (current mild). Each cites
-  // a stat from the analysis.
+  // Templates weave streak length and the WR pair through the full line —
+  // no generic "two losses, ten-min break" tail that reads identically
+  // across role-split views. Streak length and post-loss WR shift per
+  // subset, so each view produces a distinct line.
   tilt: [
     {
       // Queue-addiction: long streak AND meaningfully worse post-loss WR.
@@ -214,44 +248,64 @@ export const ROAST_TEMPLATES: Partial<Record<AnalysisId, RoastTemplate[]>> = {
         Number(f.streak ?? 0) >= 4 &&
         Number(f.post_loss ?? 100) <= Number(f.overall ?? 0) - 10,
       english:
-        "Longest streak {streak}, post-loss WR {post_loss}% vs {overall}% overall. The queue button is your worst enemy.",
+        "{streak}-streak in this window; post-loss WR drops to {post_loss}% from your {overall}% overall. Cap at two losses, not {streak}.",
     },
     {
       // Free-fall: post-loss WR is far below overall, regardless of streak.
       condition: (_r, f) =>
         Number(f.post_loss ?? 100) <= Number(f.overall ?? 0) - 15,
       english:
-        "Post-loss WR {post_loss}% vs overall {overall}%. You don't tilt — you free-fall.",
+        "Post-loss WR {post_loss}% vs {overall}% overall — you don't tilt, you free-fall the moment you re-queue. Longest streak {streak}.",
     },
     {
       // Generic concerning fallback.
       condition: (r) => isConcerning(r),
       english:
-        "Post-loss WR is {post_loss}%, overall {overall}%, longest streak {streak}. The pattern is doing more damage than the matchmaker.",
+        "{streak}-streak through {overall}% overall WR; post-loss bounces to {post_loss}%. The streak length is the warning sign.",
     },
     {
       // Borderline / Watch — keep mild.
       condition: (r) => isWatch(r),
       english:
-        "Bounce-back is fine ({post_loss}% vs {overall}%) but you hit a {streak}-game streak. Two losses, ten-min break.",
+        "{streak}-streak in this window. Bounce-back is intact ({post_loss}% post-loss vs {overall}% overall) — the streak length is the only soft spot.",
     },
     {
       // Healthy.
       condition: (r) => isHealthy(r),
       english:
-        "Longest streak {streak}, post-loss WR {post_loss}% vs {overall}% overall. You queue like an adult.",
+        "Longest streak {streak} games; post-loss WR {post_loss}% sits with overall {overall}%. Queue discipline is rare — you have it.",
     },
   ],
 
   // ─── Stack synergy ────────────────────────────────────────────────────
   // Templates use {best_partner} / {worst_partner} which are filled with
-  // the (possibly anonymized) display name in StackSynergyCard, so honest
-  // mode honors the same "Show partner names" toggle that default mode
-  // does.
+  // the (possibly anonymized) display name in StackSynergyCard. Worst is
+  // ALWAYS anonymized (Friend N) regardless of the toggle — see
+  // StackSynergyCard.tsx for the rationale.
+  //
+  // Severe-negative carve-out: when worst_partner has 5+ games AND either
+  // <=15% WR or <=-30pp delta, we route to the dedicated severe template
+  // below. Every other worst-partner-mentioning template explicitly
+  // excludes that case so the severe one is the only eligible match.
   'stack-synergy': [
     {
+      // Severe-negative — flat-loss or big-negative partner. Mirrors
+      // the default-mode "stack that doesn't work" prose. Threshold
+      // matches isSevereNegative() in stackSynergy.ts.
+      condition: (_r, f) =>
+        f.worst_partner != null &&
+        Number(f.worst_games ?? 0) >= 5 &&
+        (Number(f.worst_wr ?? 100) <= 15 || Number(f.worst_delta ?? 0) <= -30),
+      english:
+        "{worst_partner} across {worst_games} games: {worst_wins}-{worst_losses}. That's not a trend, that's a stack that doesn't work — try a different role pair or sit it out.",
+    },
+    {
       // Concerning + has a significant negative partner — name them.
-      condition: (r, f) => isConcerning(r) && f.worst_partner != null,
+      // Yields to the severe template above when the data is that bad.
+      condition: (r, f) =>
+        isConcerning(r) &&
+        f.worst_partner != null &&
+        !isSevereWorst(f),
       english:
         "{worst_partner}: {worst_wr}% WR ({worst_delta}pp vs solo). The friendship is real, the synergy is fictional.",
     },
@@ -262,8 +316,12 @@ export const ROAST_TEMPLATES: Partial<Record<AnalysisId, RoastTemplate[]>> = {
         "Best stack partner is {best_partner} at +{best_delta}pp. Solid in isolation; not enough to carry a window of mixed pickings.",
     },
     {
-      // Watch — both best and worst named.
-      condition: (r, f) => isWatch(r) && f.best_partner != null && f.worst_partner != null,
+      // Watch — both best and worst named. Yields to severe.
+      condition: (r, f) =>
+        isWatch(r) &&
+        f.best_partner != null &&
+        f.worst_partner != null &&
+        !isSevereWorst(f),
       english:
         "{best_partner} carries the synergy ({best_delta}pp), {worst_partner} drags it ({worst_delta}pp). Reshuffle the role pairs.",
     },
@@ -274,8 +332,11 @@ export const ROAST_TEMPLATES: Partial<Record<AnalysisId, RoastTemplate[]>> = {
         "{best_partner} pulls the stack up ({best_delta}pp). The rest are within noise — keep the duo, fill around it.",
     },
     {
-      // Healthy — name the carry.
-      condition: (r, f) => isHealthy(r) && f.best_partner != null,
+      // Healthy — name the carry. Yields to severe so the disaster
+      // doesn't get drowned out by a "lock this person in" mention
+      // when the same window also has a 0-7 partner.
+      condition: (r, f) =>
+        isHealthy(r) && f.best_partner != null && !isSevereWorst(f),
       english:
         "{best_partner}: {best_wr}% WR (+{best_delta}pp). Lock this person in, ignore everyone else in your friends list.",
     },
@@ -283,28 +344,30 @@ export const ROAST_TEMPLATES: Partial<Record<AnalysisId, RoastTemplate[]>> = {
 
   // ─── Vision ────────────────────────────────────────────────────────────
   // Headline metric is role-specific: support/flex graded on obs/game,
-  // core graded on dewards/game. Templates cite the relevant stat plus
-  // shared sub-metrics (lifetime, mismatch) when conditions allow.
+  // core graded on dewards/game. Templates lean on whichever stat is
+  // role-relevant PLUS lifetime, so each view produces a different line
+  // even at identical severity (the support subset's headline is obs,
+  // the core subset's is dewards — visibly different copy).
   vision: [
     {
       // Support / flex placing fewer obs than baseline.
       condition: (r, f) =>
         isConcerning(r) && String(f.role ?? '') !== 'core',
       english:
-        "{obs}/game observers (baseline {obs_baseline}). The fog of war is winning.",
+        "{obs} obs/game vs {obs_baseline} baseline; wards live {seconds}s. As a {role}, vision is the lever you're not pulling.",
     },
     {
       // Core neglecting dewards.
       condition: (r, f) => isConcerning(r) && String(f.role ?? '') === 'core',
       english:
-        "{dewards} dewards/game vs {dewards_baseline}. The enemy team appreciates your hands-off vision policy.",
+        "{dewards} dewards/game vs {dewards_baseline} target. Farm matters less when the enemy support reads your stack rotation 60s before you do.",
     },
     {
       // High vision-death mismatch — only fires when the mismatch was
       // actually computed and is meaningfully high.
       condition: (_r, f) => Number(f.mismatch ?? 0) >= 30,
       english:
-        "{mismatch}% of your deaths in unwarded regions. The map shows where you ward; the body count shows where you don't.",
+        "{mismatch}% of deaths happen in unwarded regions, with wards living {seconds}s on average — placement is reading dewards instead of avoiding them.",
     },
     {
       // Wards die fast — surfaces when avg lifetime trails baseline by 60s+.
@@ -312,19 +375,30 @@ export const ROAST_TEMPLATES: Partial<Record<AnalysisId, RoastTemplate[]>> = {
         Number(f.seconds ?? 0) > 0 &&
         Number(f.seconds ?? 999) <= Number(f.lifetime_baseline_sec ?? 0) - 60,
       english:
-        "Wards live {seconds}s on average. Your vision investments have the half-life of a tweet.",
+        "Wards live {seconds}s vs {lifetime_baseline_sec}s baseline. Placement is reading dewards instead of avoiding them.",
     },
     {
-      // Watch — generic role-aware fallback.
+      // Watch — role-aware copy with both lifetime and headline.
+      condition: (r, f) => isWatch(r) && String(f.role ?? '') === 'core',
+      english:
+        "{dewards} dewards/game vs {dewards_baseline}; wards live {seconds}s. Closing enemy vision is the highest-ROI lever for cores at your bracket.",
+    },
+    {
       condition: (r) => isWatch(r),
       english:
-        "{headline} {role} on the headline vs {headline_baseline} bracket. Vision is leaking points you could be banking.",
+        "{obs} obs/game vs {obs_baseline}; wards live {seconds}s. The cadence is the soft spot, not the count.",
     },
     {
-      // Healthy.
+      // Healthy core.
+      condition: (r, f) => isHealthy(r) && String(f.role ?? '') === 'core',
+      english:
+        "{dewards} dewards/game vs {dewards_baseline}. Closing enemy vision faster than they close yours — the rare core W on this card.",
+    },
+    {
+      // Healthy support / flex.
       condition: (r) => isHealthy(r),
       english:
-        "{headline} on the headline vs {headline_baseline}. Vision input is on-pace — now spot-check whether your wards see anything important.",
+        "{obs} obs/game vs {obs_baseline}; wards live {seconds}s. The vision input is doing the work — next thing to grade is what they actually see.",
     },
   ],
 }

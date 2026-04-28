@@ -109,7 +109,14 @@ export function VisionCard({ result, honestMode, language, accountId, phase }: V
   )
 }
 
+// Need at least this many matches contributing death-coords before we
+// surface the mismatch percentage. Below it, the percentage is too thin
+// to mean anything and the tile just reads as broken — hide it instead.
+const MIN_DEATH_MATCHES_FOR_MISMATCH = 10
+
 function SubMetrics({ data }: { data: VisionData }) {
+  const showMismatch =
+    data.mismatchPct != null && data.deathSampleMatches >= MIN_DEATH_MATCHES_FOR_MISMATCH
   return (
     <div className="substat">
       <div>
@@ -119,17 +126,17 @@ function SubMetrics({ data }: { data: VisionData }) {
         </div>
         <div className="l">Avg ward lifetime</div>
       </div>
-      <div>
-        <div className="v">
-          {data.mismatchPct != null ? `${Math.round(data.mismatchPct)}%` : '—'}
-          <span className="sub">
-            {data.mismatchPct != null
-              ? `${data.deathSamples} death${data.deathSamples === 1 ? '' : 's'}`
-              : 'no death coords'}
-          </span>
+      {showMismatch && (
+        <div>
+          <div className="v">
+            {Math.round(data.mismatchPct!)}%
+            <span className="sub">
+              {data.deathSamples} death{data.deathSamples === 1 ? '' : 's'} across {data.deathSampleMatches} match{data.deathSampleMatches === 1 ? '' : 'es'}
+            </span>
+          </div>
+          <div className="l">Vision-death mismatch</div>
         </div>
-        <div className="l">Vision-death mismatch</div>
-      </div>
+      )}
     </div>
   )
 }

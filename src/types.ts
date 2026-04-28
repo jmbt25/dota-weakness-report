@@ -185,7 +185,33 @@ export interface AnalysisResult {
    * substitution. Optional — analyses opt in when they have data to roast.
    */
   roastFacts?: Record<string, string | number>
+  /**
+   * Optional compact data block rendered below the chart on a card. Used
+   * for v1.2.0 sub-findings (lanes-won-but-lost, WR-by-session-position,
+   * 5-item power spike). Keeps the card from sprouting a second card
+   * when one extra data point is the right answer.
+   */
+  subFinding?: SubFindingPayload
 }
+
+/** A small "single value" stat appended to a card, e.g. "31/49 lanes". */
+export interface SubFindingValue {
+  kind: 'value'
+  label: string
+  value: string
+  sub?: string
+}
+
+/** A small list of (label, percent, secondary text) rows — bars + numbers. */
+export interface SubFindingRows {
+  kind: 'rows'
+  label: string
+  rows: { name: string; pct: number; sub?: string }[]
+  /** Optional caption beneath the rows. */
+  sub?: string
+}
+
+export type SubFindingPayload = SubFindingValue | SubFindingRows
 
 export type HonestLanguage = 'english' | 'taglish'
 
@@ -261,6 +287,10 @@ export interface VisionData {
   mismatchPct: number | null
   /** Total deaths sampled — surfaced for the footnote so users can see the denominator. */
   deathSamples: number
+  /** Distinct matches that contributed at least one death-with-coords.
+   *  Used by the UI to gate rendering of the mismatch tile (need ≥10
+   *  matches contributing death coords for the percentage to be stable). */
+  deathSampleMatches: number
   eligibleMatches: number
   totalMatches: number
   /** Renders the role-specific framing in the headline. */

@@ -6,6 +6,9 @@ import { Footer } from './components/Footer'
 import { DeepDive } from './components/DeepDive'
 import { HonestModeToggle } from './components/HonestModeToggle'
 import { ChangelogPage } from './components/ChangelogPage'
+import { MmrMathPage } from './components/MmrMathPage'
+import { MetaPage } from './components/MetaPage'
+import { TopNav, type NavRoute } from './components/TopNav'
 import { ProgressStrip, type ReportPhase } from './components/ProgressStrip'
 import {
   fetchAllMatchDetails,
@@ -268,6 +271,19 @@ function App() {
     navigate('/changelog')
   }
 
+  function navByRoute(r: NavRoute) {
+    if (r === 'report') {
+      // If user has analyzed, just navigate back to "/" without resetting
+      // their report state (so they can flip between pages without
+      // re-running analysis).
+      navigate('/')
+    } else if (r === 'mmr-math') {
+      navigate('/mmr-math')
+    } else if (r === 'meta') {
+      navigate('/meta')
+    }
+  }
+
   const errorMessage = status.kind === 'error' ? status.message : null
   const isPreparing = status.kind === 'preparing'
   const isStreaming = status.kind === 'streaming'
@@ -286,6 +302,9 @@ function App() {
   }, [status.kind])
 
   const isChangelog = route === '/changelog'
+  const isMmrMath = route === '/mmr-math'
+  const isMeta = route === '/meta'
+  const isReportRoute = !isChangelog && !isMmrMath && !isMeta
 
   // Per-match role classification for the role-split toggle. Recomputed
   // whenever the live details map changes — early on when most matches
@@ -363,24 +382,70 @@ function App() {
 
   const reportPhase: ReportPhase | null = isStreaming ? status.report.phase : null
 
+  // The report state lives in `status` and is preserved across page
+  // navigation — flipping to /mmr-math or /meta won't reset analysis.
+  // /mmr-math and /meta only need the profile + matches summary, both
+  // of which are populated as soon as streaming starts (the parse phase
+  // doesn't add anything they care about).
+  const reportProfile =
+    status.kind === 'streaming' ? status.report.profile : null
+  const reportMatches =
+    status.kind === 'streaming' ? status.report.matches : null
+
   return (
     <div className="dwr" data-honest={honestMode ? 'true' : 'false'}>
       <div className="cosmos" />
 
-      {isChangelog ? (
-        <ChangelogPage onHome={goHome} />
-      ) : (
+      {isChangelog && <ChangelogPage onHome={goHome} />}
+
+      {isMmrMath && (
         <>
-          <Hero
+          <TopNav
+            active="mmr-math"
+            reportDisabled={!isStreaming && !isPreparing}
+            onNavigate={navByRoute}
+          />
+          <MmrMathPage
+            profile={reportProfile}
+            matches={reportMatches}
             onAnalyze={(raw) => analyze(raw)}
             isLoading={isPreparing}
             error={errorMessage}
-            showLanding={!isStreaming}
-            onHome={goHome}
-            loaderSlot={
-              isPreparing ? <Loader stage={(status as { stage: string }).stage} /> : null
-            }
           />
+        </>
+      )}
+
+      {isMeta && (
+        <>
+          <TopNav
+            active="meta"
+            reportDisabled={!isStreaming && !isPreparing}
+            onNavigate={navByRoute}
+          />
+          <MetaPage profile={reportProfile} matches={reportMatches} />
+        </>
+      )}
+
+      {isReportRoute && (
+        <>
+          <TopNav
+            active="report"
+            reportDisabled={!isStreaming && !isPreparing}
+            onNavigate={navByRoute}
+          />
+          {!isStreaming && (
+            <Hero
+              onAnalyze={(raw) => analyze(raw)}
+              isLoading={isPreparing}
+              error={errorMessage}
+              showLanding={!isStreaming}
+              onHome={goHome}
+              hideHeader
+              loaderSlot={
+                isPreparing ? <Loader stage={(status as { stage: string }).stage} /> : null
+              }
+            />
+          )}
 
           {isStreaming && reportComputed && roleSplit && (
             <>
@@ -439,7 +504,7 @@ function App() {
         onUnlock={unlock}
         onHome={goHome}
         onChangelog={goChangelog}
-        showCta={!isChangelog}
+        showCta={isReportRoute}
       />
     </div>
   )
@@ -527,7 +592,10 @@ function ProfileBar({
               supportCount={roleSplit.supportCount}
             />
           )}
-          <span className={`dwr-badge ${isPaid ? 'paid' : ''}`}>{isPaid ? 'Paid' : 'Free'}</span>
+          {/* "Free" badge removed — it floated without context for new users.
+              Paid status (when unlocked) still shows so the user can see their
+              license took. Tier info lives in the unlock CTA at the bottom. */}
+          {isPaid && <span className="dwr-badge paid">Paid</span>}
           <HonestModeToggle enabled={honestMode} onToggle={onToggleHonestMode} />
         </div>
       </div>

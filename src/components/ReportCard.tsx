@@ -15,6 +15,7 @@ import type {
   ChartPayload,
   HonestLanguage,
   Severity,
+  SubFindingPayload,
 } from '../types'
 import { generateRoast } from '../lib/honestMode'
 import { CardSkeleton } from './CardSkeleton'
@@ -102,6 +103,7 @@ export function ReportCard({ result, honestMode, language, accountId, phase }: R
       )}
 
       {!isUnmeasured && chart && <ChartBlock chart={chart} />}
+      {!isUnmeasured && result.subFinding && <SubFindingBlock payload={result.subFinding} />}
 
       <p className="prose">{finding}</p>
       <div className="what">
@@ -210,6 +212,42 @@ function renderXyChart(chart: Exclude<ChartPayload, { kind: 'stat-blocks' }>) {
         />
       )}
     </BarChart>
+  )
+}
+
+function SubFindingBlock({ payload }: { payload: SubFindingPayload }) {
+  if (payload.kind === 'value') {
+    return (
+      <div className="dwr-subfinding">
+        <div className="dwr-subfinding-label">{payload.label}</div>
+        <div className="dwr-subfinding-value">{payload.value}</div>
+        {payload.sub && <div className="dwr-subfinding-sub">{payload.sub}</div>}
+      </div>
+    )
+  }
+  return (
+    <div className="dwr-subfinding">
+      <div className="dwr-subfinding-label">{payload.label}</div>
+      <div className="dwr-subfinding-rows">
+        {payload.rows.map((r, i) => (
+          <RowFragment key={i} name={r.name} pct={r.pct} sub={r.sub} />
+        ))}
+      </div>
+      {payload.sub && <div className="dwr-subfinding-sub">{payload.sub}</div>}
+    </div>
+  )
+}
+
+function RowFragment({ name, pct, sub }: { name: string; pct: number; sub?: string }) {
+  const clamped = Math.max(0, Math.min(100, pct))
+  return (
+    <>
+      <span className="pos">{name}</span>
+      <span className="meter" aria-hidden="true">
+        <span style={{ width: `${clamped}%` }} />
+      </span>
+      <span className="pct">{Math.round(pct)}%{sub ? <span style={{ color: 'var(--ink-dim)', marginLeft: 4, fontSize: 10 }}> {sub}</span> : null}</span>
+    </>
   )
 }
 

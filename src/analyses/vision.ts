@@ -51,6 +51,7 @@ export function analyzeVision(input: ReportInput): AnalysisResult {
   const senLifetimes: number[] = []
   let deathSamples = 0
   let noVisionDeaths = 0
+  let deathSampleMatches = 0
 
   let debugLogged = false
 
@@ -119,6 +120,7 @@ export function analyzeVision(input: ReportInput): AnalysisResult {
     // user's wards in that match. When they don't, this branch stays
     // silent and mismatchPct ends up null.
     if (Array.isArray(detail.objectives)) {
+      let matchContributedDeath = false
       for (const obj of detail.objectives) {
         if (obj.type !== 'CHAT_MESSAGE_HERO_KILL') continue
         const victimSlot =
@@ -128,8 +130,10 @@ export function analyzeVision(input: ReportInput): AnalysisResult {
         if (victimSlot !== player.player_slot) continue
         if (typeof obj.x !== 'number' || typeof obj.y !== 'number') continue
         deathSamples++
+        matchContributedDeath = true
         if (!hasNearbyWard(obj.x, obj.y, matchWardCoords)) noVisionDeaths++
       }
+      if (matchContributedDeath) deathSampleMatches++
     }
 
     // userIsRadiant retained for future use (e.g. team-side colored dots);
@@ -298,6 +302,7 @@ export function analyzeVision(input: ReportInput): AnalysisResult {
       lifetimeBaselineSec,
       mismatchPct,
       deathSamples,
+      deathSampleMatches,
       eligibleMatches,
       totalMatches,
       inferredRole,
