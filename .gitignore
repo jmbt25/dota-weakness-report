@@ -146,3 +146,12 @@ vite.config.ts.timestamp-*
 CLAUDE.md
 # Claude Code project-scoped local state (lockfiles, settings.local.json, etc.)
 .claude/
+
+# Pro Comparison dev artifacts — diagnostic only, not for the repo.
+# `screenshots/` is the Phase 4 visual-verification output from
+# `_DevProComparisonStates.tsx`; regenerate with Edge headless when needed.
+# `pro-vectors-sample.json` is the inspection output from
+# `scripts/build-pro-vectors.mjs --sample`; the production corpus is
+# `pro-vectors.json`, written by `scripts/refresh-pro-corpus.mjs`.
+screenshots/
+src/data/pro-vectors-sample.json
