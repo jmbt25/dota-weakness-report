@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Hero } from './components/Hero'
 import { Loader } from './components/Loader'
 import { ReportGrid } from './components/ReportGrid'
@@ -6,6 +6,18 @@ import { Footer } from './components/Footer'
 import { DeepDive } from './components/DeepDive'
 import { HonestModeToggle } from './components/HonestModeToggle'
 import { ChangelogPage } from './components/ChangelogPage'
+// Dev-only Pro Comparison test page. Lazy-loaded behind the
+// `import.meta.env.DEV` gate so production bundles tree-shake the entire
+// module (synthetic fixtures + secondary corpus import) — Vite replaces
+// `import.meta.env.DEV` with a literal `false` at build time, the ternary
+// resolves to `null`, and the dynamic import call gets dropped.
+const DevProComparisonStates = import.meta.env.DEV
+  ? lazy(() =>
+      import('./components/_DevProComparisonStates').then((m) => ({
+        default: m.DevProComparisonStates,
+      }))
+    )
+  : null
 import { MmrMathPage } from './components/MmrMathPage'
 import { MetaPage } from './components/MetaPage'
 import { TopNav, type NavRoute } from './components/TopNav'
@@ -295,7 +307,12 @@ function App() {
   const isChangelog = route === '/changelog'
   const isMmrMath = route === '/mmr-math'
   const isMeta = route === '/meta'
-  const isReportRoute = !isChangelog && !isMmrMath && !isMeta
+  // Dev-only route for visual verification of ProComparisonCard states.
+  // Stripped from production builds — `import.meta.env.DEV` is a Vite
+  // compile-time constant that resolves to `false` in `vite build`, so
+  // the `&&` short-circuits and tree-shakes the entire branch.
+  const isDevProComparison = route === '/_dev/pro-comparison' && import.meta.env.DEV
+  const isReportRoute = !isChangelog && !isMmrMath && !isMeta && !isDevProComparison
 
   // Per-match role classification for the role-split toggle. Recomputed
   // whenever the live details map changes — early on when most matches
@@ -389,6 +406,12 @@ function App() {
 
       {isChangelog && <ChangelogPage onHome={goHome} />}
 
+      {isDevProComparison && DevProComparisonStates && (
+        <Suspense fallback={null}>
+          <DevProComparisonStates />
+        </Suspense>
+      )}
+
       {isMmrMath && (
         <>
           <TopNav
@@ -480,6 +503,8 @@ function App() {
                 honestMode={honestMode}
                 language={language}
                 accountId={status.report.profile.profile?.account_id ?? 0}
+                matches={filteredMatches}
+                details={status.report.details}
                 roleFilter={effectiveFilter}
                 phase={reportPhase ?? 'done'}
               />

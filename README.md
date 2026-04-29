@@ -2,8 +2,9 @@
 
 A static website that grades your last 50 Dota 2 matches and tells you,
 specifically, what you keep doing wrong. Paste your Steam ID, get a
-nine-card report covering deaths, farm, items, lanes, hero pool, stack
-synergy, vision, and tilt. Live at **[dotaweakness.com](https://dotaweakness.com)**.
+ten-card report covering deaths, farm, items, lanes, hero pool, stack
+synergy, vision, tilt, and your closest pro twin. Live at
+**[dotaweakness.com](https://dotaweakness.com)**.
 
 ## What it does
 
@@ -32,6 +33,12 @@ games that already happened.
 - **Vision** — observer/sentry placements rendered over the Dota 2
   minimap, with ward-lifetime and (when death coordinates are in the
   parsed data) a vision-death mismatch tile.
+- **Pro Comparison** — computes a 30-feature playstyle vector from your
+  last 50 matches, finds your closest twin among ~60 currently-active
+  TI cycle qualifiers, and breaks the comparison down by hero
+  archetype, tempo, farm shape, vision, and death pattern. Hides for
+  windows under 25 matches. Suppresses the headline twin for genuine
+  3+ role flex players (per-axis breakdown still renders).
 
 Baselines are tuned per role (core / support / flex) and per rank
 bucket (Herald-Crusader / Archon-Legend / Ancient-Divine / Immortal),
@@ -62,6 +69,13 @@ Static React + Vite + TypeScript site. No backend, no accounts, no
 server-side state, no tracking. Match data is fetched from the public
 [OpenDota API](https://docs.opendota.com/) directly from your browser
 — rate-limited to ~57 req/min to stay inside their free-tier ceiling.
+
+The Pro Comparison card uses a static JSON corpus
+(`src/data/pro-vectors.json`) of pre-computed pro playstyle vectors,
+refreshed weekly via a GitHub Actions workflow that opens a PR with
+the regenerated data. Your own vector is computed in-browser from the
+same matches the rest of the report runs on — no extra API calls, no
+data leaves your session.
 
 Charts are Recharts. Routing is a 50-line pathname router, no
 react-router. Production deploy is Cloudflare Workers Static Assets.
@@ -98,6 +112,20 @@ npm run preview  # serve the dist/ build locally
 
 No environment variables needed — the OpenDota free tier doesn't
 require an API key.
+
+To refresh the Pro Comparison corpus locally (the production version
+runs weekly via GitHub Actions):
+
+```bash
+node scripts/refresh-pro-corpus.mjs
+```
+
+Pulls last-50-match samples for every pro in
+`scripts/pro-corpus-list.json` and rewrites `src/data/pro-vectors.json`.
+Takes ~20 minutes on the free OpenDota rate limit. Fails loudly on
+daily-cap exhaustion or upstream outage rather than writing partial
+data. The curated pro list is hand-edited at the start of each TI
+cycle when team rosters lock in.
 
 ## Contributing
 

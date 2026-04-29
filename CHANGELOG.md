@@ -13,6 +13,43 @@ src/lib/version.ts AND add an entry to this file. Both happen in the
 same commit. Newest entries go on top.
 -->
 
+## v1.3.0 — 2026-04-29
+
+New "Pro Comparison" card on /report. Computes a playstyle vector from
+your last 50 matches and finds your closest pro twin among ~60 currently-
+active TI cycle qualifiers, both overall and broken down by hero
+archetype, tempo, farm, vision, and death pattern. Vectors live in
+`src/data/pro-vectors.json` and refresh weekly via a GitHub Actions PR
+workflow (free-tier OpenDota, no API key). Honest mode adds a "what
+changes if you steal one thing" line.
+
+- 30-feature vector: role distribution, hero archetype overlap, tempo,
+  farm shape, vision, death pattern, role-conditional spending tempo,
+  and fight involvement (kill participation).
+- Hero archetypes tagged by hero design (Pudge → initiator, Hoodwink →
+  caster_nuker, etc.), not pub-position. The archetype dimension
+  measures "what kind of hero you reach for," independent of position.
+- Flex players (role-distribution Shannon entropy > 0.95) get the
+  per-axis breakdown without a headline twin — three roles in one body
+  doesn't have a single pro analogue.
+- Pro corpus footnote shows last-updated date; turns to "refresh
+  pending" warning past 14 days old.
+- Loose-match (cosine similarity < 0.3) renders with explicit caveat
+  text rather than pretending the closest pro is a real fit.
+- Card hides when user has fewer than 25 matches in the window —
+  vector quality is too noisy below that.
+- Refresh script: `node scripts/refresh-pro-corpus.mjs`. Fails loudly on
+  daily-cap exhaustion or OpenDota outage so partial corpora don't ship.
+- Weekly Actions workflow: `.github/workflows/refresh-pro-corpus.yml`
+  opens a PR with the regenerated JSON instead of direct-committing.
+- Initial corpus shipped at 50 pros (10 top-tier teams) — trimmed from a
+  64-pro target during the first build because OpenDota's free-tier daily
+  quota was tight after multiple build attempts. Future weekly refreshes
+  may grow the corpus back toward 60+ as transient API failures recover
+  (Mira, kaori, Abed, Dukalis failed during the v1.3.0 build with `other`
+  errors; all are recognizable and should come back). Corpus size
+  fluctuating ±5 pros between refreshes is expected behavior, not a bug.
+
 ## v1.2.5 — 2026-04-28
 
 Public-launch prep.

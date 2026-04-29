@@ -1,0 +1,456 @@
+{
+  "description": "Active TI 2026 cycle qualifier rosters — top-tier teams. Filtered from /api/proPlayers by team_name + is_locked + last_match_time within 60 days. Re-curate when team rosters shift between TI cycles. | Trimmed 2026-04-29 to top-10 recognized teams (50 pros) to fit free-tier daily quota with margin.",
+  "curated_at": "2026-04-29",
+  "entries": [
+    {
+      "account_id": 106305042,
+      "name": "Larl",
+      "personaname": "i love social media",
+      "team": "Team Spirit",
+      "country": null,
+      "fantasy_role": 0,
+      "last_match": "2026-04-24"
+    },
+    {
+      "account_id": 108958769,
+      "name": "panto",
+      "personaname": "sustain",
+      "team": "Team Spirit",
+      "country": "GB",
+      "fantasy_role": 2,
+      "last_match": "2026-04-24"
+    },
+    {
+      "account_id": 321580662,
+      "name": "Yatoro",
+      "personaname": "6敏捷",
+      "team": "Team Spirit",
+      "country": "CH",
+      "fantasy_role": 1,
+      "last_match": "2026-04-24"
+    },
+    {
+      "account_id": 847565596,
+      "name": "rue",
+      "personaname": "123",
+      "team": "Team Spirit",
+      "country": null,
+      "fantasy_role": 2,
+      "last_match": "2026-04-24"
+    },
+    {
+      "account_id": 113331514,
+      "name": "Miposhka",
+      "personaname": "Miposhka",
+      "team": "Team Spirit",
+      "country": "RU",
+      "fantasy_role": 2,
+      "last_match": "2026-04-10"
+    },
+    {
+      "account_id": 10366616,
+      "name": "Sneyking",
+      "personaname": "Sneyking",
+      "team": "Team Falcons",
+      "country": null,
+      "fantasy_role": 2,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 25907144,
+      "name": "Cr1t-",
+      "personaname": "Cr1t-",
+      "team": "Team Falcons",
+      "country": null,
+      "fantasy_role": 2,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 100058342,
+      "name": "skiter",
+      "personaname": "I m Going To Be The Best Carry",
+      "team": "Team Falcons",
+      "country": "SK",
+      "fantasy_role": 1,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 183719386,
+      "name": "AMMAR_THE_F",
+      "personaname": "Collapse",
+      "team": "Team Falcons",
+      "country": "JO",
+      "fantasy_role": 1,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 898455820,
+      "name": "Malr1ne",
+      "personaname": "...",
+      "team": "Team Falcons",
+      "country": "RU",
+      "fantasy_role": 4,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 127617979,
+      "name": "Crystallis",
+      "personaname": "KITR",
+      "team": "Tundra Esports",
+      "country": "NL",
+      "fantasy_role": 1,
+      "last_match": "2026-04-22"
+    },
+    {
+      "account_id": 86698277,
+      "name": "33",
+      "personaname": "not human (животное)",
+      "team": "Tundra Esports",
+      "country": "IL",
+      "fantasy_role": 1,
+      "last_match": "2026-04-20"
+    },
+    {
+      "account_id": 93618577,
+      "name": "bzm",
+      "personaname": "insects",
+      "team": "Tundra Esports",
+      "country": "JP",
+      "fantasy_role": 0,
+      "last_match": "2026-04-20"
+    },
+    {
+      "account_id": 136829091,
+      "name": "Whitemon",
+      "personaname": "NongMon",
+      "team": "Tundra Esports",
+      "country": "ID",
+      "fantasy_role": 0,
+      "last_match": "2026-04-20"
+    },
+    {
+      "account_id": 331855530,
+      "name": "Pure",
+      "personaname": "Preacher Man",
+      "team": "Tundra Esports",
+      "country": "RU",
+      "fantasy_role": 1,
+      "last_match": "2026-03-29"
+    },
+    {
+      "account_id": 124801257,
+      "name": "Nightfall",
+      "personaname": "bored",
+      "team": "Aurora Gaming",
+      "country": "RU",
+      "fantasy_role": 1,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 126842529,
+      "name": "Ws`",
+      "personaname": "Shenorita`",
+      "team": "Aurora Gaming",
+      "country": "MY",
+      "fantasy_role": 3,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 256156323,
+      "name": "Mira",
+      "personaname": "geekin'",
+      "team": "Aurora Gaming",
+      "country": "UA",
+      "fantasy_role": 2,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 320219866,
+      "name": "kaori",
+      "personaname": "set your heart ablaze",
+      "team": "Aurora Gaming",
+      "country": "UA",
+      "fantasy_role": 2,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 154715080,
+      "name": "Abed",
+      "personaname": "hamilton",
+      "team": "Aurora Gaming",
+      "country": "PH",
+      "fantasy_role": 4,
+      "last_match": "2026-04-21"
+    },
+    {
+      "account_id": 73401082,
+      "name": "Dukalis",
+      "personaname": "Dukalis",
+      "team": "PARIVISION",
+      "country": "RU",
+      "fantasy_role": 2,
+      "last_match": "2026-04-25"
+    },
+    {
+      "account_id": 106573901,
+      "name": "No[o]ne-",
+      "personaname": "Have fun",
+      "team": "PARIVISION",
+      "country": null,
+      "fantasy_role": 1,
+      "last_match": "2026-04-25"
+    },
+    {
+      "account_id": 164199202,
+      "name": "9Class",
+      "personaname": "Pele",
+      "team": "PARIVISION",
+      "country": "RU",
+      "fantasy_role": 2,
+      "last_match": "2026-04-25"
+    },
+    {
+      "account_id": 402583877,
+      "name": "SSS",
+      "personaname": "Nah, I'd adapt",
+      "team": "PARIVISION",
+      "country": null,
+      "fantasy_role": 1,
+      "last_match": "2026-04-25"
+    },
+    {
+      "account_id": 1044002267,
+      "name": "Satanic",
+      "personaname": "destroy",
+      "team": "PARIVISION",
+      "country": null,
+      "fantasy_role": 1,
+      "last_match": "2026-04-25"
+    },
+    {
+      "account_id": 165564598,
+      "name": "MieRo",
+      "personaname": "ALIVE",
+      "team": "BetBoom Team",
+      "country": "RU",
+      "fantasy_role": 3,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 172099728,
+      "name": "Kiritych~",
+      "personaname": "Naruto~",
+      "team": "BetBoom Team",
+      "country": "RU",
+      "fantasy_role": 1,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 196878136,
+      "name": "Kataomi`",
+      "personaname": "trimski",
+      "team": "BetBoom Team",
+      "country": "RU",
+      "fantasy_role": 2,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 317880638,
+      "name": "Save-",
+      "personaname": "gdc&n",
+      "team": "BetBoom Team",
+      "country": "SE",
+      "fantasy_role": 2,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 480412663,
+      "name": "gpk~",
+      "personaname": "negative behavior",
+      "team": "BetBoom Team",
+      "country": "AF",
+      "fantasy_role": 2,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 16497807,
+      "name": "tOfu",
+      "personaname": "tOfu",
+      "team": "Team Liquid",
+      "country": "DE",
+      "fantasy_role": 2,
+      "last_match": "2026-04-25"
+    },
+    {
+      "account_id": 97590558,
+      "name": "Ace ♠",
+      "personaname": "50centaur",
+      "team": "Team Liquid",
+      "country": "DK",
+      "fantasy_role": 1,
+      "last_match": "2026-04-25"
+    },
+    {
+      "account_id": 152962063,
+      "name": "m1CKe",
+      "personaname": "yondaime",
+      "team": "Team Liquid",
+      "country": "VN",
+      "fantasy_role": 1,
+      "last_match": "2026-04-25"
+    },
+    {
+      "account_id": 201358612,
+      "name": "Nisha",
+      "personaname": "мусор",
+      "team": "Team Liquid",
+      "country": null,
+      "fantasy_role": 0,
+      "last_match": "2026-04-25"
+    },
+    {
+      "account_id": 77490514,
+      "name": "Boxi",
+      "personaname": "Boxi",
+      "team": "Team Liquid",
+      "country": "SE",
+      "fantasy_role": 2,
+      "last_match": "2026-03-15"
+    },
+    {
+      "account_id": 301750126,
+      "name": "Mikoto",
+      "personaname": "River in Flow",
+      "team": "Talon",
+      "country": "ID",
+      "fantasy_role": 4,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 293904640,
+      "name": "ponyo",
+      "personaname": "papage",
+      "team": "Talon",
+      "country": "MY",
+      "fantasy_role": 2,
+      "last_match": "2026-04-18"
+    },
+    {
+      "account_id": 375507918,
+      "name": "23savage",
+      "personaname": "The Emptiness MAChine",
+      "team": "Talon",
+      "country": "TH",
+      "fantasy_role": 1,
+      "last_match": "2026-04-14"
+    },
+    {
+      "account_id": 152859296,
+      "name": "Jhocam",
+      "personaname": "axeLa",
+      "team": "Talon",
+      "country": "ID",
+      "fantasy_role": 2,
+      "last_match": "2026-04-13"
+    },
+    {
+      "account_id": 355168766,
+      "name": "Natsumi",
+      "personaname": ">>>>>>>><<<<<<<<<",
+      "team": "Talon",
+      "country": "US",
+      "fantasy_role": 1,
+      "last_match": "2026-04-13"
+    },
+    {
+      "account_id": 138543123,
+      "name": "Pyw",
+      "personaname": "Neil",
+      "team": "Xtreme Gaming",
+      "country": "CN",
+      "fantasy_role": 2,
+      "last_match": "2026-04-25"
+    },
+    {
+      "account_id": 94296097,
+      "name": "xNova",
+      "personaname": "lavie",
+      "team": "Xtreme Gaming",
+      "country": "AQ",
+      "fantasy_role": 2,
+      "last_match": "2026-04-22"
+    },
+    {
+      "account_id": 101695162,
+      "name": "fy",
+      "personaname": "其疾如风",
+      "team": "Xtreme Gaming",
+      "country": null,
+      "fantasy_role": 2,
+      "last_match": "2026-04-22"
+    },
+    {
+      "account_id": 129958758,
+      "name": "Xxs",
+      "personaname": "¿",
+      "team": "Xtreme Gaming",
+      "country": "CN",
+      "fantasy_role": 1,
+      "last_match": "2026-04-22"
+    },
+    {
+      "account_id": 173978074,
+      "name": "NothingToSay",
+      "personaname": "NothingToSay",
+      "team": "Xtreme Gaming",
+      "country": "MY",
+      "fantasy_role": 0,
+      "last_match": "2026-04-22"
+    },
+    {
+      "account_id": 40805086,
+      "name": "mellojul",
+      "personaname": "dota maniac",
+      "team": "Natus Vincere",
+      "country": "UA",
+      "fantasy_role": 4,
+      "last_match": "2026-04-28"
+    },
+    {
+      "account_id": 116249155,
+      "name": "nefrit",
+      "personaname": "nefrit",
+      "team": "Natus Vincere",
+      "country": "UA",
+      "fantasy_role": 1,
+      "last_match": "2026-04-26"
+    },
+    {
+      "account_id": 167976729,
+      "name": "Yuragi",
+      "personaname": "kinoko",
+      "team": "Natus Vincere",
+      "country": "KR",
+      "fantasy_role": 1,
+      "last_match": "2026-04-25"
+    },
+    {
+      "account_id": 130991304,
+      "name": "Riddys",
+      "personaname": "Larry Fishermann",
+      "team": "Natus Vincere",
+      "country": "PT",
+      "fantasy_role": 2,
+      "last_match": "2026-04-21"
+    },
+    {
+      "account_id": 185590374,
+      "name": "Niku",
+      "personaname": "xx",
+      "team": "Natus Vincere",
+      "country": "UA",
+      "fantasy_role": 0,
+      "last_match": "2026-04-21"
+    }
+  ]
+}
