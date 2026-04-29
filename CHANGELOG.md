@@ -13,6 +13,14 @@ src/lib/version.ts AND add an entry to this file. Both happen in the
 same commit. Newest entries go on top.
 -->
 
+## v1.3.1 — 2026-04-29
+
+SEO and share-preview hygiene pass. No functional changes to the report.
+
+- Added Open Graph and Twitter Card metadata so link previews render correctly when the site is shared on Discord, X, Reddit, etc.
+- Per-route page titles and descriptions so each page is distinct in browser tabs and search results.
+- Added robots.txt and sitemap.xml for search engine indexing. Sitemap covers /, /meta, /mmr-math, /changelog. /_dev/ is disallowed.
+
 ## v1.3.0 — 2026-04-29
 
 New "Pro Comparison" card on /report. Computes a playstyle vector from

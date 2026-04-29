@@ -314,6 +314,34 @@ function App() {
   const isDevProComparison = route === '/_dev/pro-comparison' && import.meta.env.DEV
   const isReportRoute = !isChangelog && !isMmrMath && !isMeta && !isDevProComparison
 
+  // Per-route document.title + meta description. Crawlers that don't run
+  // JS still see the homepage values from index.html (which is fine —
+  // share previews go through index.html). This pass is for browser tabs,
+  // history, and JS-aware indexers.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    let title = 'Dota Weakness Report'
+    let description =
+      "A free Dota 2 weakness report. Drop in your Steam ID, get an honest read on what's holding your MMR back."
+    if (isChangelog) {
+      title = 'Changelog — Dota Weakness Report'
+      description = 'Release notes for Dota Weakness Report.'
+    } else if (isMmrMath) {
+      title = 'MMR Math — Dota Weakness Report'
+      description =
+        'How many games to your next Dota 2 rank? Math-backed estimate from your real win rate.'
+    } else if (isMeta) {
+      title = 'Meta Heroes by Bracket — Dota Weakness Report'
+      description =
+        'Current Dota 2 meta heroes by bracket — win rates, pick rates, and tier scores updated weekly.'
+    } else if (isReportRoute && isStreaming) {
+      title = 'Your Report — Dota Weakness Report'
+    }
+    document.title = title
+    const metaDesc = document.querySelector('meta[name="description"]')
+    if (metaDesc) metaDesc.setAttribute('content', description)
+  }, [isChangelog, isMmrMath, isMeta, isReportRoute, isStreaming])
+
   // Per-match role classification for the role-split toggle. Recomputed
   // whenever the live details map changes — early on when most matches
   // are unparsed, classification falls back to the summary-only KDA
