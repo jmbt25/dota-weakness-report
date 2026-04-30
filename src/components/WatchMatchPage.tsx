@@ -3,6 +3,7 @@ import type { ODMatchDetail } from '../types'
 import { fetchMatchDetail, HttpError } from '../api/opendota'
 import { getCachedMatch, setCachedMatch } from '../lib/watchCache'
 import { WatchDisclaimer } from './WatchDisclaimer'
+import { WatchPlayerGrid } from './WatchPlayerGrid'
 
 interface WatchMatchPageProps {
   /** Match ID parsed from the URL path. May be NaN/0 if the route matched
@@ -244,13 +245,16 @@ function ReadyView({
       </header>
 
       <div className="dwr-watch-match-body">
+        <WatchPlayerGrid detail={detail} />
+
         <div className="dwr-watch-match-placeholder">
-          <p className="dwr-watch-match-placeholder-eyebrow">PHASE 3 PREVIEW</p>
+          <p className="dwr-watch-match-placeholder-eyebrow">PHASE 4 — IN PROGRESS</p>
           <p className="dwr-watch-match-placeholder-body">
-            Match data fetched + cached. Per-player observations (Phases 4–5),
-            match-level observations (Phase 6), and the "What stood out"
-            lead-line synthesis (Phase 7) render here when the prose templates
-            land.
+            Match-level observations (draft, lane phase, Roshan, teamfights —
+            Phase 6) and the "What stood out" lead-line synthesis (Phase 7)
+            render here when those templates land. Cross-match per-player
+            observations (Phase 5) append to each card above when the
+            curated pro is in the baseline corpus.
           </p>
         </div>
 

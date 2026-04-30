@@ -53,6 +53,10 @@ export interface ODMatchPlayer {
   denies: number
   net_worth?: number
   level?: number
+  hero_damage?: number
+  buyback_count?: number
+  teamfight_participation?: number | null
+  stuns?: number | null
   lane?: number | null
   lane_role?: number | null
   is_roaming?: boolean | null
