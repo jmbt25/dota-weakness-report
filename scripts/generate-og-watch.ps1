@@ -81,7 +81,7 @@ function Resolve-Font([string[]]$names, [single]$size, [System.Drawing.FontStyle
   return New-Object System.Drawing.Font('Arial', $size, $style, [System.Drawing.GraphicsUnit]::Point)
 }
 
-$displayFont  = Resolve-Font @('Bebas Neue', 'Impact', 'Arial Black') 92  ([System.Drawing.FontStyle]::Regular)
+$displayFont  = Resolve-Font @('Bebas Neue', 'Impact', 'Arial Black') 84  ([System.Drawing.FontStyle]::Regular)
 $displaySmall = Resolve-Font @('Bebas Neue', 'Impact', 'Arial Black') 38  ([System.Drawing.FontStyle]::Regular)
 $bodyFont     = Resolve-Font @('Inter', 'Segoe UI', 'Arial')          24  ([System.Drawing.FontStyle]::Regular)
 $monoFont     = Resolve-Font @('JetBrains Mono', 'Consolas', 'Courier New') 16 ([System.Drawing.FontStyle]::Regular)
@@ -130,35 +130,41 @@ for ($i = 0; $i -lt 60; $i++) {
 # Reproduced from src/components/ApertureSigil.tsx, simplified for OG
 # scale. SVG viewBox is 200x200; we scale to 280x280 centered at (220, 315).
 
-$cx = 220.0
-$cy = 315.0
-$scale = 280.0 / 200.0  # 1.4x
+# Sigil position — top-center to match og-image.png composition
+# (centered/stacked, not horizontal two-column).
+$cx = 600.0
+$cy = 175.0
+$scale = 230.0 / 200.0  # ~1.15x — slightly smaller to leave room below for stacked wordmark + tagline
 
-function S([single]$v) { return $v * $scale }
-function Px([single]$svgX) { return $cx + S($svgX - 100.0) }
-function Py([single]$svgY) { return $cy + S($svgY - 100.0) }
+# Inline scale + translate helpers (PowerShell function-call syntax in
+# expression context is fragile — `S($x - 100.0)` parses as a cmdlet
+# call rather than a function invocation. Inlining the math is more
+# verbose but bulletproof).
+function ToPx([single]$svgX) { return [single]($cx + ($svgX - 100.0) * $scale) }
+function ToPy([single]$svgY) { return [single]($cy + ($svgY - 100.0) * $scale) }
+function ToS([single]$v)     { return [single]($v * $scale) }
 
 # Outer hex stroke
 $violetPen = New-Object System.Drawing.Pen ((New-AlphaColor $cosmicGlow 220), 2.4)
 $hexPoints = @(
-  (New-Object System.Drawing.PointF (Px 100), (Py 8)),
-  (New-Object System.Drawing.PointF (Px 173), (Py 50)),
-  (New-Object System.Drawing.PointF (Px 173), (Py 150)),
-  (New-Object System.Drawing.PointF (Px 100), (Py 192)),
-  (New-Object System.Drawing.PointF (Px 27),  (Py 150)),
-  (New-Object System.Drawing.PointF (Px 27),  (Py 50))
+  (New-Object System.Drawing.PointF((ToPx 100.0), (ToPy 8.0))),
+  (New-Object System.Drawing.PointF((ToPx 173.0), (ToPy 50.0))),
+  (New-Object System.Drawing.PointF((ToPx 173.0), (ToPy 150.0))),
+  (New-Object System.Drawing.PointF((ToPx 100.0), (ToPy 192.0))),
+  (New-Object System.Drawing.PointF((ToPx 27.0),  (ToPy 150.0))),
+  (New-Object System.Drawing.PointF((ToPx 27.0),  (ToPy 50.0)))
 )
 $g.DrawPolygon($violetPen, $hexPoints)
 
 # Inner hex stroke (lighter)
 $violetPenLight = New-Object System.Drawing.Pen ((New-AlphaColor $cosmicGlow 140), 1.2)
 $innerHex = @(
-  (New-Object System.Drawing.PointF (Px 100), (Py 20)),
-  (New-Object System.Drawing.PointF (Px 162), (Py 56)),
-  (New-Object System.Drawing.PointF (Px 162), (Py 144)),
-  (New-Object System.Drawing.PointF (Px 100), (Py 180)),
-  (New-Object System.Drawing.PointF (Px 38),  (Py 144)),
-  (New-Object System.Drawing.PointF (Px 38),  (Py 56))
+  (New-Object System.Drawing.PointF((ToPx 100.0), (ToPy 20.0))),
+  (New-Object System.Drawing.PointF((ToPx 162.0), (ToPy 56.0))),
+  (New-Object System.Drawing.PointF((ToPx 162.0), (ToPy 144.0))),
+  (New-Object System.Drawing.PointF((ToPx 100.0), (ToPy 180.0))),
+  (New-Object System.Drawing.PointF((ToPx 38.0),  (ToPy 144.0))),
+  (New-Object System.Drawing.PointF((ToPx 38.0),  (ToPy 56.0)))
 )
 $g.DrawPolygon($violetPenLight, $innerHex)
 
@@ -169,9 +175,9 @@ foreach ($pt in $hexPoints) {
 }
 
 # Iris — radial gradient, violet center → cosmic-mid → bg-void
-$irisCx = Px 100
-$irisCy = Py 100
-$irisR = S 58
+$irisCx = ToPx 100.0
+$irisCy = ToPy 100.0
+$irisR = ToS 58.0
 $irisRect = New-Object System.Drawing.RectangleF ($irisCx - $irisR), ($irisCy - $irisR), ($irisR * 2), ($irisR * 2)
 $irisPath = New-Object System.Drawing.Drawing2D.GraphicsPath
 $irisPath.AddEllipse($irisRect)
@@ -183,48 +189,61 @@ $g.FillEllipse($irisBrush, $irisRect)
 $g.DrawEllipse($violetPen, $irisRect)
 
 # Inner concentric circles (just one for OG simplicity vs the SVG's two)
-$ringRect = New-Object System.Drawing.RectangleF ($irisCx - (S 32)), ($irisCy - (S 32)), (S 64), (S 64)
+$ring32 = ToS 32.0
+$ring64 = ToS 64.0
+$ringRect = New-Object System.Drawing.RectangleF (($irisCx - $ring32), ($irisCy - $ring32), $ring64, $ring64)
 $g.DrawEllipse($violetPenLight, $ringRect)
 
 # Pupil — tiny red dot at center, glow behind
-$glowR = S 9
-$glowRect = New-Object System.Drawing.RectangleF ($irisCx - $glowR), ($irisCy - $glowR), ($glowR * 2), ($glowR * 2)
+$glowR = ToS 9.0
+$glowRect = New-Object System.Drawing.RectangleF (($irisCx - $glowR), ($irisCy - $glowR), ($glowR * 2), ($glowR * 2))
 $glowBrush = New-Object System.Drawing.SolidBrush (New-AlphaColor $accent 80)
 $g.FillEllipse($glowBrush, $glowRect)
-$pupilR = S 5
-$pupilRect = New-Object System.Drawing.RectangleF ($irisCx - $pupilR), ($irisCy - $pupilR), ($pupilR * 2), ($pupilR * 2)
+$pupilR = ToS 5.0
+$pupilRect = New-Object System.Drawing.RectangleF (($irisCx - $pupilR), ($irisCy - $pupilR), ($pupilR * 2), ($pupilR * 2))
 $g.FillEllipse($accentBrush, $pupilRect)
 
 # Red diagonal gash across the iris
 $gashPen = New-Object System.Drawing.Pen $accent, 3.2
 $gashPen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
 $gashPen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
-$g.DrawLine($gashPen, [single](Px 38), [single](Py 70), [single](Px 162), [single](Py 130))
+$g.DrawLine($gashPen, (ToPx 38.0), (ToPy 70.0), (ToPx 162.0), (ToPy 130.0))
 
-# ---- Right column — wordmark + tagline ----
+# ---- Centered wordmark + tagline (mirrors og-image.png composition) ----
 
-$rightX = 480
+# Helper: draw text centered horizontally on the canvas at y=$y
+function Draw-CenteredText([System.Drawing.Graphics]$gfx, [string]$text, [System.Drawing.Font]$font, [System.Drawing.Brush]$brush, [single]$y) {
+  $sz = $gfx.MeasureString($text, $font)
+  $x = ($WIDTH - $sz.Width) / 2.0
+  $gfx.DrawString($text, $font, $brush, $x, $y)
+}
 
-# Eyebrow: tiny mono caption above the wordmark
-$eyebrowText = "DOTA WEAKNESS REPORT"
-$eyebrowBrush = New-Object System.Drawing.SolidBrush $inkMuted
-$g.DrawString($eyebrowText, $monoFont, $eyebrowBrush, $rightX, 200)
-
-# Wordmark: "WATCH LIKE A COACH" in display font
-$wordmarkText = "WATCH LIKE A COACH"
+# Wordmark: "WATCH LIKE A COACH" — single line, centered. Big and bold,
+# matching the "DOTA WEAKNESS REPORT" treatment in og-image.png.
 $wordmarkBrush = New-Object System.Drawing.SolidBrush $ink
-$g.DrawString($wordmarkText, $displayFont, $wordmarkBrush, $rightX, 235)
+Draw-CenteredText $g "WATCH LIKE A COACH" $displayFont $wordmarkBrush 360
 
-# Red accent: small horizontal line under the wordmark to anchor it
-$accentLinePen = New-Object System.Drawing.Pen $accent, 3
-$g.DrawLine($accentLinePen, $rightX, 360, ($rightX + 80), 360)
-
-# Tagline: "What stood out — every recent pro match."
+# Tagline: "What stood out — every recent pro match." — centered below
+# the wordmark.
 $taglineText = "What stood out — every recent pro match."
 $taglineBrush = New-Object System.Drawing.SolidBrush $inkSoft
-$g.DrawString($taglineText, $bodyFont, $taglineBrush, $rightX, 380)
+Draw-CenteredText $g $taglineText $bodyFont $taglineBrush 480
 
-# Domain caption at bottom-right
+# Red accent: short horizontal line centered below the tagline (matches
+# og-image.png's accent treatment under "An honest read..." tagline).
+$accentLinePen = New-Object System.Drawing.Pen $accent, 3
+$accentLineWidth = 90.0
+$accentLineY = 525.0
+$g.DrawLine(
+  $accentLinePen,
+  [single](($WIDTH - $accentLineWidth) / 2.0),
+  $accentLineY,
+  [single](($WIDTH + $accentLineWidth) / 2.0),
+  $accentLineY
+)
+
+# Domain caption — bottom-right, mono, dim. Same subtle brand mark as
+# og-image.png (which puts it in similar position).
 $domainText = "DOTAWEAKNESS.COM"
 $domainBrush = New-Object System.Drawing.SolidBrush $inkMuted
 $domainSize = $g.MeasureString($domainText, $monoFont)
@@ -257,7 +276,6 @@ $irisPath.Dispose()
 $gradBrush.Dispose()
 $wordmarkBrush.Dispose()
 $taglineBrush.Dispose()
-$eyebrowBrush.Dispose()
 $domainBrush.Dispose()
 $displayFont.Dispose()
 $displaySmall.Dispose()
