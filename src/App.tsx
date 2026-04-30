@@ -26,7 +26,6 @@ import { TopNav, type NavRoute } from './components/TopNav'
 import { ProgressStrip, type ReportPhase } from './components/ProgressStrip'
 import {
   fetchAllMatchDetails,
-  fetchHeroes,
   fetchPlayerMatches,
   fetchPlayerProfile,
   parseMatches,
@@ -35,7 +34,7 @@ import { parseAccountInput } from './lib/parseInput'
 import { runAllAnalyses } from './analyses'
 import { computeRoleSplit, inferRole, type RoleSplit } from './lib/matchHelpers'
 import { rankBucketFromTier, rankBucketLabel, rankLabel } from './lib/baselines'
-import { getHeroName, setHeroes } from './lib/heroes'
+import { getHeroName } from './lib/heroes'
 import { FREE_TIER_MATCH_LIMIT, MAX_DETAIL_FETCH } from './lib/license'
 import type {
   AnalysisResult,
@@ -95,7 +94,6 @@ function App() {
   const [watchMatchHeader, setWatchMatchHeader] = useState<WatchMatchHeader | null>(null)
   const lastInputRef = useRef<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
-  const heroesLoadedRef = useRef(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -112,17 +110,6 @@ function App() {
     setRoute(path)
     window.scrollTo({ top: 0, behavior: 'auto' })
   }
-
-  useEffect(() => {
-    if (heroesLoadedRef.current) return
-    heroesLoadedRef.current = true
-    fetchHeroes()
-      .then((heroes) => setHeroes(heroes))
-      .catch((err) => {
-        // eslint-disable-next-line no-console
-        console.warn('Hero index unavailable; falling back to numeric IDs.', err)
-      })
-  }, [])
 
   async function analyze(raw: string) {
     abortRef.current?.abort()
