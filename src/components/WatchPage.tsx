@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ODProMatch } from '../types'
 import { fetchProMatches, HttpError } from '../api/opendota'
 import { getCachedProMatches, setCachedProMatches } from '../lib/watchCache'
+import { countByFilter, isMatchEligible } from '../lib/watchLeagues'
 import { WatchDisclaimer } from './WatchDisclaimer'
 
 interface WatchPageProps {
@@ -18,6 +19,9 @@ const VISIBLE_COUNT = 50
 
 export function WatchPage({ onSelectMatch }: WatchPageProps) {
   const [state, setState] = useState<FetchState>({ kind: 'loading' })
+  // Default off: tracked-tournaments only. Doesn't persist across visits —
+  // each fresh /watch lands the user in the curated view.
+  const [showAll, setShowAll] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
   function load() {
@@ -77,21 +81,109 @@ export function WatchPage({ onSelectMatch }: WatchPageProps) {
           </div>
         )}
 
-        {state.kind === 'ready' && state.matches.length === 0 && (
-          <p className="dwr-watch-empty">
-            No recent pro matches available right now. OpenDota's feed may be
-            briefly empty between tournaments — try again in a few minutes.
-          </p>
-        )}
-
-        {state.kind === 'ready' && state.matches.length > 0 && (
-          <div className="dwr-watch-grid">
-            {state.matches.slice(0, VISIBLE_COUNT).map((m) => (
-              <MatchCard key={m.match_id} m={m} onClick={() => onSelectMatch(m.match_id)} />
-            ))}
-          </div>
+        {state.kind === 'ready' && (
+          <ReadyView
+            matches={state.matches}
+            showAll={showAll}
+            setShowAll={setShowAll}
+            onSelectMatch={onSelectMatch}
+          />
         )}
       </section>
+    </>
+  )
+}
+
+function ReadyView({
+  matches,
+  showAll,
+  setShowAll,
+  onSelectMatch,
+}: {
+  matches: ODProMatch[]
+  showAll: boolean
+  setShowAll: (v: boolean) => void
+  onSelectMatch: (id: number) => void
+}) {
+  // Single pass over the full list to derive both filtered + counts.
+  // Memoized so toggling showAll doesn't re-iterate.
+  const counts = useMemo(() => countByFilter(matches), [matches])
+  const visible = useMemo(
+    () => matches.filter((m) => isMatchEligible(m, showAll)).slice(0, VISIBLE_COUNT),
+    [matches, showAll]
+  )
+
+  if (matches.length === 0) {
+    return (
+      <p className="dwr-watch-empty">
+        No recent pro matches available right now. OpenDota's feed may be
+        briefly empty between tournaments — try again in a few minutes.
+      </p>
+    )
+  }
+
+  // Tracked-tournaments mode but the curated set is empty (slow week
+  // between major events). Surface why + offer the toggle as the path forward.
+  if (!showAll && counts.trackedAndLong === 0) {
+    return (
+      <>
+        <div className="dwr-watch-empty-tracked">
+          <p>
+            No tracked tournaments live right now. The default view shows
+            DreamLeague, BLAST Slam, ESL One, PGL, Riyadh Masters, ESports
+            World Cup, TI, and qualifiers for those — none of those have
+            matches in OpenDota's most recent feed.
+          </p>
+          <button
+            type="button"
+            className="dwr-link-btn dwr-watch-toggle-link"
+            onClick={() => setShowAll(true)}
+          >
+            Show all {counts.allLong} recent matches →
+          </button>
+        </div>
+      </>
+    )
+  }
+
+  return (
+    <>
+      <div className="dwr-watch-grid">
+        {visible.map((m) => (
+          <MatchCard key={m.match_id} m={m} onClick={() => onSelectMatch(m.match_id)} />
+        ))}
+      </div>
+
+      <div className="dwr-watch-toggle">
+        {showAll ? (
+          <>
+            <span className="dwr-watch-toggle-status">
+              Showing {visible.length} of {counts.allLong} recent matches.
+            </span>
+            <button
+              type="button"
+              className="dwr-link-btn dwr-watch-toggle-link"
+              onClick={() => setShowAll(false)}
+            >
+              Show only tracked tournaments
+            </button>
+          </>
+        ) : (
+          <>
+            <span className="dwr-watch-toggle-status">
+              Showing {visible.length} from tracked tournaments
+              {counts.allLong > visible.length && ` (${counts.allLong - visible.length} more in the unfiltered feed)`}.
+            </span>
+            <button
+              type="button"
+              className="dwr-link-btn dwr-watch-toggle-link"
+              onClick={() => setShowAll(true)}
+            >
+              Show all {counts.allLong} recent matches
+            </button>
+          </>
+        )}
+      </div>
     </>
   )
 }

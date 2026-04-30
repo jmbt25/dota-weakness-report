@@ -2294,6 +2294,49 @@
   font-size: 14px;
 }
 
+/* Sparse-week empty state: tracked tournaments are off-air, point to the toggle */
+.dwr-watch-empty-tracked {
+  max-width: 580px;
+  margin: 48px auto;
+  padding: 24px;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  text-align: center;
+  color: var(--ink-soft);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.dwr-watch-empty-tracked .dwr-link-btn {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--accent);
+}
+.dwr-watch-empty-tracked .dwr-link-btn:hover { color: var(--accent-hover); }
+
+/* Show-all toggle — discreet text strip below the listing */
+.dwr-watch-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 32px auto 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.dwr-watch-toggle-status {
+  font-style: italic;
+}
+.dwr-watch-toggle-link {
+  font-size: 12px;
+  color: var(--accent);
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: 'Inter', sans-serif;
+}
+.dwr-watch-toggle-link:hover { color: var(--accent-hover); }
+
 /* /watch/{match_id} detail page */
 .dwr-watch-match {
   max-width: 1080px;
