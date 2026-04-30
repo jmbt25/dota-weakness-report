@@ -14,6 +14,22 @@
 // All output passes validateWatchProse before returning. Drift detection:
 // a self-test at module load runs each template against a synthetic
 // match and asserts validation passes. Console.error if any fails.
+//
+// ─── v1.1 hook-point: user-comparison layer ───
+// The /watch feature ships v1 as pure observation prose (third-person,
+// no viewer state). v1.1 may add an opt-in "Show my comparison" toggle
+// that injects personal lines next to each Cat 1B fire ("Pos 4 placed
+// 6 obs. You average 4."). Design intent (decided 2026-04-30, NOT
+// being built):
+//   - Toggle is off by default; persists in sessionStorage; query
+//     param ?compare=me makes URLs bookmarkable.
+//   - The personal layer ADDS lines to existing per-player cards; it
+//     does NOT replace the Cat 1B observation lines.
+//   - Each Cat 1B template would gain a parallel `compareToUser()`
+//     method that returns an additional ProseFire when a user vector
+//     is in scope. Same banned-token validator gate.
+//   - Don't pre-build the parallel method now — design it once we
+//     know which templates land + see post-launch user behavior.
 
 import type { ODMatchDetail, ODMatchPlayer } from '../../types'
 import { validateWatchProse } from './bannedTokens'
@@ -321,11 +337,28 @@ const teamfightParticipationRank: Cat1BTemplate = {
   },
 }
 
-/** 5. Dead-time block — 3+ deaths inside a 4-minute window. */
+/** 5. Dead-time block — 3+ deaths inside a 4-minute window.
+ *
+ * Multi-unit heroes are EXCLUDED because their kills_log can record a
+ * single mechanical "death event" as multiple entries. Phase 4 dump on
+ * Nigma vs 1w showed Meepo dying 3 times in 14 seconds — that's all
+ * his clones dying together in one teamfight, not three separate
+ * pickoffs. The exclusion is preferred over a "minimum window span"
+ * rule because legitimate triple-pickoffs on supports can land inside
+ * 60 seconds and we want those to surface. */
+const MULTI_UNIT_HERO_IDS = new Set<number>([
+  78,  // Brewmaster — Primal Split spawns 3 spirit units
+  80,  // Lone Druid — Spirit Bear is a separate unit with its own deaths
+  82,  // Meepo — clones share death events
+  92,  // Visage — familiars are summoned units
+  113, // Arc Warden — Tempest Double dies as a separate event
+])
+
 const deadTimeBlock: Cat1BTemplate = {
   id: 'dead_time_block',
   priority: 5,
   produce: (player) => {
+    if (MULTI_UNIT_HERO_IDS.has(player.player.hero_id)) return null
     const window = densestDeathWindow(player.player, 3, 240)
     if (!window) return null
     return {
@@ -341,7 +374,24 @@ const deadTimeBlock: Cat1BTemplate = {
   },
 }
 
-/** 6. Buyback pattern — 0 buybacks in a long game by a core. */
+/** 6. Buyback pattern — 0 buybacks in a long game by a core, but only
+ *     when buyback was actually relevant. Two qualifying paths:
+ *       (a) Player on the LOSING team — buyback might have flipped the game.
+ *       (b) Peak net worth never crossed COULDNT_AFFORD_FLOOR (5000 gold)
+ *           — they couldn't have afforded one even if they wanted to.
+ *
+ *     Without these gates the template fired for nearly every winning
+ *     core in long games (5/6 cores in the Phase 4 dump on Nigma vs 1w
+ *     Team), which reads as criticism of normal late-game discipline.
+ *     The Phase 4 review spec sketched a duration-scaled threshold
+ *     (200 + duration_min × 9) × 1000 — read literally that's ~524k
+ *     gold, always above peak NW, so the OR collapses to "always fire."
+ *     5000 is a fixed "structurally couldn't afford" floor that's
+ *     robust across game length: real end-game buyback cost is roughly
+ *     200 + (NW × 0.05) + (level × 1.5) which lands in the 1000-2000
+ *     range for level-25 cores at 20k NW; never reaching 5000 means the
+ *     player never had practical access to a buyback decision. */
+const COULDNT_AFFORD_BUYBACK_FLOOR = 5000
 const buybackPatternZero: Cat1BTemplate = {
   id: 'buyback_pattern_zero',
   priority: 4,
@@ -352,6 +402,13 @@ const buybackPatternZero: Cat1BTemplate = {
     if (typeof count !== 'number' || count !== 0) return null
     const peak = peakNetWorth(player.player)
     if (peak === 0) return null
+
+    const slot = player.player.player_slot ?? 0
+    const isRadiant = slot < 128
+    const isLosingTeam = isRadiant !== ctx.detail.radiant_win
+    const couldntAfford = peak < COULDNT_AFFORD_BUYBACK_FLOOR
+    if (!isLosingTeam && !couldntAfford) return null
+
     return {
       text: `${positionLabel(player.position)} (${player.heroName}) had 0 buybacks across the ${Math.round(ctx.durationMin)}-min game. Peak net worth: ${peak.toLocaleString()}.`,
       facts: {
@@ -359,6 +416,7 @@ const buybackPatternZero: Cat1BTemplate = {
         hero: player.heroName,
         duration_min: Math.round(ctx.durationMin),
         peak_net_worth: peak,
+        losing_team: String(isLosingTeam),
       },
     }
   },
