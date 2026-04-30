@@ -3,7 +3,10 @@ import type { ProseFire, PlayerContext } from '../lib/watchProse/cat1b'
 
 interface WatchPlayerCardProps {
   ctx: PlayerContext
-  fires: ProseFire[]
+  /** Cat 1A (corpus-backed cross-match) — empty for non-corpus players. */
+  cat1aFires: ProseFire[]
+  /** Cat 1B (within-match) — runs for every player. */
+  cat1bFires: ProseFire[]
   displayName: string
 }
 
@@ -17,7 +20,7 @@ interface WatchPlayerCardProps {
  * into player.personaname directly — the structural guarantee of the
  * "no personaname for display" rule.
  */
-export function WatchPlayerCard({ ctx, fires, displayName }: WatchPlayerCardProps) {
+export function WatchPlayerCard({ ctx, cat1aFires, cat1bFires, displayName }: WatchPlayerCardProps) {
   const [open, setOpen] = useState(false)
   const p = ctx.player
   const kills = p.kills ?? 0
@@ -46,17 +49,22 @@ export function WatchPlayerCard({ ctx, fires, displayName }: WatchPlayerCardProp
         </div>
       </header>
 
-      {fires.length > 0 ? (
+      {(cat1aFires.length + cat1bFires.length) > 0 ? (
         <div className="dwr-watch-player-body">
-          {fires.map((f) => (
-            <p key={f.templateId} className="dwr-watch-player-prose">
+          {cat1aFires.map((f) => (
+            <p key={`a-${f.templateId}`} className="dwr-watch-player-prose cat1a">
+              {f.text}
+            </p>
+          ))}
+          {cat1bFires.map((f) => (
+            <p key={`b-${f.templateId}`} className="dwr-watch-player-prose">
               {f.text}
             </p>
           ))}
         </div>
       ) : (
         <div className="dwr-watch-player-body empty">
-          <p className="dwr-watch-player-prose dim">No within-match observations fired for this player.</p>
+          <p className="dwr-watch-player-prose dim">No observations fired for this player.</p>
         </div>
       )}
 

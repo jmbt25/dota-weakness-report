@@ -5,7 +5,9 @@ import {
   buildMatchContext,
   runCat1B,
   type PlayerContext,
+  type ProseFire,
 } from '../lib/watchProse/cat1b'
+import { runCat1A } from '../lib/watchProse/cat1a'
 import { resolveDisplayName } from '../lib/watchProse/displayName'
 import { WatchPlayerCard } from './WatchPlayerCard'
 
@@ -23,10 +25,11 @@ interface WatchPlayerGridProps {
  * never read.
  */
 export function WatchPlayerGrid({ detail }: WatchPlayerGridProps) {
-  const { ctx, fires } = useMemo(() => {
+  const { ctx, cat1a, cat1b } = useMemo(() => {
     const ctx = buildMatchContext(detail, getHeroName)
-    const fires = runCat1B(ctx)
-    return { ctx, fires }
+    const cat1a = runCat1A(ctx)
+    const cat1b = runCat1B(ctx)
+    return { ctx, cat1a, cat1b }
   }, [detail])
 
   const radiantSorted = sortByPosition(ctx.players.filter((p) => p.isRadiant))
@@ -41,12 +44,14 @@ export function WatchPlayerGrid({ detail }: WatchPlayerGridProps) {
       <TeamSection
         label={`Radiant${detail.radiant_win ? ' — winner' : ''}`}
         players={radiantSorted}
-        fires={fires}
+        cat1a={cat1a}
+        cat1b={cat1b}
       />
       <TeamSection
         label={`Dire${!detail.radiant_win ? ' — winner' : ''}`}
         players={direSorted}
-        fires={fires}
+        cat1a={cat1a}
+        cat1b={cat1b}
       />
     </div>
   )
@@ -55,11 +60,13 @@ export function WatchPlayerGrid({ detail }: WatchPlayerGridProps) {
 function TeamSection({
   label,
   players,
-  fires,
+  cat1a,
+  cat1b,
 }: {
   label: string
   players: PlayerContext[]
-  fires: Map<number, ReturnType<typeof runCat1B> extends Map<number, infer V> ? V : never>
+  cat1a: Map<number, ProseFire[]>
+  cat1b: Map<number, ProseFire[]>
 }) {
   return (
     <section className="dwr-watch-team">
@@ -69,7 +76,8 @@ function TeamSection({
           <WatchPlayerCard
             key={ctx.player.player_slot}
             ctx={ctx}
-            fires={fires.get(ctx.player.player_slot) ?? []}
+            cat1aFires={cat1a.get(ctx.player.player_slot) ?? []}
+            cat1bFires={cat1b.get(ctx.player.player_slot) ?? []}
             displayName={resolveDisplayName(ctx.player.account_id, ctx.position)}
           />
         ))}

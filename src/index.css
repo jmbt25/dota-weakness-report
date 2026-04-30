@@ -2574,6 +2574,12 @@
   color: var(--ink-dim);
   font-style: italic;
 }
+/* Cat 1A lines (corpus-backed cross-match) read brighter than Cat 1B —
+   they're the higher-information narrative. No hard divider; the slight
+   color shift is enough visual hierarchy. */
+.dwr-watch-player-prose.cat1a {
+  color: var(--ink);
+}
 
 .dwr-watch-player-toggle {
   background: transparent;
