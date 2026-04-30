@@ -1,7 +1,7 @@
 // Browser → OpenDota client. Free tier is 60 req/min. We throttle below that
 // (~50/min) to leave headroom for retries.
 
-import type { ODHero, ODMatchDetail, ODMatchSummary, ODPlayerProfile } from '../types'
+import type { ODHero, ODMatchDetail, ODMatchSummary, ODPlayerProfile, ODProMatch } from '../types'
 
 const BASE_URL = 'https://api.opendota.com/api'
 
@@ -102,6 +102,20 @@ export async function fetchMatchDetail(
   signal?: AbortSignal
 ): Promise<ODMatchDetail> {
   return get<ODMatchDetail>(`/matches/${matchId}`, signal)
+}
+
+/**
+ * Fetch the most recent finished pro matches. Powers /watch entry page.
+ * Returns ~100 entries by default (OpenDota's standard page size). Pass
+ * `lessThanMatchId` to paginate.
+ */
+export async function fetchProMatches(
+  options: { lessThanMatchId?: number; signal?: AbortSignal } = {}
+): Promise<ODProMatch[]> {
+  const qs = options.lessThanMatchId != null
+    ? `?less_than_match_id=${options.lessThanMatchId}`
+    : ''
+  return get<ODProMatch[]>(`/proMatches${qs}`, options.signal)
 }
 
 export interface ParseRequestResponse {

@@ -20,6 +20,8 @@ const DevProComparisonStates = import.meta.env.DEV
   : null
 import { MmrMathPage } from './components/MmrMathPage'
 import { MetaPage } from './components/MetaPage'
+import { WatchPage } from './components/WatchPage'
+import { WatchMatchPage } from './components/WatchMatchPage'
 import { TopNav, type NavRoute } from './components/TopNav'
 import { ProgressStrip, type ReportPhase } from './components/ProgressStrip'
 import {
@@ -43,6 +45,14 @@ import type {
   ODPlayerProfile,
   ReportInput,
 } from './types'
+
+type WatchMatchHeader = {
+  match_id: number
+  radiant_name: string
+  dire_name: string
+  radiant_score: number
+  dire_score: number
+}
 
 interface ReportState {
   profile: ODPlayerProfile
@@ -79,6 +89,10 @@ function App() {
   const [route, setRoute] = useState<string>(() =>
     typeof window !== 'undefined' ? window.location.pathname : '/'
   )
+  // Held only while the user is on /watch/{match_id} — drives the
+  // document.title swap once the match data lands. Cleared when the
+  // match_id in the URL changes or the user leaves /watch routes.
+  const [watchMatchHeader, setWatchMatchHeader] = useState<WatchMatchHeader | null>(null)
   const lastInputRef = useRef<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const heroesLoadedRef = useRef(false)
@@ -284,6 +298,8 @@ function App() {
       navigate('/mmr-math')
     } else if (r === 'meta') {
       navigate('/meta')
+    } else if (r === 'watch') {
+      navigate('/watch')
     }
   }
 
@@ -307,12 +323,32 @@ function App() {
   const isChangelog = route === '/changelog'
   const isMmrMath = route === '/mmr-math'
   const isMeta = route === '/meta'
+  const isWatch = route === '/watch'
+  // /watch/{match_id} — capture group is integer-only.
+  const watchMatchExec = route.match(/^\/watch\/(\d+)$/)
+  const isWatchMatch = watchMatchExec != null
+  const watchMatchId = watchMatchExec ? Number(watchMatchExec[1]) : NaN
   // Dev-only route for visual verification of ProComparisonCard states.
   // Stripped from production builds — `import.meta.env.DEV` is a Vite
   // compile-time constant that resolves to `false` in `vite build`, so
   // the `&&` short-circuits and tree-shakes the entire branch.
   const isDevProComparison = route === '/_dev/pro-comparison' && import.meta.env.DEV
-  const isReportRoute = !isChangelog && !isMmrMath && !isMeta && !isDevProComparison
+  const isReportRoute =
+    !isChangelog && !isMmrMath && !isMeta && !isWatch && !isWatchMatch && !isDevProComparison
+
+  // Reset the cached match header whenever the active /watch/{id} match
+  // changes (or we leave the watch routes). Without this, navigating from
+  // /watch/A → /watch/B would briefly show A's title in the tab.
+  useEffect(() => {
+    if (!isWatchMatch) {
+      if (watchMatchHeader != null) setWatchMatchHeader(null)
+      return
+    }
+    if (watchMatchHeader && watchMatchHeader.match_id !== watchMatchId) {
+      setWatchMatchHeader(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isWatchMatch, watchMatchId])
 
   // Per-route document.title + meta description. Crawlers that don't run
   // JS still see the homepage values from index.html (which is fine —
@@ -334,13 +370,35 @@ function App() {
       title = 'Meta Heroes by Bracket — Dota Weakness Report'
       description =
         'Current Dota 2 meta heroes by bracket — win rates, pick rates, and tier scores updated weekly.'
+    } else if (isWatch) {
+      title = 'Watch — Dota Weakness Report'
+      description =
+        'Coach-style analysis of recent pro Dota 2 matches. Updated as matches finish.'
+    } else if (isWatchMatch) {
+      if (watchMatchHeader && watchMatchHeader.match_id === watchMatchId) {
+        title = `${watchMatchHeader.radiant_name} ${watchMatchHeader.radiant_score}–${watchMatchHeader.dire_score} ${watchMatchHeader.dire_name} — DotaWR Watch`
+      } else {
+        title = 'Match — Dota Weakness Report'
+      }
+      description =
+        'Coach-style breakdown of a recent professional Dota 2 match.'
     } else if (isReportRoute && isStreaming) {
       title = 'Your Report — Dota Weakness Report'
     }
     document.title = title
     const metaDesc = document.querySelector('meta[name="description"]')
     if (metaDesc) metaDesc.setAttribute('content', description)
-  }, [isChangelog, isMmrMath, isMeta, isReportRoute, isStreaming])
+  }, [
+    isChangelog,
+    isMmrMath,
+    isMeta,
+    isWatch,
+    isWatchMatch,
+    watchMatchId,
+    watchMatchHeader,
+    isReportRoute,
+    isStreaming,
+  ])
 
   // Per-match role classification for the role-split toggle. Recomputed
   // whenever the live details map changes — early on when most matches
@@ -465,6 +523,46 @@ function App() {
             onNavigate={navByRoute}
           />
           <MetaPage profile={reportProfile} matches={reportMatches} />
+        </>
+      )}
+
+      {isWatch && (
+        <>
+          <TopNav
+            active="watch"
+            reportDisabled={!isStreaming && !isPreparing}
+            onNavigate={navByRoute}
+          />
+          <WatchPage onSelectMatch={(id) => navigate(`/watch/${id}`)} />
+        </>
+      )}
+
+      {isWatchMatch && (
+        <>
+          <TopNav
+            active="watch"
+            reportDisabled={!isStreaming && !isPreparing}
+            onNavigate={navByRoute}
+          />
+          <WatchMatchPage
+            matchId={watchMatchId}
+            onBackToWatch={() => navigate('/watch')}
+            onMatchLoaded={(detail) => {
+              const d = detail as ODMatchDetail & {
+                radiant_team?: { name?: string | null }
+                dire_team?: { name?: string | null }
+                radiant_score?: number
+                dire_score?: number
+              }
+              setWatchMatchHeader({
+                match_id: detail.match_id,
+                radiant_name: d.radiant_team?.name ?? 'Radiant',
+                dire_name: d.dire_team?.name ?? 'Dire',
+                radiant_score: d.radiant_score ?? 0,
+                dire_score: d.dire_score ?? 0,
+              })
+            }}
+          />
         </>
       )}
 

@@ -149,6 +149,30 @@ export interface ODHero {
   roles: string[]
 }
 
+/**
+ * /proMatches list entry. Lightweight summary for recently-finished pro
+ * matches — full per-player detail is fetched separately via /matches/{id}.
+ * Pro matches are auto-parsed by OpenDota; `version` is non-null almost
+ * immediately after match end (Phase 0 verification, 2026-04-30).
+ */
+export interface ODProMatch {
+  match_id: number
+  duration: number
+  start_time: number
+  radiant_team_id: number
+  radiant_name: string
+  dire_team_id: number
+  dire_name: string
+  leagueid: number
+  league_name: string
+  series_id: number
+  series_type: number
+  radiant_score: number
+  dire_score: number
+  radiant_win: boolean
+  version?: number | null
+}
+
 // Domain types
 
 export type Role = 'core' | 'support' | 'flex' | 'unknown'
