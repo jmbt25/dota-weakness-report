@@ -13,6 +13,18 @@ src/lib/version.ts AND add an entry to this file. Both happen in the
 same commit. Newest entries go on top.
 -->
 
+## v1.6.0 — 2026-04-30
+
+Phase 5 of the watch-feature buildout — cross-match per-player observations.
+/watch/{match_id} now layers corpus-backed cross-match prose on top of the
+within-match observations from v1.5.0. Match-level observations (Phase 6)
+and the "What stood out" lead-line synthesis (Phase 7) still pending.
+
+- /watch/{match_id} per-player cards now include cross-match prose (Cat 1A) for corpus-known players: lane WR streaks (with break detection), hero records on the played hero, KDA vs rolling baseline, GPM vs rolling baseline, vision vs rolling, role distribution shifts (e.g., a pos 5 main playing pos 4), and hero-specific KDA outliers.
+- Cross-match prose surfaces narrative-shaped comparisons: streak breaks earn the line, continuations don't unless they're remarkable. Hero-specific records suppress general-stat lines when both could fire — specific beats general.
+- 48 active TI 2026 cycle pros currently in the corpus. Players outside the corpus continue to render Cat 1B observations only. Corpus expands 2026-06-01 with TI Open Qualifier rosters and current DreamLeague Division 2 rosters.
+- All Cat 1A prose passes the WATCH_BANNED_TOKENS validator: past tense, third person, observation register, no editorializing.
+
 ## v1.5.0 — 2026-04-30
 
 Phase 4 of the watch-feature buildout — within-match per-player observations.
