@@ -32,14 +32,14 @@ export function WatchLeadLines({ detail }: WatchLeadLinesProps) {
   return (
     <section className="dwr-watch-leads">
       <h2 className="dwr-watch-leads-header">WHAT STOOD OUT</h2>
-      <div className="dwr-watch-leads-grid">
+      <div className="dwr-watch-leads-list">
         {leads.map((lead, i) => (
-          <article key={lead.fire.templateId} className="card dwr-watch-lead">
+          <div key={lead.fire.templateId} className="dwr-watch-lead">
             <div className="dwr-watch-lead-overline">
-              OBSERVATION {String(i + 1).padStart(2, '0')}
+              [{String(i + 1).padStart(2, '0')}]
             </div>
             <p className="dwr-watch-lead-text">{lead.fire.text}</p>
-          </article>
+          </div>
         ))}
       </div>
     </section>

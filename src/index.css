@@ -2581,57 +2581,71 @@
   color: var(--ink);
 }
 
-/* Phase 7 — lead-line synthesis (WHAT STOOD OUT). 2-3 pull-quote cards
-   at the top of /watch/{match_id} surfacing the highest-emphasis fires
-   across Cat 1A, Cat 1B, and Cat 2. Visual register: distinct from the
-   per-player + match-level cards below — these are headlines. */
+/* Phase 7 — lead-line synthesis (WHAT STOOD OUT). Editorial pull-quote
+   treatment, NOT card chrome. The synthesis sits at the top of
+   /watch/{match_id} as headlines lifted from the per-player and
+   match-level cards below; sharing card chrome with those sections
+   broke the headline register (eye read it as the start of the grid,
+   not as synthesis).
+
+   Treatment: typographic-only frame — left accent bar, no background
+   panel, no border ring. Larger prose than card body text. Generous
+   vertical spacing between observations. Bracketed mono numerals as
+   overline ("[01]" not "OBSERVATION 01"). */
 .dwr-watch-leads {
-  margin-bottom: 24px;
+  margin: 8px 0 32px;
+  padding: 12px 0 0;
 }
 
 .dwr-watch-leads-header {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.18em;
+  font-size: 14px;
+  letter-spacing: 0.24em;
   color: var(--accent);
   text-transform: uppercase;
-  margin: 0 0 12px;
+  margin: 0 0 28px;
   text-align: center;
+  font-weight: 600;
 }
 
-.dwr-watch-leads-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-@media (min-width: 900px) {
-  .dwr-watch-leads-grid { grid-template-columns: repeat(3, 1fr); }
+.dwr-watch-leads-list {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 980px;
+  margin: 0 auto;
 }
 
 .dwr-watch-lead {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  background: linear-gradient(155deg, rgba(91, 58, 143, 0.10), rgba(233, 69, 96, 0.04));
-  border: 1px solid var(--line-strong);
-  padding: 18px 18px 16px;
+  gap: 6px;
+  padding-left: 20px;
+  border-left: 3px solid var(--accent);
 }
 
 .dwr-watch-lead-overline {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  color: var(--ink-muted);
-  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .dwr-watch-lead-text {
   font-family: 'Inter', sans-serif;
-  font-size: 15px;
-  line-height: 1.5;
+  font-size: 22px;
+  line-height: 1.4;
   color: var(--ink);
   margin: 0;
   font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+@media (max-width: 640px) {
+  .dwr-watch-lead-text { font-size: 18px; }
+  .dwr-watch-leads-header { font-size: 12px; margin-bottom: 20px; }
+  .dwr-watch-leads-list { gap: 20px; }
 }
 
 /* Cat 2 — match-level sections (draft / lane / mid game / teamfights)
