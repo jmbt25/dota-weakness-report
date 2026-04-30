@@ -5,3 +5,26 @@ compatibility_date = "2025-01-01"
 directory = "./dist"
 # SPA fallback: serve index.html for any path the static bundle doesn't have.
 not_found_handling = "single-page-application"
+
+# ──────────────────────────────────────────────────────────────────────
+# Preview worker — separate target for feature-branch visual review.
+# - Worker name:  dota-weakness-report-preview
+# - workers.dev:  ENABLED (production worker has it disabled via the
+#                 Cloudflare dashboard; preview gets its own subdomain).
+# - URL pattern:  https://dota-weakness-report-preview.<account>.workers.dev
+# - Deploy via:   npm run deploy:preview
+#                 (= npm run build && npx wrangler deploy --env preview)
+#
+# Workflow: every feature branch lands on preview first for visual
+# review; production deploy is a separate, manual step gated on
+# approval. The preview env is a single mutable target — successive
+# deploys overwrite. If multiple parallel previews ever become a need,
+# switch to `wrangler versions upload --env preview` per-version URLs.
+# ──────────────────────────────────────────────────────────────────────
+[env.preview]
+name = "dota-weakness-report-preview"
+workers_dev = true
+
+[env.preview.assets]
+directory = "./dist"
+not_found_handling = "single-page-application"
