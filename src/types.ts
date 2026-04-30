@@ -34,6 +34,10 @@ export interface ODObjective {
   player_slot?: number
   key?: string | number
   value?: number
+  /** Roshan kill events: 2 = Radiant, 3 = Dire. */
+  team?: number
+  /** building_kill carries the killer's hero entity name (e.g. "npc_dota_hero_puck") OR a creep entity if a creep finished. */
+  unit?: string
   /** Some parsed event types (deaths, tower kills, etc.) carry coordinates. */
   x?: number | null
   y?: number | null
@@ -120,6 +124,38 @@ export interface ODKillEvent {
   key?: string
 }
 
+export interface ODPicksBan {
+  is_pick: boolean
+  hero_id: number
+  /** team: 0 = Radiant, 1 = Dire */
+  team: number
+  order: number
+}
+
+export interface ODTeamfightPlayer {
+  deaths_pos?: unknown
+  ability_uses?: Record<string, number>
+  ability_targets?: Record<string, Record<string, number>>
+  item_uses?: Record<string, number>
+  killed?: Record<string, number>
+  deaths?: number
+  buybacks?: number
+  damage?: number
+  healing?: number
+  gold_delta?: number
+  xp_delta?: number
+  xp_start?: number
+  xp_end?: number
+}
+
+export interface ODTeamfight {
+  start: number
+  end: number
+  last_death?: number
+  deaths?: number
+  players?: ODTeamfightPlayer[]
+}
+
 export interface ODMatchDetail {
   match_id: number
   duration: number
@@ -129,6 +165,18 @@ export interface ODMatchDetail {
   lobby_type: number
   players: ODMatchPlayer[]
   objectives?: ODObjective[]
+  /** Captains-mode draft order. Always present on parsed pro matches (24 entries). */
+  picks_bans?: ODPicksBan[]
+  teamfights?: ODTeamfight[]
+  /** Per-game-minute Radiant gold lead. Length ≈ floor(duration/60) + 1. Sign: positive = Radiant ahead. */
+  radiant_gold_adv?: number[]
+  /** Per-game-minute Radiant XP lead. Same shape + sign as radiant_gold_adv. */
+  radiant_xp_adv?: number[]
+  radiant_score?: number
+  dire_score?: number
+  radiant_team?: { name?: string | null; team_id?: number | null }
+  dire_team?: { name?: string | null; team_id?: number | null }
+  league?: { name?: string | null; leagueid?: number | null }
   // The match has been parsed (replay analyzed) when this is set
   version?: number | null
 }

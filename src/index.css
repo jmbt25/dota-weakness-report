@@ -2581,6 +2581,47 @@
   color: var(--ink);
 }
 
+/* Cat 2 — match-level sections (draft / lane / mid game / teamfights)
+   below the per-player grid. Each section is a full-width card. Empty
+   sections don't render at all — handled in WatchMatchSections. */
+.dwr-watch-match-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.dwr-watch-match-section {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  padding: 16px 20px;
+}
+
+.dwr-watch-match-section-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin: 0 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.dwr-watch-match-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dwr-watch-match-section-prose {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin: 0;
+}
+
 .dwr-watch-player-toggle {
   background: transparent;
   border: 1px solid var(--line);

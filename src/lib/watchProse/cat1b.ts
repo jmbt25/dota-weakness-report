@@ -56,6 +56,12 @@ export interface MatchContext {
   /** All 10 players, in the SAME order as detail.players. */
   players: PlayerContext[]
   durationMin: number
+  /** Hero ID → localized name resolver. Cat 2 templates that name heroes
+   *  by raw ID (picks_bans, building_kill.unit) use this rather than
+   *  importing `getHeroName` directly — that singleton isn't populated
+   *  outside the browser bootstrap, so Cat 2 prose would render
+   *  "Hero 21" instead of "Windranger" in Node-side dumps. */
+  heroName: (id: number) => string
 }
 
 export interface ProseFire {
@@ -573,6 +579,7 @@ export function buildMatchContext(
     detail,
     players,
     durationMin: detail.duration / 60,
+    heroName,
   }
 }
 
