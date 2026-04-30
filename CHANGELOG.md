@@ -13,6 +13,21 @@ src/lib/version.ts AND add an entry to this file. Both happen in the
 same commit. Newest entries go on top.
 -->
 
+## v1.4.0 — 2026-04-30
+
+New "Watch like a coach" feature surface — two new routes for analyzing
+recent professional Dota matches. Phase 3 of the v1 buildout: page
+scaffolding, routing, and listing-tier filtering. Per-player and match-
+level coach prose ships in subsequent versions.
+
+- /watch entry page lists recent pro matches via OpenDota /proMatches with a name-pattern filter for premier-tier tournaments.
+- /watch/{match_id} renders match header + raw match data (Phase 3 preview — coach-style prose ships in subsequent versions).
+- TopNav extended with Watch link as fourth nav item.
+- Disclaimer banner on /watch routes: Observations from public match data. Not affiliated with any team, player, or tournament.
+- Sparse-week messaging surfaces the calendar context when tracked-tournament count is low.
+- Show-all toggle reveals unfiltered /proMatches feed for users who want it. Default off, does not persist across navigation.
+- Pro-baselines corpus and weekly refresh workflow committed (data infrastructure for upcoming Cat 1A prose templates in v1.5.0).
+
 ## v1.3.1 — 2026-04-29
 
 SEO and share-preview hygiene pass. No functional changes to the report.
