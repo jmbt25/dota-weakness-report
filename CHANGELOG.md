@@ -13,6 +13,18 @@ src/lib/version.ts AND add an entry to this file. Both happen in the
 same commit. Newest entries go on top.
 -->
 
+## v1.8.0 — 2026-04-30
+
+Phase 7 of the watch-feature buildout — lead-line synthesis, share-preview
+asset, and per-route OG meta swap. The /watch surface is now feature-complete
+for the v1 launch (TI 2026 Open Qualifiers, June 9). Phase 8 (calibration +
+polish) starts after this lands.
+
+- /watch/{match_id} now leads with a "What stood out" section: 2-3 pull-quote headlines synthesized from the strongest per-player and match-level observations. Editorial typography (22px prose, accent left-bar, [01]/[02]/[03] enumeration) makes the synthesis the first thing readers see, with the per-player and match-level cards beneath as supporting detail.
+- Lead-line algorithm picks across all three prose categories (cross-match, within-match, match-level) by emphasis score, with per-player dedup so the same individual doesn't appear in two pull-quotes describing the same observation.
+- Hero ID resolution refreshed to cover all heroes through current patch (Muerta, Ringmaster, etc.). Previous /watch builds rendered "Hero 138" instead of "Muerta" for recent additions.
+- og-watch.png ships as the share-preview asset for /watch routes. Discord/X/Reddit embeds for any /watch URL now render the WATCH LIKE A COACH brand card. Per-match dynamic OG cards remain v1.1 territory.
+
 ## v1.7.0 — 2026-04-30
 
 Phase 6 of the watch-feature buildout — match-level prose. /watch/{match_id}
