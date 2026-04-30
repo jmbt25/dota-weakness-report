@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import type { ProseFire, PlayerContext } from '../lib/watchProse/cat1b'
+import type { ProseFire, PlayerContext } from '../lib/breakdownsProse/cat1b'
 
-interface WatchPlayerCardProps {
+interface BreakdownsPlayerCardProps {
   ctx: PlayerContext
   /** Cat 1A (corpus-backed cross-match) — empty for non-corpus players. */
   cat1aFires: ProseFire[]
@@ -11,16 +11,16 @@ interface WatchPlayerCardProps {
 }
 
 /**
- * One card per player on /watch/{match_id}. Header carries position +
+ * One card per player on /breakdowns/{match_id}. Header carries position +
  * hero + display name. Body lists Cat 1B prose lines (zero or more).
  * Show-more toggle reveals the per-player stats table.
  *
  * Display name resolution happens upstream in the grid (resolveDisplayName
- * from src/lib/watchProse/displayName.ts). This component never reaches
- * into player.personaname directly — the structural guarantee of the
- * "no personaname for display" rule.
+ * from src/lib/breakdownsProse/displayName.ts). This component never
+ * reaches into player.personaname directly — the structural guarantee of
+ * the "no personaname for display" rule.
  */
-export function WatchPlayerCard({ ctx, cat1aFires, cat1bFires, displayName }: WatchPlayerCardProps) {
+export function BreakdownsPlayerCard({ ctx, cat1aFires, cat1bFires, displayName }: BreakdownsPlayerCardProps) {
   const [open, setOpen] = useState(false)
   const p = ctx.player
   const kills = p.kills ?? 0
@@ -40,37 +40,37 @@ export function WatchPlayerCard({ ctx, cat1aFires, cat1bFires, displayName }: Wa
   const stuns = p.stuns
 
   return (
-    <article className={`card dwr-watch-player ${ctx.isRadiant ? 'radiant' : 'dire'}`}>
-      <header className="dwr-watch-player-head">
-        <span className="dwr-watch-player-pos">POS {ctx.position}</span>
-        <div className="dwr-watch-player-id">
-          <span className="dwr-watch-player-hero">{ctx.heroName}</span>
-          <span className="dwr-watch-player-name">{displayName}</span>
+    <article className={`card dwr-breakdowns-player ${ctx.isRadiant ? 'radiant' : 'dire'}`}>
+      <header className="dwr-breakdowns-player-head">
+        <span className="dwr-breakdowns-player-pos">POS {ctx.position}</span>
+        <div className="dwr-breakdowns-player-id">
+          <span className="dwr-breakdowns-player-hero">{ctx.heroName}</span>
+          <span className="dwr-breakdowns-player-name">{displayName}</span>
         </div>
       </header>
 
       {(cat1aFires.length + cat1bFires.length) > 0 ? (
-        <div className="dwr-watch-player-body">
+        <div className="dwr-breakdowns-player-body">
           {cat1aFires.map((f) => (
-            <p key={`a-${f.templateId}`} className="dwr-watch-player-prose cat1a">
+            <p key={`a-${f.templateId}`} className="dwr-breakdowns-player-prose cat1a">
               {f.text}
             </p>
           ))}
           {cat1bFires.map((f) => (
-            <p key={`b-${f.templateId}`} className="dwr-watch-player-prose">
+            <p key={`b-${f.templateId}`} className="dwr-breakdowns-player-prose">
               {f.text}
             </p>
           ))}
         </div>
       ) : (
-        <div className="dwr-watch-player-body empty">
-          <p className="dwr-watch-player-prose dim">No observations fired for this player.</p>
+        <div className="dwr-breakdowns-player-body empty">
+          <p className="dwr-breakdowns-player-prose dim">No observations fired for this player.</p>
         </div>
       )}
 
       <button
         type="button"
-        className="dwr-watch-player-toggle"
+        className="dwr-breakdowns-player-toggle"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
@@ -78,7 +78,7 @@ export function WatchPlayerCard({ ctx, cat1aFires, cat1bFires, displayName }: Wa
       </button>
 
       {open && (
-        <dl className="dwr-watch-player-stats">
+        <dl className="dwr-breakdowns-player-stats">
           <Row label="K / D / A" value={`${kills}/${deaths}/${assists}`} />
           <Row label="KDA" value={kda} />
           <Row label="GPM" value={String(gpm)} />
@@ -99,7 +99,7 @@ export function WatchPlayerCard({ ctx, cat1aFires, cat1bFires, displayName }: Wa
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="dwr-watch-player-stat-row">
+    <div className="dwr-breakdowns-player-stat-row">
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>

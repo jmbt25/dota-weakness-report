@@ -1,4 +1,4 @@
-// sessionStorage cache for the /watch feature.
+// sessionStorage cache for the /breakdowns feature.
 //
 // Two distinct cache shapes:
 //   - /proMatches list: 5-min TTL (the list churns as new matches finish)
@@ -12,8 +12,8 @@
 
 import type { ODMatchDetail, ODProMatch } from '../types'
 
-const PRO_MATCHES_KEY = 'dwr.watch.proMatches'
-const MATCH_KEY_PREFIX = 'dwr.watch.match.'
+const PRO_MATCHES_KEY = 'dwr.breakdowns.proMatches'
+const MATCH_KEY_PREFIX = 'dwr.breakdowns.match.'
 const PRO_MATCHES_TTL_MS = 5 * 60 * 1000 // 5 minutes
 
 interface CachedProMatches {

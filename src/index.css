@@ -2057,13 +2057,13 @@
 }
 
 /* =============================================================
-   Watch feature (Phase 3 — page scaffolding only, no prose yet)
-   - /watch listing and /watch/{match_id} detail
+   Breakdowns feature (renamed from "watch" in v1.8.1)
+   - /breakdowns listing and /breakdowns/{match_id} detail
    - Disclaimer banner reused on both routes
-   - All classes prefixed .dwr-watch-* to keep blast radius local
+   - All classes prefixed .dwr-breakdowns-* to keep blast radius local
    ============================================================= */
 
-/* Generic link-button (footer's .dwr-link-btn was scoped). Watch back-button uses this too. */
+/* Generic link-button (footer's .dwr-link-btn was scoped). Breakdowns back-button uses this too. */
 .dwr-link-btn {
   background: transparent;
   border: none;
@@ -2090,7 +2090,7 @@
 }
 
 /* Disclaimer banner — italic, dim, full-width strip just under TopNav */
-.dwr-watch-disclaimer {
+.dwr-breakdowns-disclaimer {
   max-width: 1280px;
   margin: 0 auto;
   padding: 10px 24px 12px;
@@ -2102,19 +2102,19 @@
   letter-spacing: 0.01em;
 }
 
-/* /watch entry page */
-.dwr-watch {
+/* /breakdowns entry page */
+.dwr-breakdowns {
   max-width: 1280px;
   margin: 0 auto;
   padding: 12px 24px 60px;
 }
 
-.dwr-watch-header {
+.dwr-breakdowns-header {
   text-align: center;
   margin: 24px 0 32px;
 }
 
-.dwr-watch-eyebrow {
+.dwr-breakdowns-eyebrow {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.16em;
@@ -2122,7 +2122,7 @@
   text-transform: uppercase;
 }
 
-.dwr-watch-title {
+.dwr-breakdowns-title {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 56px;
   letter-spacing: 0.04em;
@@ -2131,27 +2131,27 @@
   line-height: 1;
 }
 
-.dwr-watch-tagline {
+.dwr-breakdowns-tagline {
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   color: var(--ink-soft);
 }
 
 /* Match grid */
-.dwr-watch-grid {
+.dwr-breakdowns-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
 }
 @media (min-width: 768px) {
-  .dwr-watch-grid { grid-template-columns: repeat(2, 1fr); }
+  .dwr-breakdowns-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (min-width: 1100px) {
-  .dwr-watch-grid { grid-template-columns: repeat(3, 1fr); }
+  .dwr-breakdowns-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 /* Match card — extends .card. Renders as a button so the entire card is a click target. */
-.dwr-watch-card {
+.dwr-breakdowns-card {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -2165,12 +2165,12 @@
   min-height: 160px;
   transition: border-color 120ms ease, transform 120ms ease;
 }
-.dwr-watch-card:hover {
+.dwr-breakdowns-card:hover {
   border-color: var(--accent-dim);
   transform: translateY(-1px);
 }
 
-.dwr-watch-card-league {
+.dwr-breakdowns-card-league {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -2181,7 +2181,7 @@
   text-overflow: ellipsis;
 }
 
-.dwr-watch-card-teams {
+.dwr-breakdowns-card-teams {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: baseline;
@@ -2192,28 +2192,28 @@
   color: var(--ink-soft);
   line-height: 1.1;
 }
-.dwr-watch-card-teams .team {
+.dwr-breakdowns-card-teams .team {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.dwr-watch-card-teams .team:last-child {
+.dwr-breakdowns-card-teams .team:last-child {
   text-align: right;
 }
-.dwr-watch-card-teams .team.win {
+.dwr-breakdowns-card-teams .team.win {
   color: var(--ink);
   font-weight: 600;
 }
-.dwr-watch-card-teams .team.lose {
+.dwr-breakdowns-card-teams .team.lose {
   color: var(--ink-muted);
 }
-.dwr-watch-card-teams .vs {
+.dwr-breakdowns-card-teams .vs {
   font-size: 13px;
   color: var(--ink-dim);
   letter-spacing: 0.1em;
 }
 
-.dwr-watch-card-score {
+.dwr-breakdowns-card-score {
   display: flex;
   align-items: baseline;
   gap: 12px;
@@ -2221,18 +2221,18 @@
   font-size: 32px;
   letter-spacing: 0.04em;
 }
-.dwr-watch-card-score .score.win {
+.dwr-breakdowns-card-score .score.win {
   color: var(--accent);
 }
-.dwr-watch-card-score .score.lose {
+.dwr-breakdowns-card-score .score.lose {
   color: var(--ink-muted);
 }
-.dwr-watch-card-score .dash {
+.dwr-breakdowns-card-score .dash {
   color: var(--ink-dim);
   font-size: 22px;
 }
 
-.dwr-watch-card-meta {
+.dwr-breakdowns-card-meta {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2242,10 +2242,10 @@
   color: var(--ink-muted);
   margin-top: auto;
 }
-.dwr-watch-card-meta .sep { color: var(--line-strong); }
+.dwr-breakdowns-card-meta .sep { color: var(--line-strong); }
 
 /* Skeleton card during /proMatches fetch */
-.dwr-watch-card-skeleton {
+.dwr-breakdowns-card-skeleton {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -2255,8 +2255,8 @@
   min-height: 160px;
 }
 
-/* /watch error / empty states */
-.dwr-watch-error {
+/* /breakdowns error / empty states */
+.dwr-breakdowns-error {
   max-width: 540px;
   margin: 48px auto;
   padding: 24px;
@@ -2267,25 +2267,25 @@
   font-family: 'Inter', sans-serif;
   font-size: 14px;
 }
-.dwr-watch-error .dwr-btn { margin-top: 12px; }
-.dwr-watch-error-title {
+.dwr-breakdowns-error .dwr-btn { margin-top: 12px; }
+.dwr-breakdowns-error-title {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 22px;
   color: var(--ink);
   letter-spacing: 0.03em;
   margin-bottom: 8px;
 }
-.dwr-watch-error-body {
+.dwr-breakdowns-error-body {
   margin-bottom: 16px;
 }
-.dwr-watch-error-actions {
+.dwr-breakdowns-error-actions {
   display: flex;
   justify-content: center;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-.dwr-watch-empty {
+.dwr-breakdowns-empty {
   max-width: 540px;
   margin: 48px auto;
   text-align: center;
@@ -2295,7 +2295,7 @@
 }
 
 /* Sparse-week empty state: tracked tournaments are off-air, point to the toggle */
-.dwr-watch-empty-tracked {
+.dwr-breakdowns-empty-tracked {
   max-width: 580px;
   margin: 48px auto;
   padding: 24px;
@@ -2307,15 +2307,15 @@
   font-size: 14px;
   line-height: 1.6;
 }
-.dwr-watch-empty-tracked .dwr-link-btn {
+.dwr-breakdowns-empty-tracked .dwr-link-btn {
   margin-top: 12px;
   font-size: 13px;
   color: var(--accent);
 }
-.dwr-watch-empty-tracked .dwr-link-btn:hover { color: var(--accent-hover); }
+.dwr-breakdowns-empty-tracked .dwr-link-btn:hover { color: var(--accent-hover); }
 
 /* Show-all toggle — discreet text strip below the listing */
-.dwr-watch-toggle {
+.dwr-breakdowns-toggle {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2325,36 +2325,36 @@
   font-size: 13px;
   color: var(--ink-muted);
 }
-.dwr-watch-toggle-status {
+.dwr-breakdowns-toggle-status {
   font-style: italic;
 }
-.dwr-watch-toggle-sparse {
+.dwr-breakdowns-toggle-sparse {
   font-size: 12px;
   color: var(--ink-dim);
   font-style: italic;
 }
-.dwr-watch-toggle-link {
+.dwr-breakdowns-toggle-link {
   font-size: 12px;
   color: var(--accent);
   text-transform: none;
   letter-spacing: 0;
   font-family: 'Inter', sans-serif;
 }
-.dwr-watch-toggle-link:hover { color: var(--accent-hover); }
+.dwr-breakdowns-toggle-link:hover { color: var(--accent-hover); }
 
-/* /watch/{match_id} detail page */
-.dwr-watch-match {
+/* /breakdowns/{match_id} detail page */
+.dwr-breakdowns-match {
   max-width: 1080px;
   margin: 0 auto;
   padding: 12px 24px 60px;
 }
 
-.dwr-watch-match-head {
+.dwr-breakdowns-match-head {
   text-align: center;
   margin: 16px 0 32px;
 }
 
-.dwr-watch-match-eyebrow {
+.dwr-breakdowns-match-eyebrow {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.16em;
@@ -2363,7 +2363,7 @@
   margin-bottom: 8px;
 }
 
-.dwr-watch-match-teams {
+.dwr-breakdowns-match-teams {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 44px;
   letter-spacing: 0.03em;
@@ -2371,17 +2371,17 @@
   line-height: 1.1;
   margin: 6px 0 12px;
 }
-.dwr-watch-match-teams .win { color: var(--ink); font-weight: 600; }
-.dwr-watch-match-teams .lose { color: var(--ink-muted); }
-.dwr-watch-match-teams .score {
+.dwr-breakdowns-match-teams .win { color: var(--ink); font-weight: 600; }
+.dwr-breakdowns-match-teams .lose { color: var(--ink-muted); }
+.dwr-breakdowns-match-teams .score {
   color: var(--accent);
   margin: 0 8px;
 }
-.dwr-watch-match-teams .dash {
+.dwr-breakdowns-match-teams .dash {
   color: var(--ink-dim);
 }
 
-.dwr-watch-match-meta {
+.dwr-breakdowns-match-meta {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -2392,32 +2392,32 @@
   letter-spacing: 0.06em;
   color: var(--ink-muted);
 }
-.dwr-watch-match-meta .sep { color: var(--line-strong); }
-.dwr-watch-match-meta a {
+.dwr-breakdowns-match-meta .sep { color: var(--line-strong); }
+.dwr-breakdowns-match-meta a {
   color: var(--accent);
   text-decoration: none;
 }
-.dwr-watch-match-meta a:hover { color: var(--accent-hover); }
+.dwr-breakdowns-match-meta a:hover { color: var(--accent-hover); }
 
-.dwr-watch-match-back {
+.dwr-breakdowns-match-back {
   margin-top: 12px;
 }
 
-.dwr-watch-match-body {
+.dwr-breakdowns-match-body {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
 /* Phase 3 placeholder — replaced by per-player + match-level cards in 4-7 */
-.dwr-watch-match-placeholder {
+.dwr-breakdowns-match-placeholder {
   background: var(--bg-panel);
   border: 1px dashed var(--line-strong);
   padding: 24px;
   text-align: center;
   color: var(--ink-soft);
 }
-.dwr-watch-match-placeholder-eyebrow {
+.dwr-breakdowns-match-placeholder-eyebrow {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.16em;
@@ -2425,7 +2425,7 @@
   text-transform: uppercase;
   margin-bottom: 8px;
 }
-.dwr-watch-match-placeholder-body {
+.dwr-breakdowns-match-placeholder-body {
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   line-height: 1.6;
@@ -2434,7 +2434,7 @@
 }
 
 /* Raw JSON dump — collapsible <details> */
-.dwr-watch-match-raw {
+.dwr-breakdowns-match-raw {
   background: var(--bg-deep);
   border: 1px solid var(--line);
   padding: 12px 16px;
@@ -2442,7 +2442,7 @@
   font-size: 11px;
   color: var(--ink-soft);
 }
-.dwr-watch-match-raw summary {
+.dwr-breakdowns-match-raw summary {
   cursor: pointer;
   color: var(--ink-muted);
   letter-spacing: 0.06em;
@@ -2450,8 +2450,8 @@
   font-size: 11px;
   padding: 4px 0;
 }
-.dwr-watch-match-raw summary:hover { color: var(--ink); }
-.dwr-watch-match-raw pre {
+.dwr-breakdowns-match-raw summary:hover { color: var(--ink); }
+.dwr-breakdowns-match-raw pre {
   margin-top: 12px;
   max-height: 600px;
   overflow: auto;
@@ -2463,19 +2463,19 @@
 }
 
 @media (max-width: 640px) {
-  .dwr-watch-title { font-size: 40px; }
-  .dwr-watch-match-teams { font-size: 32px; }
-  .dwr-watch-card-teams { font-size: 18px; }
-  .dwr-watch-card-score { font-size: 28px; }
+  .dwr-breakdowns-title { font-size: 40px; }
+  .dwr-breakdowns-match-teams { font-size: 32px; }
+  .dwr-breakdowns-card-teams { font-size: 18px; }
+  .dwr-breakdowns-card-score { font-size: 28px; }
 }
 
-/* /watch/{id} — per-player section (Phase 4 Cat 1B prose) */
-.dwr-watch-players {
+/* /breakdowns/{id} — per-player section (Phase 4 Cat 1B prose) */
+.dwr-breakdowns-players {
   display: flex;
   flex-direction: column;
   gap: 28px;
 }
-.dwr-watch-team-label {
+.dwr-breakdowns-team-label {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 22px;
   letter-spacing: 0.06em;
@@ -2485,19 +2485,19 @@
   padding-bottom: 6px;
   border-bottom: 1px solid var(--line);
 }
-.dwr-watch-player-grid {
+.dwr-breakdowns-player-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
 }
 @media (min-width: 700px) {
-  .dwr-watch-player-grid { grid-template-columns: repeat(2, 1fr); }
+  .dwr-breakdowns-player-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (min-width: 1100px) {
-  .dwr-watch-player-grid { grid-template-columns: repeat(3, 1fr); }
+  .dwr-breakdowns-player-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-.dwr-watch-player {
+.dwr-breakdowns-player {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -2506,19 +2506,19 @@
   padding: 14px 14px 12px;
   min-height: 180px;
 }
-.dwr-watch-player.radiant {
+.dwr-breakdowns-player.radiant {
   border-left: 2px solid var(--cosmic-violet, #5B3A8F);
 }
-.dwr-watch-player.dire {
+.dwr-breakdowns-player.dire {
   border-left: 2px solid var(--accent-dim);
 }
 
-.dwr-watch-player-head {
+.dwr-breakdowns-player-head {
   display: flex;
   align-items: baseline;
   gap: 12px;
 }
-.dwr-watch-player-pos {
+.dwr-breakdowns-player-pos {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.14em;
@@ -2526,14 +2526,14 @@
   text-transform: uppercase;
   flex-shrink: 0;
 }
-.dwr-watch-player-id {
+.dwr-breakdowns-player-id {
   display: flex;
   flex-direction: column;
   gap: 2px;
   flex: 1;
   min-width: 0;
 }
-.dwr-watch-player-hero {
+.dwr-breakdowns-player-hero {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 20px;
   letter-spacing: 0.04em;
@@ -2543,7 +2543,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.dwr-watch-player-name {
+.dwr-breakdowns-player-name {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.06em;
@@ -2553,37 +2553,37 @@
   white-space: nowrap;
 }
 
-.dwr-watch-player-body {
+.dwr-breakdowns-player-body {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-.dwr-watch-player-body.empty {
+.dwr-breakdowns-player-body.empty {
   flex: 1;
   display: flex;
   align-items: center;
 }
-.dwr-watch-player-prose {
+.dwr-breakdowns-player-prose {
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   line-height: 1.5;
   color: var(--ink-soft);
   margin: 0;
 }
-.dwr-watch-player-prose.dim {
+.dwr-breakdowns-player-prose.dim {
   color: var(--ink-dim);
   font-style: italic;
 }
 /* Cat 1A lines (corpus-backed cross-match) read brighter than Cat 1B —
    they're the higher-information narrative. No hard divider; the slight
    color shift is enough visual hierarchy. */
-.dwr-watch-player-prose.cat1a {
+.dwr-breakdowns-player-prose.cat1a {
   color: var(--ink);
 }
 
 /* Phase 7 — lead-line synthesis (WHAT STOOD OUT). Editorial pull-quote
    treatment, NOT card chrome. The synthesis sits at the top of
-   /watch/{match_id} as headlines lifted from the per-player and
+   /breakdowns/{match_id} as headlines lifted from the per-player and
    match-level cards below; sharing card chrome with those sections
    broke the headline register (eye read it as the start of the grid,
    not as synthesis).
@@ -2592,12 +2592,12 @@
    panel, no border ring. Larger prose than card body text. Generous
    vertical spacing between observations. Bracketed mono numerals as
    overline ("[01]" not "OBSERVATION 01"). */
-.dwr-watch-leads {
+.dwr-breakdowns-leads {
   margin: 8px 0 32px;
   padding: 12px 0 0;
 }
 
-.dwr-watch-leads-header {
+.dwr-breakdowns-leads-header {
   font-family: 'JetBrains Mono', monospace;
   font-size: 14px;
   letter-spacing: 0.24em;
@@ -2608,7 +2608,7 @@
   font-weight: 600;
 }
 
-.dwr-watch-leads-list {
+.dwr-breakdowns-leads-list {
   display: flex;
   flex-direction: column;
   gap: 28px;
@@ -2616,7 +2616,7 @@
   margin: 0 auto;
 }
 
-.dwr-watch-lead {
+.dwr-breakdowns-lead {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -2624,7 +2624,7 @@
   border-left: 3px solid var(--accent);
 }
 
-.dwr-watch-lead-overline {
+.dwr-breakdowns-lead-overline {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   letter-spacing: 0.12em;
@@ -2632,7 +2632,7 @@
   font-weight: 600;
 }
 
-.dwr-watch-lead-text {
+.dwr-breakdowns-lead-text {
   font-family: 'Inter', sans-serif;
   font-size: 22px;
   line-height: 1.4;
@@ -2643,28 +2643,28 @@
 }
 
 @media (max-width: 640px) {
-  .dwr-watch-lead-text { font-size: 18px; }
-  .dwr-watch-leads-header { font-size: 12px; margin-bottom: 20px; }
-  .dwr-watch-leads-list { gap: 20px; }
+  .dwr-breakdowns-lead-text { font-size: 18px; }
+  .dwr-breakdowns-leads-header { font-size: 12px; margin-bottom: 20px; }
+  .dwr-breakdowns-leads-list { gap: 20px; }
 }
 
 /* Cat 2 — match-level sections (draft / lane / mid game / teamfights)
    below the per-player grid. Each section is a full-width card. Empty
-   sections don't render at all — handled in WatchMatchSections. */
-.dwr-watch-match-sections {
+   sections don't render at all — handled in BreakdownsMatchSections. */
+.dwr-breakdowns-match-sections {
   display: flex;
   flex-direction: column;
   gap: 16px;
   margin-top: 8px;
 }
 
-.dwr-watch-match-section {
+.dwr-breakdowns-match-section {
   background: var(--bg-panel);
   border: 1px solid var(--line);
   padding: 16px 20px;
 }
 
-.dwr-watch-match-section-label {
+.dwr-breakdowns-match-section-label {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 24px;
   letter-spacing: 0.06em;
@@ -2675,13 +2675,13 @@
   border-bottom: 1px solid var(--line);
 }
 
-.dwr-watch-match-section-body {
+.dwr-breakdowns-match-section-body {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.dwr-watch-match-section-prose {
+.dwr-breakdowns-match-section-prose {
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   line-height: 1.55;
@@ -2689,7 +2689,7 @@
   margin: 0;
 }
 
-.dwr-watch-player-toggle {
+.dwr-breakdowns-player-toggle {
   background: transparent;
   border: 1px solid var(--line);
   border-radius: 0;
@@ -2702,12 +2702,12 @@
   cursor: pointer;
   align-self: flex-start;
 }
-.dwr-watch-player-toggle:hover {
+.dwr-breakdowns-player-toggle:hover {
   color: var(--ink);
   border-color: var(--ink-muted);
 }
 
-.dwr-watch-player-stats {
+.dwr-breakdowns-player-stats {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -2718,16 +2718,16 @@
   font-size: 11px;
   color: var(--ink-soft);
 }
-.dwr-watch-player-stat-row {
+.dwr-breakdowns-player-stat-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
 }
-.dwr-watch-player-stat-row dt {
+.dwr-breakdowns-player-stat-row dt {
   color: var(--ink-muted);
 }
-.dwr-watch-player-stat-row dd {
+.dwr-breakdowns-player-stat-row dd {
   color: var(--ink);
   margin: 0;
   text-align: right;

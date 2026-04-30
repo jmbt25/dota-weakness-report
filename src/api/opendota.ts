@@ -105,7 +105,7 @@ export async function fetchMatchDetail(
 }
 
 /**
- * Fetch the most recent finished pro matches. Powers /watch entry page.
+ * Fetch the most recent finished pro matches. Powers /breakdowns entry page.
  * Returns ~100 entries by default (OpenDota's standard page size). Pass
  * `lessThanMatchId` to paginate.
  */

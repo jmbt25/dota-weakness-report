@@ -1,6 +1,6 @@
 // Category 1B — within-match per-player observations.
 //
-// Per docs/watch-feature-v1-spec.md §2.3, these fire for every player in
+// Per docs/breakdowns-feature-v1-spec.md §2.3, these fire for every player in
 // every match. They compare a player against the other 9 in the match
 // (or absolute floors). NO corpus reads — Cat 1A handles cross-match
 // comparison in Phase 5.
@@ -11,12 +11,12 @@
 //  - priority: how loud the line is (Phase 7 lead-line synthesis ranks
 //    leads by this — higher = more candidate for the top of the page)
 //
-// All output passes validateWatchProse before returning. Drift detection:
+// All output passes validateBreakdownsProse before returning. Drift detection:
 // a self-test at module load runs each template against a synthetic
 // match and asserts validation passes. Console.error if any fails.
 //
 // ─── v1.1 hook-point: user-comparison layer ───
-// The /watch feature ships v1 as pure observation prose (third-person,
+// The /breakdowns feature ships v1 as pure observation prose (third-person,
 // no viewer state). v1.1 may add an opt-in "Show my comparison" toggle
 // that injects personal lines next to each Cat 1B fire ("Pos 4 placed
 // 6 obs. You average 4."). Design intent (decided 2026-04-30, NOT
@@ -32,7 +32,7 @@
 //     know which templates land + see post-launch user behavior.
 
 import type { ODMatchDetail, ODMatchPlayer } from '../../types'
-import { validateWatchProse } from './bannedTokens'
+import { validateBreakdownsProse } from './bannedTokens'
 import {
   classifyPosition,
   isCorePosition,
@@ -568,7 +568,7 @@ export const CAT_1B_TEMPLATES: Cat1BTemplate[] = [
 
 /**
  * Build a MatchContext from raw OpenDota data + a hero-name resolver.
- * Caller (WatchPlayerGrid) typically constructs this once per match.
+ * Caller (BreakdownsPlayerGrid) typically constructs this once per match.
  */
 export function buildMatchContext(
   detail: ODMatchDetail,
@@ -608,11 +608,11 @@ export function runCat1B(ctx: MatchContext): Map<number, ProseFire[]> {
         result = null
       }
       if (!result) continue
-      if (!validateWatchProse(result.text)) {
+      if (!validateBreakdownsProse(result.text)) {
         // Drop silently. Don't poison the player's card with an invalid
         // line; the module-load self-test should have caught this.
         // eslint-disable-next-line no-console
-        console.warn('[watch-prose] Cat 1B template rejected by validator:', tpl.id, result.text)
+        console.warn('[breakdowns-prose] Cat 1B template rejected by validator:', tpl.id, result.text)
         continue
       }
       fires.push({
@@ -645,7 +645,7 @@ function selfTest(): void {
   for (const list of fires.values()) total += list.length
   if (total === 0) {
     // eslint-disable-next-line no-console
-    console.warn('[watch-prose] Cat 1B self-test produced 0 fires — synthetic data may be too tame.')
+    console.warn('[breakdowns-prose] Cat 1B self-test produced 0 fires — synthetic data may be too tame.')
   }
   // Re-run the validator explicitly on each template's first non-null
   // synthetic produce to be sure.
@@ -657,10 +657,10 @@ function selfTest(): void {
       } catch {
         r = null
       }
-      if (r && !validateWatchProse(r.text)) {
+      if (r && !validateBreakdownsProse(r.text)) {
         // eslint-disable-next-line no-console
         console.error(
-          `[watch-prose] FAIL: template ${tpl.id} produced banned text: "${r.text}"`
+          `[breakdowns-prose] FAIL: template ${tpl.id} produced banned text: "${r.text}"`
         )
       }
     }

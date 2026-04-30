@@ -1,15 +1,15 @@
-// Banned-token validator for /watch prose.
+// Banned-token validator for /breakdowns prose.
 //
 // Tone register: observation, not editorial. Sharper than dry analysis,
 // softer than user-facing roast. The Cat 1B + 1A + 2 templates all pass
-// through `validateWatchProse`; failures are dropped silently and the
-// player card just renders without that line. At module load we run
+// through `validateBreakdownsProse`; failures are dropped silently and
+// the player card just renders without that line. At module load we run
 // every Cat 1B template against synthetic data and assert validation
 // passes — catches drift the moment a contributor adds a banned word.
 //
 // This list extends — does NOT replace — the honest-mode banned list.
 // /report's honest mode is a willing-participant roast (the user opted
-// in); /watch comments on pros (not willing participants), so the
+// in); /breakdowns comments on pros (not willing participants), so the
 // register is stricter on judgment language and direct address.
 
 /**
@@ -30,7 +30,7 @@
  * Keep entries lowercase. The validator lowercases the candidate text
  * before substring matching.
  */
-export const WATCH_BANNED_TOKENS: string[] = [
+export const BREAKDOWNS_BANNED_TOKENS: string[] = [
   // Prescriptive
   'should have',
   'should’ve',
@@ -77,9 +77,9 @@ export const WATCH_BANNED_TOKENS: string[] = [
 /**
  * Returns true if the text is safe (no banned tokens).
  */
-export function validateWatchProse(text: string): boolean {
+export function validateBreakdownsProse(text: string): boolean {
   const lower = text.toLowerCase()
-  for (const tok of WATCH_BANNED_TOKENS) {
+  for (const tok of BREAKDOWNS_BANNED_TOKENS) {
     if (lower.includes(tok)) return false
   }
   return true

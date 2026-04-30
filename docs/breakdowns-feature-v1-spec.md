@@ -1,6 +1,6 @@
-# Watch-Like-A-Coach — v1 Spec
+# Match Breakdowns — v1 Spec
 
-**Status**: draft for review (Phase 1 deliverable, no code yet)
+**Status**: shipped 2026-04-30 as v1.4.0+; renamed from "Watch-Like-A-Coach" → "Match Breakdowns" in v1.8.1 (2026-04-30) for honesty — the feature is post-match analysis, not live viewing. Routes moved /watch → /breakdowns (legacy paths 301-redirect).
 **Author**: written 2026-04-30 from Phase 0 data verification findings
 **Target ship**: 2026-06-07 (TI 2026 Open Qualifiers begin 2026-06-09)
 
@@ -9,7 +9,7 @@
 ## 0. Scope + non-goals
 
 **In v1**:
-- Two routes: `/watch` (entry, lists recent finished pro matches) and `/watch/{match_id}` (per-match analysis).
+- Two routes: `/breakdowns` (entry, lists recent finished pro matches) and `/breakdowns/{match_id}` (per-match analysis).
 - Post-match recap only. Data source: OpenDota `/proMatches` + `/matches/{id}`.
 - Client-only. sessionStorage cache (5-min TTL on `/proMatches` listing, indefinite TTL on per-match data — pro match results are immutable).
 - Two prose categories: per-player (1A cross-match + 1B within-match) and match-level (2).
@@ -26,15 +26,15 @@
 
 ## 1. Page layouts
 
-### 1.1 `/watch` (entry page)
+### 1.1 `/breakdowns` (entry page)
 
-**Route match**: pathname `/watch` exactly. Add to `App.tsx`'s pathname-based router alongside `isMmrMath` / `isMeta`.
-**Data fetch**: single `GET /proMatches` on mount. sessionStorage cache key `dwr.watch.proMatches`, 5-min TTL.
+**Route match**: pathname `/breakdowns` exactly. Add to `App.tsx`'s pathname-based router alongside `isMmrMath` / `isMeta`.
+**Data fetch**: single `GET /proMatches` on mount. sessionStorage cache key `dwr.breakdowns.proMatches`, 5-min TTL.
 
 **Sections, top to bottom**:
-1. **TopNav** — extend [TopNav.tsx](src/components/TopNav.tsx) to add a fourth `Watch` link. Keep the active-underline pattern.
+1. **TopNav** — extend [TopNav.tsx](src/components/TopNav.tsx) to add a fourth `Breakdowns` link. Keep the active-underline pattern.
 2. **Disclaimer banner** (italic, dim, full-width, just under nav): _"Observations from public match data. Not affiliated with any team, player, or tournament. Data via OpenDota."_
-3. **Page header**: small Aperture sigil + `WATCH LIKE A COACH` wordmark + 1-line tagline ("_Recent pro matches, with what stood out._").
+3. **Page header**: small Aperture sigil + `MATCH BREAKDOWNS` wordmark + 1-line tagline ("_Recent pro matches, with what stood out._").
 4. **Match list**: top 50 entries from `/proMatches` rendered as match cards in a responsive grid (3-col desktop, 2-col tablet, 1-col mobile). No filtering by league_id in v1 — `/proMatches` returns a mix of major and amateur tournaments; treat that as the canonical "recent pro" surface. (League-tier curation is a v1.1 candidate once we see whether amateur leagues clutter the feed.)
 5. **Loading state**: 8–12 skeleton cards while `/proMatches` is in flight. Reuse [CardSkeleton.tsx](src/components/CardSkeleton.tsx) shape.
 6. **Empty / error state**: _"Couldn't load recent pro matches. Try again in a minute."_ + retry button.
@@ -46,16 +46,16 @@
 - Score row: `26 — 15` (winner highlighted).
 - Meta row: duration (`31:14`), "ended X ago" (relative time from `start_time + duration`).
 
-Click anywhere on card → `history.pushState` to `/watch/{match_id}`, render that route. Same routing pattern as `/changelog`.
+Click anywhere on card → `history.pushState` to `/breakdowns/{match_id}`, render that route. Same routing pattern as `/changelog`.
 
-### 1.2 `/watch/{match_id}` (match analysis)
+### 1.2 `/breakdowns/{match_id}` (match analysis)
 
-**Route match**: pathname matching `/^\/watch\/(\d+)$/`. Capture group is the match ID.
-**Data fetch**: single `GET /matches/{match_id}` on mount. sessionStorage key `dwr.watch.match.{match_id}`, indefinite TTL.
+**Route match**: pathname matching `/^\/breakdowns\/(\d+)$/`. Capture group is the match ID.
+**Data fetch**: single `GET /matches/{match_id}` on mount. sessionStorage key `dwr.breakdowns.match.{match_id}`, indefinite TTL.
 
 **Sections, top to bottom**:
 1. **TopNav**.
-2. **Disclaimer banner** (same as `/watch`).
+2. **Disclaimer banner** (same as `/breakdowns`).
 3. **Match header** (large, Bebas Neue):
    - `{Radiant team}` `{radiant_score}` — `{dire_score}` `{Dire team}`, winner bolded.
    - Caption row: `{league_name}` · `{duration formatted MM:SS}` · `Ended {relative time}` · external link to `dotabuff.com/matches/{id}` (small, mono).
@@ -73,11 +73,11 @@ Click anywhere on card → `history.pushState` to `/watch/{match_id}`, render th
 
 **Loading state**: full-page skeleton — header line, 2 lead-line skeletons, 10 per-player skeletons, 4 match-level skeletons. Single fetch, ~1–3 s on a parsed pro match.
 **Error states**:
-- Invalid match ID format → render the match-level 404 ("That match ID doesn't look right" + back to `/watch`).
-- 404 from OpenDota → "Couldn't load match {id}" + back-to-`/watch` button + retry.
+- Invalid match ID format → render the match-level 404 ("That match ID doesn't look right" + back to `/breakdowns`).
+- 404 from OpenDota → "Couldn't load match {id}" + back-to-`/breakdowns` button + retry.
 - 502 / 5xx from OpenDota → ErrorBoundary already covers this. Retry button.
 
-**Direct deep links**: a user landing on `/watch/{match_id}` cold (no `/watch` referrer cache) gets all needed header data from the `/matches/{id}` response itself (it carries team names, score, league, duration). No extra `/proMatches` call needed.
+**Direct deep links**: a user landing on `/breakdowns/{match_id}` cold (no `/breakdowns` referrer cache) gets all needed header data from the `/matches/{id}` response itself (it carries team names, score, league, duration). No extra `/proMatches` call needed.
 
 ---
 
@@ -87,7 +87,7 @@ Click anywhere on card → `history.pushState` to `/watch/{match_id}`, render th
 
 **Sharper than dry analysis, softer than user-facing roast. Observation territory, not editorializing.**
 
-Extends the existing honest-mode template validator pattern in [src/lib/honestMode.ts](src/lib/honestMode.ts). Add a new `WATCH_BANNED_TOKENS` list, applied to all watch-feature templates:
+Extends the existing honest-mode template validator pattern in [src/lib/honestMode.ts](src/lib/honestMode.ts). Add a new `BREAKDOWNS_BANNED_TOKENS` list, applied to all breakdowns-feature templates:
 
 Banned (in addition to the existing `BANNED_ROAST_TOKENS`):
 - Prescriptive: `should have`, `needed to`, `had to`, `was supposed to`, `must have`
@@ -177,8 +177,8 @@ Examples — the line:
 ## 3. Data flow — concrete field mapping
 
 Per-page-view API budget:
-- `/watch`: 1 call (`/proMatches`), sessionStorage-cached 5 min.
-- `/watch/{match_id}`: 1 call (`/matches/{id}`), sessionStorage-cached indefinitely.
+- `/breakdowns`: 1 call (`/proMatches`), sessionStorage-cached 5 min.
+- `/breakdowns/{match_id}`: 1 call (`/matches/{id}`), sessionStorage-cached indefinitely.
 - Static corpus (`pro-baselines.json`) ships in the bundle; zero runtime fetches.
 - Estimated worst-case daily traffic per IP: 50 unique match views = 50 calls. Free tier (3000/day) is unmeetable in v1.
 
@@ -291,27 +291,27 @@ Empirical pass against 8 finished pro matches across 4 leagues, 2026-04-30:
 
 ## 5. SEO meta tags strategy
 
-### 5.1 `/watch` (entry page)
+### 5.1 `/breakdowns` (entry page)
 
 - `index.html`: keep homepage `<head>` static (homepage values render for crawlers cold-loading any route — fine for v1).
-- Client-side `useEffect` in `App.tsx` (extends the existing `[isChangelog, isMmrMath, isMeta, isReportRoute, isStreaming]` dependency list to add `isWatchRoute`, `isWatchMatchRoute`):
-  - `/watch` title: `"Watch — Dota Weakness Report"`.
-  - `/watch` description: `"Coach-style analysis of recent pro Dota 2 matches. Updated as matches finish."`.
-- `public/robots.txt`: add explicit `Allow: /watch/` line. Defends against future overzealous Disallow entries.
-- `public/sitemap.xml`: add `<url><loc>https://dotaweakness.com/watch</loc><changefreq>daily</changefreq></url>`.
+- Client-side `useEffect` in `App.tsx` (extends the existing `[isChangelog, isMmrMath, isMeta, isReportRoute, isStreaming]` dependency list to add `isBreakdowns`, `isBreakdownsMatch`):
+  - `/breakdowns` title: `"Breakdowns — Dota Weakness Report"`.
+  - `/breakdowns` description: `"Coach-style analysis of recent pro Dota 2 matches. Updated as matches finish."`.
+- `public/robots.txt`: add explicit `Allow: /breakdowns/` line. Defends against future overzealous Disallow entries.
+- `public/sitemap.xml`: add `<url><loc>https://dotaweakness.com/breakdowns</loc><changefreq>daily</changefreq></url>`.
 
-### 5.2 `/watch/{match_id}` — v1 (Static OG, dynamic title)
+### 5.2 `/breakdowns/{match_id}` — v1 (Static OG, dynamic title)
 
 - `index.html`: ships generic homepage values. Crawlers without JS see those.
-- Client-side `useEffect` mutates `document.title` once data loads: `"{Radiant} {radiant_score}–{dire_score} {Dire} — DotaWR Watch"` (e.g. `"Nigma Galaxy 29–11 1w Team — DotaWR Watch"`).
+- Client-side `useEffect` mutates `document.title` once data loads: `"{Radiant} {radiant_score}–{dire_score} {Dire} — DotaWR Breakdowns"` (e.g. `"Nigma Galaxy 29–11 1w Team — DotaWR Breakdowns"`).
 - Description: `"Coach-style breakdown of {match_id} ({league_name})."`
 - **Share previews** (Reddit / Discord / X / Slack — all server-side renderers, JS-blind): every match page shares the homepage OG values. Acceptable for v1 because:
-  - The watch feature ships its own dedicated OG asset (next item).
+  - The breakdowns feature ships its own dedicated OG asset (next item).
   - Per-match dynamic OG cards are deliberately deferred (§5.3).
-- New asset: `public/og-watch.png` (1200×630). Cosmic gradient + Aperture sigil + `WATCH LIKE A COACH` wordmark + 1-line tagline. Generated by the same PowerShell + System.Drawing pattern as the existing `og-image.png`.
+- New asset: `public/og-breakdowns.png` (1200×630). Cosmic gradient + Aperture sigil + `MATCH BREAKDOWNS` wordmark + 1-line tagline. Generated by the same PowerShell + System.Drawing pattern as the existing `og-image.png`.
 - `index.html` strategy: keep the existing `og:image` pointed at `og-image.png` for `/`, `/changelog`, `/meta`, `/mmr-math`. There is no clean way to swap the og:image per route in pure-static deploys.
-  - **Decision**: ship `og-watch.png` as an unused-by-default asset in v1, ready for the v1.1 dynamic-injection epic.
-  - For v1 launch share-quality on `/watch/*`, accept that the homepage `og-image.png` previews. The brand asset stands alone; the title (visible client-side post-load) carries the per-match info.
+  - **Decision**: ship `og-breakdowns.png` as an unused-by-default asset in v1, ready for the v1.1 dynamic-injection epic.
+  - For v1 launch share-quality on `/breakdowns/*`, accept that the homepage `og-image.png` previews. The brand asset stands alone; the title (visible client-side post-load) carries the per-match info.
 
 ### 5.3 v1.1 candidate — Dynamic per-route OG injection
 
@@ -328,11 +328,11 @@ Both options are real engineering work. Pre-rendered is simpler. **Not in v1 sco
 | Phase | Work | Days | Cumulative |
 |---|---|---|---|
 | 2 | `pro-baselines.json` corpus build script + first refresh + GH Actions workflow | 2 | day 2 |
-| 3 | Page scaffolding: `App.tsx` route additions, sessionStorage cache layer, `WatchPage.tsx`, `WatchMatchPage.tsx`, fetch + skeleton states, TopNav `Watch` link | 1.5 | day 3.5 |
+| 3 | Page scaffolding: `App.tsx` route additions, sessionStorage cache layer, `BreakdownsPage.tsx`, `BreakdownsMatchPage.tsx`, fetch + skeleton states, TopNav `Breakdowns` link | 1.5 | day 3.5 |
 | 4 | Category 1B prose templates (within-match per-player, no corpus) | 2 | day 5.5 |
 | 5 | Category 1A prose templates (cross-match per-player, corpus-backed) | 2 | day 7.5 |
 | 6 | Category 2 prose templates (match-level: draft + lane + roshan + teamfights) | 2 | day 9.5 |
-| 7 | Tone-register validator + `WATCH_BANNED_TOKENS`, footer disclaimer wiring, `og-watch.png`, robots/sitemap update, lead-line synthesis | 1 | day 10.5 |
+| 7 | Tone-register validator + `BREAKDOWNS_BANNED_TOKENS`, footer disclaimer wiring, `og-breakdowns.png`, robots/sitemap update, lead-line synthesis | 1 | day 10.5 |
 | 8 | Manual review pass against 5+ live pro matches, copy polish, lead-line threshold calibration, edge cases (unknown players, very short games, no Roshan, no teamfights tracked) | 1.5 | day 12 |
 
 Today: 2026-04-30. June 7 = 38 days away. Working budget ~12 days → comfortable buffer; the slack absorbs corpus-refresh API budget overruns and Phase 8 calibration overruns.
@@ -345,10 +345,10 @@ Today: 2026-04-30. June 7 = 38 days away. Working budget ~12 days → comfortabl
 
 1. **Corpus size + API budget**: 80 pros × 25 calls = 2000 daily-cap calls. If the curated list grows past 100 pros after Open Qualifier rosters land, the refresh either spans two days or needs an API key (~$0.20 per run). Is API-key spend OK in principle? It would simplify everything downstream.
 2. **Lead-line emphasis thresholds**: §2.5 sketches the algorithm but the std-dev cutoffs need calibration in Phase 8 against real matches. Acceptance criterion to define: how many leads is the right number per match? 2–3? 3–5?
-3. **Anonymization stance**: confirm — pros are public figures, no anonymization in `/watch` prose. Footer disclaimer covers the legal-ish surface. (Stack Synergy's "Friend N" rule does NOT carry over to /watch.)
+3. **Anonymization stance**: confirm — pros are public figures, no anonymization in `/breakdowns` prose. Footer disclaimer covers the legal-ish surface. (Stack Synergy's "Friend N" rule does NOT carry over to /breakdowns.)
 4. **Hero variant / facets**: heroes since 7.36 have multiple facets. `players[].hero_variant` is populated in our sample; HERO_ARCHETYPES doesn't model facets. Phase 6 work needs to decide whether facet-aware draft prose ("Dire took the second facet of Lich, the freeze build") is in v1 scope or v1.1.
 5. **OpenDota outage handling**: existing `ErrorBoundary` covers render failures, but what's the user-facing message for a `/proMatches` 502 specifically? Probably "OpenDota's having a moment — try again in a minute" + a link to status.opendota.com. Confirm copy.
-6. **Card key rotation**: `/report` keys cards as `${id}-${roleFilter}` to remount on filter switch (v1.1.1 fix). `/watch/{match_id}` has no equivalent filter so no remount issue, but Phase 3 should still remember the precedent — if any per-card filter lands later (e.g. "show only the losing team"), apply the same pattern.
+6. **Card key rotation**: `/report` keys cards as `${id}-${roleFilter}` to remount on filter switch (v1.1.1 fix). `/breakdowns/{match_id}` has no equivalent filter so no remount issue, but Phase 3 should still remember the precedent — if any per-card filter lands later (e.g. "show only the losing team"), apply the same pattern.
 
 ---
 
@@ -356,12 +356,12 @@ Today: 2026-04-30. June 7 = 38 days away. Working budget ~12 days → comfortabl
 
 When v1 ships, append a new top-level section to `CLAUDE.md`:
 
-> **## Watch feature (v1.4.0+, 2026-06-07)**
+> **## Breakdowns feature (v1.4.0+, 2026-06-07; renamed from "Watch" in v1.8.1)**
 >
-> Two routes (`/watch`, `/watch/{match_id}`) for coach-style post-match recaps of finished pro matches. Browser-only, sessionStorage-cached, OpenDota `/proMatches` + `/matches/{id}`. Per-player baselines static-corpus'd in `src/data/pro-baselines.json` (refreshed weekly via `.github/workflows/refresh-pro-baselines.yml`). Watch-feature prose register is observation-not-editorial: extends the existing template validator with `WATCH_BANNED_TOKENS`. Footer disclaimer required on both routes.
+> Two routes (`/breakdowns`, `/breakdowns/{match_id}`) for coach-style post-match recaps of finished pro matches. Browser-only, sessionStorage-cached, OpenDota `/proMatches` + `/matches/{id}`. Per-player baselines static-corpus'd in `src/data/pro-baselines.json` (refreshed weekly via `.github/workflows/refresh-pro-baselines.yml`). Breakdowns-feature prose register is observation-not-editorial: extends the existing template validator with `BREAKDOWNS_BANNED_TOKENS`. Footer disclaimer required on both routes. Legacy `/watch` and `/watch/{match_id}` 301-redirect to the new paths via `worker/index.ts`.
 
 Plus new "Things NOT to do" entries:
-- Don't render Watch prose with editorial language. The validator catches the obvious cases; reviewers should still read for tone.
-- Don't power Watch prose from `/live` data. Phase 0 confirmed it lacks per-player depth.
+- Don't render Breakdowns prose with editorial language. The validator catches the obvious cases; reviewers should still read for tone.
+- Don't power Breakdowns prose from `/live` data. Phase 0 confirmed it lacks per-player depth.
 - Don't add per-match OG cards via client-side JS — same constraint as the `/report` SEO note.
 - Don't direct-commit the pro-baselines refresh from CI. PR-based, same as pro-corpus refresh.

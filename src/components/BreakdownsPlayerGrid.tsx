@@ -6,17 +6,17 @@ import {
   runCat1B,
   type PlayerContext,
   type ProseFire,
-} from '../lib/watchProse/cat1b'
-import { runCat1A } from '../lib/watchProse/cat1a'
-import { resolveDisplayName } from '../lib/watchProse/displayName'
-import { WatchPlayerCard } from './WatchPlayerCard'
+} from '../lib/breakdownsProse/cat1b'
+import { runCat1A } from '../lib/breakdownsProse/cat1a'
+import { resolveDisplayName } from '../lib/breakdownsProse/displayName'
+import { BreakdownsPlayerCard } from './BreakdownsPlayerCard'
 
-interface WatchPlayerGridProps {
+interface BreakdownsPlayerGridProps {
   detail: ODMatchDetail
 }
 
 /**
- * Renders the 10 per-player cards for /watch/{match_id}, grouped by
+ * Renders the 10 per-player cards for /breakdowns/{match_id}, grouped by
  * team. Phase 4 wiring: Cat 1B (within-match) prose only. Cat 1A
  * (cross-match) joins in Phase 5.
  *
@@ -24,7 +24,7 @@ interface WatchPlayerGridProps {
  * via account_id, position-label fallback otherwise. Personaname is
  * never read.
  */
-export function WatchPlayerGrid({ detail }: WatchPlayerGridProps) {
+export function BreakdownsPlayerGrid({ detail }: BreakdownsPlayerGridProps) {
   const { ctx, cat1a, cat1b } = useMemo(() => {
     const ctx = buildMatchContext(detail, getHeroName)
     const cat1a = runCat1A(ctx)
@@ -40,7 +40,7 @@ export function WatchPlayerGrid({ detail }: WatchPlayerGridProps) {
   }
 
   return (
-    <div className="dwr-watch-players">
+    <div className="dwr-breakdowns-players">
       <TeamSection
         label={`Radiant${detail.radiant_win ? ' — winner' : ''}`}
         players={radiantSorted}
@@ -69,11 +69,11 @@ function TeamSection({
   cat1b: Map<number, ProseFire[]>
 }) {
   return (
-    <section className="dwr-watch-team">
-      <h2 className="dwr-watch-team-label">{label}</h2>
-      <div className="dwr-watch-player-grid">
+    <section className="dwr-breakdowns-team">
+      <h2 className="dwr-breakdowns-team-label">{label}</h2>
+      <div className="dwr-breakdowns-player-grid">
         {players.map((ctx) => (
-          <WatchPlayerCard
+          <BreakdownsPlayerCard
             key={ctx.player.player_slot}
             ctx={ctx}
             cat1aFires={cat1a.get(ctx.player.player_slot) ?? []}

@@ -13,6 +13,16 @@ src/lib/version.ts AND add an entry to this file. Both happen in the
 same commit. Newest entries go on top.
 -->
 
+## v1.8.1 — 2026-04-30
+
+Renamed /watch → /breakdowns. The "Watch Like a Coach" framing was
+aspirational — the feature is post-match analysis, not live viewing.
+"Match Breakdowns" describes what the page actually does.
+
+- Renamed /watch → /breakdowns. The "Watch Like a Coach" name was aspirational — the feature is post-match analysis, not live viewing. "Match Breakdowns" describes what the page actually does.
+- /watch and /watch/{match_id} now permanently redirect to /breakdowns and /breakdowns/{match_id}. Existing shared links continue to work.
+- OG image swapped to og-breakdowns.png with updated "MATCH BREAKDOWNS" wordmark.
+
 ## v1.8.0 — 2026-04-30
 
 Phase 7 of the watch-feature buildout — lead-line synthesis, share-preview

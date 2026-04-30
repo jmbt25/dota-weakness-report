@@ -1,6 +1,6 @@
 // Category 1A — cross-match per-player observations (corpus-backed).
 //
-// Per docs/watch-feature-v1-spec.md §2.2, fires only when the player's
+// Per docs/breakdowns-feature-v1-spec.md §2.2, fires only when the player's
 // account_id is in pro-baselines.json AND the relevant aggregate has
 // enough sample (typically ≥ 5 games on whatever axis is being read).
 // Falls back silently when the player is unknown or the sample is thin
@@ -8,15 +8,15 @@
 //
 // Design rule: NARRATIVE not numbers. Each template should produce a
 // two-clause sentence — corpus context + current-match payoff. Don't
-// fire on small deltas. Cat 1A is where the watch feature gets
+// fire on small deltas. Cat 1A is where the breakdowns feature gets
 // interesting; mediocre comparisons are noise.
 //
 // Reuses Phase 4 plumbing: PlayerContext / MatchContext / ProseFire
-// from cat1b.ts, validateWatchProse from bannedTokens.ts,
+// from cat1b.ts, validateBreakdownsProse from bannedTokens.ts,
 // resolveDisplayName from displayName.ts.
 
 import type { MatchContext, PlayerContext, ProseFire } from './cat1b'
-import { validateWatchProse } from './bannedTokens'
+import { validateBreakdownsProse } from './bannedTokens'
 import { resolveDisplayName, hasCuratedName } from './displayName'
 import {
   getBaseline,
@@ -403,9 +403,9 @@ export function runCat1A(ctx: MatchContext): Map<number, ProseFire[]> {
         result = null
       }
       if (!result) continue
-      if (!validateWatchProse(result.text)) {
+      if (!validateBreakdownsProse(result.text)) {
         // eslint-disable-next-line no-console
-        console.warn('[watch-prose] Cat 1A template rejected by validator:', tpl.id, result.text)
+        console.warn('[breakdowns-prose] Cat 1A template rejected by validator:', tpl.id, result.text)
         continue
       }
       fires.push({

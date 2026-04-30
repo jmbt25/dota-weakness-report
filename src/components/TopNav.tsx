@@ -1,6 +1,6 @@
 import { ApertureSigil } from './ApertureSigil'
 
-export type NavRoute = 'report' | 'mmr-math' | 'meta' | 'watch'
+export type NavRoute = 'report' | 'mmr-math' | 'meta' | 'breakdowns'
 
 interface TopNavProps {
   active: NavRoute
@@ -15,7 +15,7 @@ export function TopNav({ active, reportDisabled = false, onNavigate }: TopNavPro
     { key: 'report', label: 'Report' },
     { key: 'mmr-math', label: 'MMR Math' },
     { key: 'meta', label: 'Meta' },
-    { key: 'watch', label: 'Watch' },
+    { key: 'breakdowns', label: 'Breakdowns' },
   ]
   return (
     <header className="dwr-topnav">

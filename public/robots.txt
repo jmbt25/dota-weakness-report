@@ -1,6 +1,6 @@
 User-agent: *
 Allow: /
-Allow: /watch/
+Allow: /breakdowns/
 Disallow: /_dev/
 
 Sitemap: https://dotaweakness.com/sitemap.xml

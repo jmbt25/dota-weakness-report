@@ -7,8 +7,9 @@ directory = "./dist"
 # SPA fallback: serve index.html for any path the static bundle doesn't have.
 not_found_handling = "single-page-application"
 # Bind the static-assets fetcher into the Worker as `env.ASSETS` so the
-# Worker entry can fetch index.html, run HTMLRewriter on /watch routes,
-# and pass everything else through unchanged.
+# Worker entry can fetch index.html, run HTMLRewriter on /breakdowns
+# routes (and 301-redirect the legacy /watch routes), and pass everything
+# else through unchanged.
 binding = "ASSETS"
 
 # ──────────────────────────────────────────────────────────────────────

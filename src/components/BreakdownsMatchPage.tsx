@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ODMatchDetail } from '../types'
 import { fetchMatchDetail, HttpError } from '../api/opendota'
-import { getCachedMatch, setCachedMatch } from '../lib/watchCache'
-import { WatchDisclaimer } from './WatchDisclaimer'
-import { WatchPlayerGrid } from './WatchPlayerGrid'
-import { WatchMatchSections } from './WatchMatchSections'
-import { WatchLeadLines } from './WatchLeadLines'
+import { getCachedMatch, setCachedMatch } from '../lib/breakdownsCache'
+import { BreakdownsDisclaimer } from './BreakdownsDisclaimer'
+import { BreakdownsPlayerGrid } from './BreakdownsPlayerGrid'
+import { BreakdownsMatchSections } from './BreakdownsMatchSections'
+import { BreakdownsLeadLines } from './BreakdownsLeadLines'
 
-interface WatchMatchPageProps {
+interface BreakdownsMatchPageProps {
   /** Match ID parsed from the URL path. May be NaN/0 if the route matched
    *  loosely; the component renders an invalid-ID error in that case. */
   matchId: number
-  onBackToWatch: () => void
+  onBackToBreakdowns: () => void
   /** Called when the match data lands so App.tsx can update document.title. */
   onMatchLoaded?: (detail: ODMatchDetail) => void
 }
@@ -22,11 +22,11 @@ type FetchState =
   | { kind: 'ready'; detail: ODMatchDetail }
   | { kind: 'error'; httpStatus: number | null; retry: () => void }
 
-export function WatchMatchPage({
+export function BreakdownsMatchPage({
   matchId,
-  onBackToWatch,
+  onBackToBreakdowns,
   onMatchLoaded,
-}: WatchMatchPageProps) {
+}: BreakdownsMatchPageProps) {
   const [state, setState] = useState<FetchState>(() =>
     !Number.isFinite(matchId) || matchId <= 0
       ? { kind: 'invalid' }
@@ -71,7 +71,7 @@ export function WatchMatchPage({
   }, [matchId])
 
   // Notify parent once when the match data first lands. Lets App.tsx update
-  // document.title to "{Radiant} {score}-{score} {Dire} — DotaWR Watch".
+  // document.title to "{Radiant} {score}-{score} {Dire} — DotaWR Breakdowns".
   useEffect(() => {
     if (state.kind === 'ready' && !loadedNotifiedRef.current) {
       loadedNotifiedRef.current = true
@@ -84,10 +84,10 @@ export function WatchMatchPage({
 
   return (
     <>
-      <WatchDisclaimer />
-      <section className="dwr-watch-match">
+      <BreakdownsDisclaimer />
+      <section className="dwr-breakdowns-match">
         {state.kind === 'invalid' && (
-          <InvalidMatchId matchId={matchId} onBackToWatch={onBackToWatch} />
+          <InvalidMatchId matchId={matchId} onBackToBreakdowns={onBackToBreakdowns} />
         )}
         {state.kind === 'loading' && <LoadingShell matchId={matchId} />}
         {state.kind === 'error' && (
@@ -95,11 +95,11 @@ export function WatchMatchPage({
             matchId={matchId}
             httpStatus={state.httpStatus}
             onRetry={state.retry}
-            onBackToWatch={onBackToWatch}
+            onBackToBreakdowns={onBackToBreakdowns}
           />
         )}
         {state.kind === 'ready' && (
-          <ReadyView detail={state.detail} onBackToWatch={onBackToWatch} />
+          <ReadyView detail={state.detail} onBackToBreakdowns={onBackToBreakdowns} />
         )}
       </section>
     </>
@@ -108,20 +108,20 @@ export function WatchMatchPage({
 
 function InvalidMatchId({
   matchId,
-  onBackToWatch,
+  onBackToBreakdowns,
 }: {
   matchId: number
-  onBackToWatch: () => void
+  onBackToBreakdowns: () => void
 }) {
   return (
-    <div className="dwr-watch-error" role="alert">
-      <p className="dwr-watch-error-title">That match ID doesn't look right</p>
-      <p className="dwr-watch-error-body">
+    <div className="dwr-breakdowns-error" role="alert">
+      <p className="dwr-breakdowns-error-title">That match ID doesn't look right</p>
+      <p className="dwr-breakdowns-error-body">
         {Number.isFinite(matchId) ? matchId : 'The URL'} isn't a valid OpenDota match ID.
         Match IDs are positive integers (e.g. 8791604589).
       </p>
-      <button type="button" className="dwr-btn" onClick={onBackToWatch}>
-        Back to Watch
+      <button type="button" className="dwr-btn" onClick={onBackToBreakdowns}>
+        Back to Breakdowns
       </button>
     </div>
   )
@@ -130,12 +130,12 @@ function InvalidMatchId({
 function LoadingShell({ matchId }: { matchId: number }) {
   return (
     <>
-      <header className="dwr-watch-match-head">
-        <div className="dwr-watch-match-eyebrow">MATCH {matchId}</div>
+      <header className="dwr-breakdowns-match-head">
+        <div className="dwr-breakdowns-match-eyebrow">MATCH {matchId}</div>
         <div className="skeleton-line lg" />
         <div className="skeleton-line md" />
       </header>
-      <div className="dwr-watch-match-body">
+      <div className="dwr-breakdowns-match-body">
         <div className="skeleton-line lg" />
         <div className="skeleton-line lg" />
         <div className="skeleton-line lg" />
@@ -149,12 +149,12 @@ function ErrorView({
   matchId,
   httpStatus,
   onRetry,
-  onBackToWatch,
+  onBackToBreakdowns,
 }: {
   matchId: number
   httpStatus: number | null
   onRetry: () => void
-  onBackToWatch: () => void
+  onBackToBreakdowns: () => void
 }) {
   let title: string
   let body: string
@@ -175,15 +175,15 @@ function ErrorView({
       : 'Request failed. Try again, or head back to the listing.'
   }
   return (
-    <div className="dwr-watch-error" role="alert">
-      <p className="dwr-watch-error-title">{title}</p>
-      <p className="dwr-watch-error-body">{body}</p>
-      <div className="dwr-watch-error-actions">
+    <div className="dwr-breakdowns-error" role="alert">
+      <p className="dwr-breakdowns-error-title">{title}</p>
+      <p className="dwr-breakdowns-error-body">{body}</p>
+      <div className="dwr-breakdowns-error-actions">
         <button type="button" className="dwr-btn" onClick={onRetry}>
           Try again
         </button>
-        <button type="button" className="dwr-btn ghost" onClick={onBackToWatch}>
-          Back to Watch
+        <button type="button" className="dwr-btn ghost" onClick={onBackToBreakdowns}>
+          Back to Breakdowns
         </button>
       </div>
     </div>
@@ -192,10 +192,10 @@ function ErrorView({
 
 function ReadyView({
   detail,
-  onBackToWatch,
+  onBackToBreakdowns,
 }: {
   detail: ODMatchDetail
-  onBackToWatch: () => void
+  onBackToBreakdowns: () => void
 }) {
   // Match-detail responses include team objects + leagueid that aren't on
   // ODMatchDetail's narrow type — read defensively.
@@ -216,11 +216,11 @@ function ReadyView({
 
   return (
     <>
-      <header className="dwr-watch-match-head">
-        <div className="dwr-watch-match-eyebrow">
+      <header className="dwr-breakdowns-match-head">
+        <div className="dwr-breakdowns-match-eyebrow">
           MATCH {detail.match_id}
         </div>
-        <h1 className="dwr-watch-match-teams">
+        <h1 className="dwr-breakdowns-match-teams">
           <span className={radiantWon ? 'win' : 'lose'}>{radiantName}</span>
           <span className="score">
             {' '}
@@ -228,7 +228,7 @@ function ReadyView({
           </span>
           <span className={!radiantWon ? 'win' : 'lose'}>{direName}</span>
         </h1>
-        <div className="dwr-watch-match-meta">
+        <div className="dwr-breakdowns-match-meta">
           {leagueName && <span>{leagueName}</span>}
           {leagueName && <span className="sep">·</span>}
           <span>{formatDurationLong(detail.duration)}</span>
@@ -239,21 +239,21 @@ function ReadyView({
             Watch on Dotabuff
           </a>
         </div>
-        <div className="dwr-watch-match-back">
-          <button type="button" className="dwr-link-btn" onClick={onBackToWatch}>
-            ← Back to Watch
+        <div className="dwr-breakdowns-match-back">
+          <button type="button" className="dwr-link-btn" onClick={onBackToBreakdowns}>
+            ← Back to Breakdowns
           </button>
         </div>
       </header>
 
-      <div className="dwr-watch-match-body">
-        <WatchLeadLines detail={detail} />
+      <div className="dwr-breakdowns-match-body">
+        <BreakdownsLeadLines detail={detail} />
 
-        <WatchPlayerGrid detail={detail} />
+        <BreakdownsPlayerGrid detail={detail} />
 
-        <WatchMatchSections detail={detail} />
+        <BreakdownsMatchSections detail={detail} />
 
-        <details className="dwr-watch-match-raw">
+        <details className="dwr-breakdowns-match-raw">
           <summary>Raw /matches/{detail.match_id} payload (JSON)</summary>
           <pre>{JSON.stringify(detail, null, 2)}</pre>
         </details>

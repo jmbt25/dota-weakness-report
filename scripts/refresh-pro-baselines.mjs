@@ -1,6 +1,6 @@
 // Refresh src/data/pro-baselines.json from OpenDota.
 //
-// Per-player rolling baselines for the /watch feature's Category 1A prose
+// Per-player rolling baselines for the /breakdowns feature's Category 1A prose
 // (cross-match observations like "hasn't won a lane in 5 games"). For each
 // pro in scripts/pro-baselines-list.json, pulls a 30-day match window plus
 // a sampled subset of full match details, computes rolling aggregates,
@@ -25,7 +25,7 @@
 //     should use the key.
 //
 // Output shape: see src/data/pro-baselines.json after the first successful
-// run, or the v1 spec doc (docs/watch-feature-v1-spec.md §3.3).
+// run, or the v1 spec doc (docs/breakdowns-feature-v1-spec.md §3.3).
 //
 // Failure semantics (mirror refresh-pro-corpus.mjs):
 //   - 429 with "daily" → exit 1, "DAILY CAP HIT" message

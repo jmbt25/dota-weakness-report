@@ -3,7 +3,7 @@
 // sub-sections produce empty arrays — UI skips them entirely (no
 // apologetic placeholder per Phase 6 spec).
 
-import { validateWatchProse } from '../bannedTokens'
+import { validateBreakdownsProse } from '../bannedTokens'
 import type { MatchContext, ProseFire } from '../cat1b'
 import type { Cat2Template, Cat2Output } from './types'
 import { DRAFT_TEMPLATES } from './draft'
@@ -23,9 +23,9 @@ function runSection(ctx: MatchContext, templates: Cat2Template[]): ProseFire[] {
       result = null
     }
     if (!result) continue
-    if (!validateWatchProse(result.text)) {
+    if (!validateBreakdownsProse(result.text)) {
       // eslint-disable-next-line no-console
-      console.warn('[watch-prose] Cat 2 template rejected by validator:', tpl.id, result.text)
+      console.warn('[breakdowns-prose] Cat 2 template rejected by validator:', tpl.id, result.text)
       continue
     }
     out.push({

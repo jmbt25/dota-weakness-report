@@ -1,4 +1,6 @@
-# Generates public/og-watch.png — the share-preview asset for /watch routes.
+# Generates public/og-breakdowns.png — the share-preview asset for
+# /breakdowns routes. Renamed from generate-og-watch.ps1 in v1.8.1
+# alongside the /watch → /breakdowns rename.
 #
 # Mirrors the original og-image.png generator (which was a one-shot bash
 # invocation back in v1.3.1, not committed at the time per CLAUDE.md).
@@ -27,12 +29,12 @@
 #   Mono:     JetBrains Mono → Consolas
 #
 # Output path:
-#   public/og-watch.png  (relative to this script's parent dir = repo root)
+#   public/og-breakdowns.png  (relative to this script's parent dir = repo root)
 #
 # Run from any shell that can invoke PowerShell:
-#   powershell -ExecutionPolicy Bypass -File scripts/generate-og-watch.ps1
+#   powershell -ExecutionPolicy Bypass -File scripts/generate-og-breakdowns.ps1
 #
-# After generating, commit the resulting public/og-watch.png alongside
+# After generating, commit the resulting public/og-breakdowns.png alongside
 # this script.
 
 Add-Type -AssemblyName System.Drawing
@@ -41,7 +43,7 @@ Add-Type -AssemblyName System.Drawing
 
 $WIDTH = 1200
 $HEIGHT = 630
-$OutputPath = Join-Path (Split-Path -Parent $PSScriptRoot) 'public\og-watch.png'
+$OutputPath = Join-Path (Split-Path -Parent $PSScriptRoot) 'public\og-breakdowns.png'
 
 # ---- Palette ----
 
@@ -218,10 +220,10 @@ function Draw-CenteredText([System.Drawing.Graphics]$gfx, [string]$text, [System
   $gfx.DrawString($text, $font, $brush, $x, $y)
 }
 
-# Wordmark: "WATCH LIKE A COACH" — single line, centered. Big and bold,
+# Wordmark: "MATCH BREAKDOWNS" — single line, centered. Big and bold,
 # matching the "DOTA WEAKNESS REPORT" treatment in og-image.png.
 $wordmarkBrush = New-Object System.Drawing.SolidBrush $ink
-Draw-CenteredText $g "WATCH LIKE A COACH" $displayFont $wordmarkBrush 360
+Draw-CenteredText $g "MATCH BREAKDOWNS" $displayFont $wordmarkBrush 360
 
 # Tagline: "What stood out — every recent pro match." — centered below
 # the wordmark.

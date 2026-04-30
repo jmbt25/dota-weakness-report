@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ODProMatch } from '../types'
 import { fetchProMatches, HttpError } from '../api/opendota'
-import { getCachedProMatches, setCachedProMatches } from '../lib/watchCache'
-import { countByFilter, isMatchEligible } from '../lib/watchLeagues'
-import { WatchDisclaimer } from './WatchDisclaimer'
+import { getCachedProMatches, setCachedProMatches } from '../lib/breakdownsCache'
+import { countByFilter, isMatchEligible } from '../lib/breakdownsLeagues'
+import { BreakdownsDisclaimer } from './BreakdownsDisclaimer'
 
-interface WatchPageProps {
+interface BreakdownsPageProps {
   /** Called when the user clicks a match card. Triggers route change. */
   onSelectMatch: (matchId: number) => void
 }
@@ -23,10 +23,10 @@ const VISIBLE_COUNT = 50
 // majors doesn't read as "the site is broken".
 const SPARSE_TRACKED_THRESHOLD = 8
 
-export function WatchPage({ onSelectMatch }: WatchPageProps) {
+export function BreakdownsPage({ onSelectMatch }: BreakdownsPageProps) {
   const [state, setState] = useState<FetchState>({ kind: 'loading' })
   // Default off: tracked-tournaments only. Doesn't persist across visits —
-  // each fresh /watch lands the user in the curated view.
+  // each fresh /breakdowns lands the user in the curated view.
   const [showAll, setShowAll] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -66,12 +66,12 @@ export function WatchPage({ onSelectMatch }: WatchPageProps) {
 
   return (
     <>
-      <WatchDisclaimer />
-      <section className="dwr-watch">
-        <div className="dwr-watch-header">
-          <div className="dwr-watch-eyebrow">WATCH LIKE A COACH</div>
-          <h1 className="dwr-watch-title">Recent pro matches</h1>
-          <p className="dwr-watch-tagline">
+      <BreakdownsDisclaimer />
+      <section className="dwr-breakdowns">
+        <div className="dwr-breakdowns-header">
+          <div className="dwr-breakdowns-eyebrow">MATCH BREAKDOWNS</div>
+          <h1 className="dwr-breakdowns-title">Recent pro matches</h1>
+          <p className="dwr-breakdowns-tagline">
             Click a match for a coach-style breakdown.
           </p>
         </div>
@@ -79,7 +79,7 @@ export function WatchPage({ onSelectMatch }: WatchPageProps) {
         {state.kind === 'loading' && <SkeletonGrid count={9} />}
 
         {state.kind === 'error' && (
-          <div className="dwr-watch-error" role="alert">
+          <div className="dwr-breakdowns-error" role="alert">
             <p>{state.message}</p>
             <button type="button" className="dwr-btn" onClick={state.retry}>
               Try again
@@ -121,7 +121,7 @@ function ReadyView({
 
   if (matches.length === 0) {
     return (
-      <p className="dwr-watch-empty">
+      <p className="dwr-breakdowns-empty">
         No recent pro matches available right now. OpenDota's feed may be
         briefly empty between tournaments — try again in a few minutes.
       </p>
@@ -133,7 +133,7 @@ function ReadyView({
   if (!showAll && counts.trackedAndLong === 0) {
     return (
       <>
-        <div className="dwr-watch-empty-tracked">
+        <div className="dwr-breakdowns-empty-tracked">
           <p>
             No tracked tournaments live right now. The default view shows
             DreamLeague, BLAST Slam, ESL One, PGL, Riyadh Masters, ESports
@@ -142,7 +142,7 @@ function ReadyView({
           </p>
           <button
             type="button"
-            className="dwr-link-btn dwr-watch-toggle-link"
+            className="dwr-link-btn dwr-breakdowns-toggle-link"
             onClick={() => setShowAll(true)}
           >
             Show all {counts.allLong} recent matches →
@@ -154,21 +154,21 @@ function ReadyView({
 
   return (
     <>
-      <div className="dwr-watch-grid">
+      <div className="dwr-breakdowns-grid">
         {visible.map((m) => (
           <MatchCard key={m.match_id} m={m} onClick={() => onSelectMatch(m.match_id)} />
         ))}
       </div>
 
-      <div className="dwr-watch-toggle">
+      <div className="dwr-breakdowns-toggle">
         {showAll ? (
           <>
-            <span className="dwr-watch-toggle-status">
+            <span className="dwr-breakdowns-toggle-status">
               Showing {visible.length} of {counts.allLong} recent matches.
             </span>
             <button
               type="button"
-              className="dwr-link-btn dwr-watch-toggle-link"
+              className="dwr-link-btn dwr-breakdowns-toggle-link"
               onClick={() => setShowAll(false)}
             >
               Show only tracked tournaments
@@ -176,18 +176,18 @@ function ReadyView({
           </>
         ) : (
           <>
-            <span className="dwr-watch-toggle-status">
+            <span className="dwr-breakdowns-toggle-status">
               Showing {visible.length} from tracked tournaments
               {counts.allLong > visible.length && ` (${counts.allLong - visible.length} more in the unfiltered feed)`}.
             </span>
             {counts.trackedAndLong < SPARSE_TRACKED_THRESHOLD && (
-              <span className="dwr-watch-toggle-sparse">
+              <span className="dwr-breakdowns-toggle-sparse">
                 Quiet week between premier events. TI 2026 qualifiers begin June 9.
               </span>
             )}
             <button
               type="button"
-              className="dwr-link-btn dwr-watch-toggle-link"
+              className="dwr-link-btn dwr-breakdowns-toggle-link"
               onClick={() => setShowAll(true)}
             >
               Show all {counts.allLong} recent matches
@@ -210,21 +210,21 @@ function MatchCard({ m, onClick }: { m: ODProMatch; onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="card dwr-watch-card"
+      className="card dwr-breakdowns-card"
       aria-label={`${radiantName} ${m.radiant_score} versus ${direName} ${m.dire_score} — view analysis`}
     >
-      <div className="dwr-watch-card-league">{m.league_name || 'League TBD'}</div>
-      <div className="dwr-watch-card-teams">
+      <div className="dwr-breakdowns-card-league">{m.league_name || 'League TBD'}</div>
+      <div className="dwr-breakdowns-card-teams">
         <span className={`team ${radiantWon ? 'win' : 'lose'}`}>{radiantName}</span>
         <span className="vs">vs</span>
         <span className={`team ${!radiantWon ? 'win' : 'lose'}`}>{direName}</span>
       </div>
-      <div className="dwr-watch-card-score">
+      <div className="dwr-breakdowns-card-score">
         <span className={`score ${radiantWon ? 'win' : 'lose'}`}>{m.radiant_score}</span>
         <span className="dash">—</span>
         <span className={`score ${!radiantWon ? 'win' : 'lose'}`}>{m.dire_score}</span>
       </div>
-      <div className="dwr-watch-card-meta">
+      <div className="dwr-breakdowns-card-meta">
         <span>{duration}</span>
         <span className="sep">·</span>
         <span>Ended {ended}</span>
@@ -235,9 +235,9 @@ function MatchCard({ m, onClick }: { m: ODProMatch; onClick: () => void }) {
 
 function SkeletonGrid({ count }: { count: number }) {
   return (
-    <div className="dwr-watch-grid">
+    <div className="dwr-breakdowns-grid">
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="card dwr-watch-card-skeleton" aria-hidden="true">
+        <div key={i} className="card dwr-breakdowns-card-skeleton" aria-hidden="true">
           <div className="skeleton-line sm" />
           <div className="skeleton-line lg" />
           <div className="skeleton-line md" />

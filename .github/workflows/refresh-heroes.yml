@@ -4,7 +4,7 @@ name: Refresh heroes
 # src/data/heroes.json. Heroes change ~1-2 times per year (new hero
 # release; tweaks like icon path don't break our resolver), so this
 # refresh exists primarily as drift insurance — without it, a new hero
-# released between our deploys would render as "Hero {id}" in /watch
+# released between our deploys would render as "Hero {id}" in /breakdowns
 # prose until someone manually re-ran the script.
 #
 # Schedule: Mondays 12:00 UTC. Offset from refresh-meta (07:00),

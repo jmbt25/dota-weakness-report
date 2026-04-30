@@ -20,8 +20,8 @@ const DevProComparisonStates = import.meta.env.DEV
   : null
 import { MmrMathPage } from './components/MmrMathPage'
 import { MetaPage } from './components/MetaPage'
-import { WatchPage } from './components/WatchPage'
-import { WatchMatchPage } from './components/WatchMatchPage'
+import { BreakdownsPage } from './components/BreakdownsPage'
+import { BreakdownsMatchPage } from './components/BreakdownsMatchPage'
 import { TopNav, type NavRoute } from './components/TopNav'
 import { ProgressStrip, type ReportPhase } from './components/ProgressStrip'
 import {
@@ -45,7 +45,7 @@ import type {
   ReportInput,
 } from './types'
 
-type WatchMatchHeader = {
+type BreakdownsMatchHeader = {
   match_id: number
   radiant_name: string
   dire_name: string
@@ -88,10 +88,10 @@ function App() {
   const [route, setRoute] = useState<string>(() =>
     typeof window !== 'undefined' ? window.location.pathname : '/'
   )
-  // Held only while the user is on /watch/{match_id} — drives the
+  // Held only while the user is on /breakdowns/{match_id} — drives the
   // document.title swap once the match data lands. Cleared when the
-  // match_id in the URL changes or the user leaves /watch routes.
-  const [watchMatchHeader, setWatchMatchHeader] = useState<WatchMatchHeader | null>(null)
+  // match_id in the URL changes or the user leaves /breakdowns routes.
+  const [breakdownsMatchHeader, setBreakdownsMatchHeader] = useState<BreakdownsMatchHeader | null>(null)
   const lastInputRef = useRef<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -285,8 +285,8 @@ function App() {
       navigate('/mmr-math')
     } else if (r === 'meta') {
       navigate('/meta')
-    } else if (r === 'watch') {
-      navigate('/watch')
+    } else if (r === 'breakdowns') {
+      navigate('/breakdowns')
     }
   }
 
@@ -310,32 +310,32 @@ function App() {
   const isChangelog = route === '/changelog'
   const isMmrMath = route === '/mmr-math'
   const isMeta = route === '/meta'
-  const isWatch = route === '/watch'
-  // /watch/{match_id} — capture group is integer-only.
-  const watchMatchExec = route.match(/^\/watch\/(\d+)$/)
-  const isWatchMatch = watchMatchExec != null
-  const watchMatchId = watchMatchExec ? Number(watchMatchExec[1]) : NaN
+  const isBreakdowns = route === '/breakdowns'
+  // /breakdowns/{match_id} — capture group is integer-only.
+  const breakdownsMatchExec = route.match(/^\/breakdowns\/(\d+)$/)
+  const isBreakdownsMatch = breakdownsMatchExec != null
+  const breakdownsMatchId = breakdownsMatchExec ? Number(breakdownsMatchExec[1]) : NaN
   // Dev-only route for visual verification of ProComparisonCard states.
   // Stripped from production builds — `import.meta.env.DEV` is a Vite
   // compile-time constant that resolves to `false` in `vite build`, so
   // the `&&` short-circuits and tree-shakes the entire branch.
   const isDevProComparison = route === '/_dev/pro-comparison' && import.meta.env.DEV
   const isReportRoute =
-    !isChangelog && !isMmrMath && !isMeta && !isWatch && !isWatchMatch && !isDevProComparison
+    !isChangelog && !isMmrMath && !isMeta && !isBreakdowns && !isBreakdownsMatch && !isDevProComparison
 
-  // Reset the cached match header whenever the active /watch/{id} match
-  // changes (or we leave the watch routes). Without this, navigating from
-  // /watch/A → /watch/B would briefly show A's title in the tab.
+  // Reset the cached match header whenever the active /breakdowns/{id} match
+  // changes (or we leave the breakdowns routes). Without this, navigating
+  // from /breakdowns/A → /breakdowns/B would briefly show A's title in the tab.
   useEffect(() => {
-    if (!isWatchMatch) {
-      if (watchMatchHeader != null) setWatchMatchHeader(null)
+    if (!isBreakdownsMatch) {
+      if (breakdownsMatchHeader != null) setBreakdownsMatchHeader(null)
       return
     }
-    if (watchMatchHeader && watchMatchHeader.match_id !== watchMatchId) {
-      setWatchMatchHeader(null)
+    if (breakdownsMatchHeader && breakdownsMatchHeader.match_id !== breakdownsMatchId) {
+      setBreakdownsMatchHeader(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isWatchMatch, watchMatchId])
+  }, [isBreakdownsMatch, breakdownsMatchId])
 
   // Per-route document.title + meta description. Crawlers that don't run
   // JS still see the homepage values from index.html (which is fine —
@@ -357,13 +357,13 @@ function App() {
       title = 'Meta Heroes by Bracket — Dota Weakness Report'
       description =
         'Current Dota 2 meta heroes by bracket — win rates, pick rates, and tier scores updated weekly.'
-    } else if (isWatch) {
-      title = 'Watch — Dota Weakness Report'
+    } else if (isBreakdowns) {
+      title = 'Breakdowns — Dota Weakness Report'
       description =
         'Coach-style analysis of recent pro Dota 2 matches. Updated as matches finish.'
-    } else if (isWatchMatch) {
-      if (watchMatchHeader && watchMatchHeader.match_id === watchMatchId) {
-        title = `${watchMatchHeader.radiant_name} ${watchMatchHeader.radiant_score}–${watchMatchHeader.dire_score} ${watchMatchHeader.dire_name} — DotaWR Watch`
+    } else if (isBreakdownsMatch) {
+      if (breakdownsMatchHeader && breakdownsMatchHeader.match_id === breakdownsMatchId) {
+        title = `${breakdownsMatchHeader.radiant_name} ${breakdownsMatchHeader.radiant_score}–${breakdownsMatchHeader.dire_score} ${breakdownsMatchHeader.dire_name} — DotaWR Breakdowns`
       } else {
         title = 'Match — Dota Weakness Report'
       }
@@ -379,10 +379,10 @@ function App() {
     isChangelog,
     isMmrMath,
     isMeta,
-    isWatch,
-    isWatchMatch,
-    watchMatchId,
-    watchMatchHeader,
+    isBreakdowns,
+    isBreakdownsMatch,
+    breakdownsMatchId,
+    breakdownsMatchHeader,
     isReportRoute,
     isStreaming,
   ])
@@ -513,27 +513,27 @@ function App() {
         </>
       )}
 
-      {isWatch && (
+      {isBreakdowns && (
         <>
           <TopNav
-            active="watch"
+            active="breakdowns"
             reportDisabled={!isStreaming && !isPreparing}
             onNavigate={navByRoute}
           />
-          <WatchPage onSelectMatch={(id) => navigate(`/watch/${id}`)} />
+          <BreakdownsPage onSelectMatch={(id) => navigate(`/breakdowns/${id}`)} />
         </>
       )}
 
-      {isWatchMatch && (
+      {isBreakdownsMatch && (
         <>
           <TopNav
-            active="watch"
+            active="breakdowns"
             reportDisabled={!isStreaming && !isPreparing}
             onNavigate={navByRoute}
           />
-          <WatchMatchPage
-            matchId={watchMatchId}
-            onBackToWatch={() => navigate('/watch')}
+          <BreakdownsMatchPage
+            matchId={breakdownsMatchId}
+            onBackToBreakdowns={() => navigate('/breakdowns')}
             onMatchLoaded={(detail) => {
               const d = detail as ODMatchDetail & {
                 radiant_team?: { name?: string | null }
@@ -541,7 +541,7 @@ function App() {
                 radiant_score?: number
                 dire_score?: number
               }
-              setWatchMatchHeader({
+              setBreakdownsMatchHeader({
                 match_id: detail.match_id,
                 radiant_name: d.radiant_team?.name ?? 'Radiant',
                 dire_name: d.dire_team?.name ?? 'Dire',

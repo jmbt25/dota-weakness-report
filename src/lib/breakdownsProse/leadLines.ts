@@ -1,7 +1,7 @@
 // Phase 7: lead-line synthesis.
 //
 // Picks the 2-3 highest-emphasis ProseFires across Cat 1A, 1B, and 2.
-// Renders at the top of /watch/{match_id} as standalone pull-quote
+// Renders at the top of /breakdowns/{match_id} as standalone pull-quote
 // cards. The same prose lines also appear in their original sections
 // below — this is a pull-out, not an extraction.
 //

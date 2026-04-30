@@ -2,7 +2,7 @@
 //
 // Why bundle heroes statically:
 //   /heroes was originally fetched at runtime via fetchHeroes() in
-//   App.tsx, populating the heroById Map asynchronously. The /watch
+//   App.tsx, populating the heroById Map asynchronously. The /breakdowns
 //   feature's prose (Cat 1A/1B/2 + lead-line synthesis) builds heroName
 //   strings inside `useMemo([detail])` blocks that run ONCE on mount.
 //   If the runtime fetch hasn't resolved when the memo runs, every
@@ -11,7 +11,7 @@
 //
 //   Phase 7 review caught this bug appearing in the highest-visibility
 //   surface — the OBSERVATION pull-quote at the top of every
-//   /watch/{match_id} page was rendering "(Hero 13)" instead of
+//   /breakdowns/{match_id} page was rendering "(Hero 13)" instead of
 //   "(Puck)". Bundling /heroes at build time eliminates the race.
 //
 // Pipeline:

@@ -1,7 +1,7 @@
 import type { ODProMatch } from '../types'
 
 /**
- * Tournament-tier filter for the /watch listing.
+ * Tournament-tier filter for the /breakdowns listing.
  *
  * Why hand-curated: OpenDota's `/leagues.tier` field exposes premium /
  * professional / amateur / excluded, but the tag hasn't been refreshed
@@ -50,7 +50,7 @@ const TOURNAMENT_NAME_PATTERNS: RegExp[] = [
 
 /**
  * Explicit league_id allow-list. Use when a legitimate event doesn't
- * match a regex pattern but should appear in the default /watch view.
+ * match a regex pattern but should appear in the default /breakdowns view.
  *
  * Add entries with a one-line comment explaining why they're here so
  * future maintenance can re-evaluate.
@@ -80,7 +80,7 @@ export function isLeagueTracked(leagueName: string, leagueId: number): boolean {
 }
 
 /**
- * Single eligibility check used by WatchPage:
+ * Single eligibility check used by BreakdownsPage:
  *  - Always applied: duration floor (18 min)
  *  - Tracked-tournaments mode (default): also requires the league to
  *    pass `isLeagueTracked`

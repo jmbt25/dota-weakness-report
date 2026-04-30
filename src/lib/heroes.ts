@@ -8,7 +8,7 @@ import { classifyHeroById, type HeroRole } from './heroRoles'
  * scripts/refresh-heroes.mjs).
  *
  * Pre-v1.7 this was populated async via App.tsx's fetchHeroes() — that
- * raced with the /watch prose pipeline's `useMemo([detail])` blocks,
+ * raced with the /breakdowns prose pipeline's `useMemo([detail])` blocks,
  * causing hero IDs to bake in as "Hero N" literals when the fetch
  * hadn't resolved by mount time. The bug surfaced in Phase 7 review on
  * the OBSERVATION pull-quote ("gpk~ (Hero 13) finished 15/1/16"). The

@@ -1,7 +1,7 @@
 // Shared types for Cat 2 match-level templates.
 //
 // Cat 2 fires on every match regardless of corpus coverage — this is the
-// floor that makes /watch/{match_id} feel complete even when no players
+// floor that makes /breakdowns/{match_id} feel complete even when no players
 // are in the corpus. Each sub-section (draft / lane / midgame /
 // teamfights) is its own module; the runner combines them.
 

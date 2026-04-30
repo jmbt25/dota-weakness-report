@@ -1,6 +1,6 @@
 name: Refresh pro baselines
 
-# Pulls fresh per-player rolling baselines for the curated /watch-feature
+# Pulls fresh per-player rolling baselines for the curated /breakdowns-feature
 # pro list and regenerates src/data/pro-baselines.json. Like the pro corpus
 # refresh (and unlike the meta refresh), this opens a pull request rather
 # than direct-committing — the corpus has more moving parts (per-pro list

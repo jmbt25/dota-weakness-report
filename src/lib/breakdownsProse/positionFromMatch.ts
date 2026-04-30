@@ -1,4 +1,4 @@
-// Position 1-5 classifier for /watch prose.
+// Position 1-5 classifier for /breakdowns prose.
 //
 // Mirrors the existing classifyPos in scripts/build-pro-vectors.mjs and
 // src/lib/proComparison.ts. Pulled into its own module because Cat 1B

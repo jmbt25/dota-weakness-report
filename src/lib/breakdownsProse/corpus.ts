@@ -1,4 +1,4 @@
-// Corpus loader for /watch Cat 1A prose.
+// Corpus loader for /breakdowns Cat 1A prose.
 //
 // Loads src/data/pro-baselines.json once at module load and exposes a
 // Map<account_id, PlayerBaseline> for cheap O(1) lookups during prose

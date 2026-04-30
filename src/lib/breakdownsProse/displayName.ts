@@ -1,10 +1,10 @@
-// Display-name resolver for /watch prose.
+// Display-name resolver for /breakdowns prose.
 //
 // Hard rule (per the Phase 2 PR + memory): NEVER use OpenDota's
 // `personaname` field for user-facing display. Steam display names are
 // unstable — pros set them to jokes, unicode, or other pros' handles.
 // AMMAR_THE_F's personaname is "Collapse" (the name of an entirely
-// different pro on PARIVISION). Surfacing personaname in /watch prose
+// different pro on PARIVISION). Surfacing personaname in /breakdowns prose
 // would produce embarrassing-to-defamatory output.
 //
 // Resolution order:
