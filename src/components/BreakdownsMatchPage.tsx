@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ODMatchDetail } from '../types'
 import { fetchMatchDetail, HttpError } from '../api/opendota'
 import { getCachedMatch, setCachedMatch } from '../lib/breakdownsCache'
+import type { UserCompareData } from '../lib/userCompareData'
 import { BreakdownsDisclaimer } from './BreakdownsDisclaimer'
 import { BreakdownsPlayerGrid } from './BreakdownsPlayerGrid'
 import { BreakdownsMatchSections } from './BreakdownsMatchSections'
@@ -14,6 +15,11 @@ interface BreakdownsMatchPageProps {
   onBackToBreakdowns: () => void
   /** Called when the match data lands so App.tsx can update document.title. */
   onMatchLoaded?: (detail: ODMatchDetail) => void
+  /** v1.9.0 user-comparison plumbing. */
+  userCompareData: UserCompareData | null
+  honestMode: boolean
+  onToggleHonestMode: (v: boolean) => void
+  onNavigateHome: () => void
 }
 
 type FetchState =
@@ -26,6 +32,10 @@ export function BreakdownsMatchPage({
   matchId,
   onBackToBreakdowns,
   onMatchLoaded,
+  userCompareData,
+  honestMode,
+  onToggleHonestMode,
+  onNavigateHome,
 }: BreakdownsMatchPageProps) {
   const [state, setState] = useState<FetchState>(() =>
     !Number.isFinite(matchId) || matchId <= 0
@@ -84,7 +94,13 @@ export function BreakdownsMatchPage({
 
   return (
     <>
-      <BreakdownsDisclaimer />
+      <BreakdownsDisclaimer
+        showAffordance
+        userCompareData={userCompareData}
+        honestMode={honestMode}
+        onToggleHonestMode={onToggleHonestMode}
+        onNavigateHome={onNavigateHome}
+      />
       <section className="dwr-breakdowns-match">
         {state.kind === 'invalid' && (
           <InvalidMatchId matchId={matchId} onBackToBreakdowns={onBackToBreakdowns} />
@@ -99,7 +115,12 @@ export function BreakdownsMatchPage({
           />
         )}
         {state.kind === 'ready' && (
-          <ReadyView detail={state.detail} onBackToBreakdowns={onBackToBreakdowns} />
+          <ReadyView
+            detail={state.detail}
+            onBackToBreakdowns={onBackToBreakdowns}
+            userCompareData={userCompareData}
+            honestMode={honestMode}
+          />
         )}
       </section>
     </>
@@ -193,9 +214,13 @@ function ErrorView({
 function ReadyView({
   detail,
   onBackToBreakdowns,
+  userCompareData,
+  honestMode,
 }: {
   detail: ODMatchDetail
   onBackToBreakdowns: () => void
+  userCompareData: UserCompareData | null
+  honestMode: boolean
 }) {
   // Match-detail responses include team objects + leagueid that aren't on
   // ODMatchDetail's narrow type — read defensively.
@@ -249,7 +274,11 @@ function ReadyView({
       <div className="dwr-breakdowns-match-body">
         <BreakdownsLeadLines detail={detail} />
 
-        <BreakdownsPlayerGrid detail={detail} />
+        <BreakdownsPlayerGrid
+          detail={detail}
+          userCompareData={userCompareData}
+          honestMode={honestMode}
+        />
 
         <BreakdownsMatchSections detail={detail} />
 

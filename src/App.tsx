@@ -36,6 +36,11 @@ import { computeRoleSplit, inferRole, type RoleSplit } from './lib/matchHelpers'
 import { rankBucketFromTier, rankBucketLabel, rankLabel } from './lib/baselines'
 import { getHeroName } from './lib/heroes'
 import { FREE_TIER_MATCH_LIMIT, MAX_DETAIL_FETCH } from './lib/license'
+import { buildUserCompareData, type UserCompareData } from './lib/userCompareData'
+import {
+  getCachedUserCompareData,
+  setCachedUserCompareData,
+} from './lib/userCompareCache'
 import type {
   AnalysisResult,
   HonestLanguage,
@@ -92,8 +97,16 @@ function App() {
   // document.title swap once the match data lands. Cleared when the
   // match_id in the URL changes or the user leaves /breakdowns routes.
   const [breakdownsMatchHeader, setBreakdownsMatchHeader] = useState<BreakdownsMatchHeader | null>(null)
+  // v1.9.0 user-comparison cache — read once on mount, refreshed when
+  // the analyze pipeline writes a new snapshot. Null = no /report run
+  // yet, OR localStorage is unavailable (embed contexts).
+  const [userCompareData, setUserCompareData] = useState<UserCompareData | null>(null)
   const lastInputRef = useRef<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    setUserCompareData(getCachedUserCompareData())
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -254,6 +267,29 @@ function App() {
           report: { ...prev.report, phase: 'done' },
         }
       })
+
+      // Phase A wiring (v1.9.0 user-comparison feature):
+      // Build and persist the user-comparison snapshot from the same
+      // matches/details the report just used. Pure post-pipeline step,
+      // no API calls. Wrapped to never break the report rendering if
+      // anything misbehaves — the feature degrades to "no
+      // personalization on /breakdowns," which is the same as a
+      // localStorage-blocked context.
+      try {
+        const compare = buildUserCompareData({
+          accountId: parsed.accountId,
+          profile,
+          details: liveDetails,
+        })
+        setCachedUserCompareData(compare)
+        // Phase C: surface the fresh snapshot to /breakdowns immediately
+        // — without this the user would have to reload to see strips
+        // start rendering on their next match-detail visit.
+        setUserCompareData(compare)
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('[user-compare] cache build failed (non-fatal):', err)
+      }
     } catch (err) {
       if ((err as Error).name === 'AbortError') return
       const message =
@@ -549,6 +585,10 @@ function App() {
                 dire_score: d.dire_score ?? 0,
               })
             }}
+            userCompareData={userCompareData}
+            honestMode={honestMode}
+            onToggleHonestMode={setHonestMode}
+            onNavigateHome={goHome}
           />
         </>
       )}

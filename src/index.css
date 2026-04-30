@@ -2089,17 +2089,96 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
-/* Disclaimer banner — italic, dim, full-width strip just under TopNav */
+/* Disclaimer banner — italic, dim, full-width strip just under TopNav.
+   Body line is the primary statement (centered, every page). Affordance
+   row sits below it (right-aligned on desktop, centered on mobile)
+   when on /breakdowns/{match_id}. */
 .dwr-breakdowns-disclaimer {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 10px 24px 12px;
+  padding: 10px 24px 10px;
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--ink-muted);
+  letter-spacing: 0.01em;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+.dwr-breakdowns-disclaimer-body { text-align: center; }
+.dwr-breakdowns-disclaimer-affordance {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+@media (min-width: 720px) {
+  .dwr-breakdowns-disclaimer-affordance { justify-content: flex-end; }
+}
+.dwr-breakdowns-disclaimer-link {
+  font-family: inherit;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  letter-spacing: inherit;
+  text-decoration: none;
+  text-align: inherit;
+}
+.dwr-breakdowns-disclaimer-link:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+/* The affordance-area honest-mode toggle is the same component as on
+   /report; it inherits .dwr-fire-btn. Shrink it slightly so it doesn't
+   dominate the disclaimer row at 38px. */
+.dwr-breakdowns-disclaimer-affordance .dwr-fire-btn {
+  width: 26px;
+  height: 26px;
+  font-size: 12px;
+}
+
+/* v1.9.0 user-comparison strips. Phase D-tuned: 12px font (one notch
+   below the 13px Cat 1B body), pink-toned dim text + 2px accent bar
+   left border. Approved Phase C; color held over from the §F.1 default. */
+.dwr-breakdowns-user-strip {
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #b87a98;
+  margin: 3px 0 0;
+  padding-left: 10px;
+  border-left: 2px solid #8a4a6a;
+}
+@media (max-width: 640px) {
+  .dwr-breakdowns-user-strip { padding-left: 8px; font-size: 11.5px; }
+}
+.dwr-breakdowns-player-line { display: block; }
+.dwr-breakdowns-player-line + .dwr-breakdowns-player-line { margin-top: 8px; }
+
+/* v1.9.0: surfaced when the position classifier produces an invalid
+   1-2-3-4-5 distribution per team (track v1.9.1 root-cause fix). Same
+   register as the top-of-page disclaimer banner — italic, dim — but
+   sits inside the player grid section, scoped to that match. */
+.dwr-breakdowns-position-warning {
   font-family: 'Inter', sans-serif;
   font-style: italic;
   font-size: 12px;
   color: var(--ink-muted);
   text-align: center;
   letter-spacing: 0.01em;
+  margin: 0 0 12px;
+  padding: 8px 16px;
+  border: 1px solid var(--line-soft, rgba(236, 230, 214, 0.08));
+  border-radius: 4px;
+  background: rgba(236, 230, 214, 0.02);
 }
 
 /* /breakdowns entry page */

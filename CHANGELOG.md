@@ -13,6 +13,28 @@ src/lib/version.ts AND add an entry to this file. Both happen in the
 same commit. Newest entries go on top.
 -->
 
+## v1.9.0 — 2026-04-30
+
+User comparison on /breakdowns.
+
+- /breakdowns/{match_id} now compares your stats to pros and bracket
+  norms when you've previously run /report.
+- Per-player cards display compact stat strips beneath each within-match
+  observation: your average vs your bracket median for that position,
+  alongside the pro's stat for context.
+- Honest-mode toggle adds editorial commentary on user-side strips.
+  Different register from /breakdowns prose about pros — that stays
+  observation-only. User-side honest mode is sharper because you opted in.
+- Comparisons fire only on positions you actually play (≥5 games at
+  the position). A pos 5 main looking at a pos 1 card sees the pro
+  line only, no strip.
+- Disclaimer when match position assignment is ambiguous: stat
+  comparisons may not perfectly align with intended roles. (Underlying
+  classifier fix tracked for v1.9.1.)
+- Personalization stays local — Steam ID lives in your browser only,
+  comparison data is computed from your /report run, never leaves
+  your device.
+
 ## v1.8.1 — 2026-04-30
 
 Renamed /watch → /breakdowns. The "Watch Like a Coach" framing was

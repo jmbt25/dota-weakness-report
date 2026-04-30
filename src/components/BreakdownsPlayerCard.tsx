@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import type { ProseFire, PlayerContext } from '../lib/breakdownsProse/cat1b'
+import type { UserCompareData } from '../lib/userCompareData'
+import { UserCompareStrip } from './UserCompareStrip'
 
 interface BreakdownsPlayerCardProps {
   ctx: PlayerContext
@@ -8,6 +10,10 @@ interface BreakdownsPlayerCardProps {
   /** Cat 1B (within-match) — runs for every player. */
   cat1bFires: ProseFire[]
   displayName: string
+  /** v1.9.0 user-comparison: snapshot from localStorage. Null when no
+   *  /report has been run; the strip layer no-ops in that case. */
+  userCompareData: UserCompareData | null
+  honestMode: boolean
 }
 
 /**
@@ -20,7 +26,14 @@ interface BreakdownsPlayerCardProps {
  * reaches into player.personaname directly — the structural guarantee of
  * the "no personaname for display" rule.
  */
-export function BreakdownsPlayerCard({ ctx, cat1aFires, cat1bFires, displayName }: BreakdownsPlayerCardProps) {
+export function BreakdownsPlayerCard({
+  ctx,
+  cat1aFires,
+  cat1bFires,
+  displayName,
+  userCompareData,
+  honestMode,
+}: BreakdownsPlayerCardProps) {
   const [open, setOpen] = useState(false)
   const p = ctx.player
   const kills = p.kills ?? 0
@@ -57,9 +70,14 @@ export function BreakdownsPlayerCard({ ctx, cat1aFires, cat1bFires, displayName 
             </p>
           ))}
           {cat1bFires.map((f) => (
-            <p key={`b-${f.templateId}`} className="dwr-breakdowns-player-prose">
-              {f.text}
-            </p>
+            <div key={`b-${f.templateId}`} className="dwr-breakdowns-player-line">
+              <p className="dwr-breakdowns-player-prose">{f.text}</p>
+              <UserCompareStrip
+                fire={f}
+                userCompareData={userCompareData}
+                honestMode={honestMode}
+              />
+            </div>
           ))}
         </div>
       ) : (

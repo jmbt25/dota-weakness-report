@@ -246,6 +246,12 @@ const fiveSlotTimingOutlier: Cat1BTemplate = {
       facts: {
         position: player.position,
         hero: player.heroName,
+        // hero_id is read by the v1.9.0 user-comparison strip layer to
+        // do the hero-match lookup against the user's per-hero 5-slot
+        // bucket. Numeric (not name) — keeps the strip layer text-blind
+        // to display names per the anti-bleed rule in
+        // docs/breakdowns-user-comparison-v1-spec.md §C.4.
+        hero_id: player.player.hero_id,
         five_slot_time: fmtMmSs(mySec),
         match_core_median_time: fmtMmSs(matchMedian),
         delta_min: Math.round(deltaMin),
@@ -268,18 +274,26 @@ const kdaExtreme: Cat1BTemplate = {
     const bottom = sorted[sorted.length - 1]
     const secondLast = sorted[sorted.length - 2]
 
+    // teamfight_pct is fed forward to the v1.9.0 user-comparison strip
+    // layer's KDA editorial template (kda_extreme honest), which pairs
+    // user KDA gap with user TF% to surface "shows up but trades poorly"
+    // vs "survives by avoiding" patterns. Omitted when null so the
+    // strip layer falls back to its KDA-only editorial.
+    const proTf = player.player.teamfight_participation
     if (top.ctx === player && top.k >= second.k * 1.5 && top.k >= 5) {
+      const facts: Record<string, string | number> = {
+        position: player.position,
+        hero: player.heroName,
+        kills: player.player.kills,
+        deaths: player.player.deaths,
+        assists: player.player.assists,
+        kda: myKda.toFixed(1),
+        rank: 'highest',
+      }
+      if (typeof proTf === 'number') facts.teamfight_pct = Math.round(proTf * 100)
       return {
         text: `${positionLabel(player.position)} (${player.heroName}) finished ${player.player.kills}/${player.player.deaths}/${player.player.assists}, KDA ${myKda.toFixed(1)} — highest in the match.`,
-        facts: {
-          position: player.position,
-          hero: player.heroName,
-          kills: player.player.kills,
-          deaths: player.player.deaths,
-          assists: player.player.assists,
-          kda: myKda.toFixed(1),
-          rank: 'highest',
-        },
+        facts,
       }
     }
     if (
@@ -287,17 +301,19 @@ const kdaExtreme: Cat1BTemplate = {
       bottom.k <= secondLast.k * 0.5 &&
       bottom.k <= 1.5
     ) {
+      const facts: Record<string, string | number> = {
+        position: player.position,
+        hero: player.heroName,
+        kills: player.player.kills,
+        deaths: player.player.deaths,
+        assists: player.player.assists,
+        kda: myKda.toFixed(1),
+        rank: 'lowest',
+      }
+      if (typeof proTf === 'number') facts.teamfight_pct = Math.round(proTf * 100)
       return {
         text: `${positionLabel(player.position)} (${player.heroName}) finished ${player.player.kills}/${player.player.deaths}/${player.player.assists}, KDA ${myKda.toFixed(1)} — lowest in the match.`,
-        facts: {
-          position: player.position,
-          hero: player.heroName,
-          kills: player.player.kills,
-          deaths: player.player.deaths,
-          assists: player.player.assists,
-          kda: myKda.toFixed(1),
-          rank: 'lowest',
-        },
+        facts,
       }
     }
     return null
