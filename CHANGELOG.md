@@ -13,6 +13,21 @@ src/lib/version.ts AND add an entry to this file. Both happen in the
 same commit. Newest entries go on top.
 -->
 
+## v1.7.0 — 2026-04-30
+
+Phase 6 of the watch-feature buildout — match-level prose. /watch/{match_id}
+now layers four match-level cards (draft, lane phase, mid game, teamfights)
+below the per-player grid. The "What stood out" lead-line synthesis (Phase 7)
+is the remaining v1 work.
+
+- /watch/{match_id} now renders four match-level prose sections below the per-player grid: draft (archetype, last picks, ban priority), lane phase (first blood, T1 timings), mid game (first Roshan + Aegis recipient, Roshan count, gold lead swings), and teamfights (count + outcome, longest fight, decisive fight).
+- Match-level prose surfaces the "what happened" story that per-player observations can't capture alone — draft intent, lane-phase tempo, map control inflection points, decisive teamfight + immediate consequence (raxx, Roshan, ancient).
+- decisive_fight template cross-references teamfights[] with subsequent objectives within 60 seconds — surfaces the moment the match was decided.
+- Pre-creep first bloods render with "before the creep wave" framing instead of negative timestamps.
+- AEGIS_STOLEN events render alongside ROSHAN_KILL when Roshan is killed by one team but Aegis is taken by the other.
+- Empty sub-sections skip entirely — no apologetic placeholder text on matches without notable activity in a sub-section.
+- Cat 2 prose passes the same WATCH_BANNED_TOKENS validator as Cat 1A and Cat 1B.
+
 ## v1.6.0 — 2026-04-30
 
 Phase 5 of the watch-feature buildout — cross-match per-player observations.

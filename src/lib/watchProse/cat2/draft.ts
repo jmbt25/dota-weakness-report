@@ -129,6 +129,14 @@ const draftLastPick: Cat2Template = {
     // Only fire when the close framing differs OR is itself a notable
     // shape — both teams closing with a generic 4-protect-1 carry isn't
     // narrative.
+    //
+    // TODO (v1.1 calibration): expand the redundancy gate to suppress
+    // ANY same-label close when neither label is dramatic. The Phase 6
+    // dump on PGL Wallachia 2026 BetBoom vs Aurora produced "Radiant
+    // closed... a playmaker close. Dire closed... a playmaker close."
+    // Same-label produces low-information lines for "playmaker close"
+    // and "an initiator-flex close" too — only the asymmetric pairings
+    // earn the slot. Currently only generic 4-protect-1 is filtered.
     if (radiantLabel === direLabel && radiantLabel === 'a 4-protect-1 close') {
       return null
     }
