@@ -71,6 +71,11 @@ export interface ProseFire {
   priority: number
   /** The raw stats the line interpolates — debug + Phase 7 reuse. */
   facts: Record<string, string | number>
+  /** Per-player fires (Cat 1A, Cat 1B) carry the source player_slot.
+   *  Cat 2 match-level fires leave this undefined. The lead-line
+   *  selector dedups by this field — at most one fire per player in
+   *  the picks — but exempts team-level Cat 2 fires from the rule. */
+  sourcePlayerSlot?: number
 }
 
 // ----- Helpers -----
@@ -615,6 +620,7 @@ export function runCat1B(ctx: MatchContext): Map<number, ProseFire[]> {
         text: result.text,
         priority: tpl.priority,
         facts: result.facts,
+        sourcePlayerSlot: player.player.player_slot,
       })
     }
     out.set(player.player.player_slot, fires)

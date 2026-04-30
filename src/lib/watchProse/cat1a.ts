@@ -413,6 +413,7 @@ export function runCat1A(ctx: MatchContext): Map<number, ProseFire[]> {
         text: result.text,
         priority: tpl.priority,
         facts: result.facts,
+        sourcePlayerSlot: player.player.player_slot,
       })
     }
     // Cross-template dedup: hero_kda_outlier subsumes kda_vs_rolling when

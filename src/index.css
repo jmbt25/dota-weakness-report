@@ -2581,6 +2581,59 @@
   color: var(--ink);
 }
 
+/* Phase 7 — lead-line synthesis (WHAT STOOD OUT). 2-3 pull-quote cards
+   at the top of /watch/{match_id} surfacing the highest-emphasis fires
+   across Cat 1A, Cat 1B, and Cat 2. Visual register: distinct from the
+   per-player + match-level cards below — these are headlines. */
+.dwr-watch-leads {
+  margin-bottom: 24px;
+}
+
+.dwr-watch-leads-header {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.dwr-watch-leads-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 900px) {
+  .dwr-watch-leads-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.dwr-watch-lead {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: linear-gradient(155deg, rgba(91, 58, 143, 0.10), rgba(233, 69, 96, 0.04));
+  border: 1px solid var(--line-strong);
+  padding: 18px 18px 16px;
+}
+
+.dwr-watch-lead-overline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+}
+
+.dwr-watch-lead-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  margin: 0;
+  font-weight: 500;
+}
+
 /* Cat 2 — match-level sections (draft / lane / mid game / teamfights)
    below the per-player grid. Each section is a full-width card. Empty
    sections don't render at all — handled in WatchMatchSections. */

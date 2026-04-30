@@ -5,6 +5,7 @@ import { getCachedMatch, setCachedMatch } from '../lib/watchCache'
 import { WatchDisclaimer } from './WatchDisclaimer'
 import { WatchPlayerGrid } from './WatchPlayerGrid'
 import { WatchMatchSections } from './WatchMatchSections'
+import { WatchLeadLines } from './WatchLeadLines'
 
 interface WatchMatchPageProps {
   /** Match ID parsed from the URL path. May be NaN/0 if the route matched
@@ -246,18 +247,11 @@ function ReadyView({
       </header>
 
       <div className="dwr-watch-match-body">
+        <WatchLeadLines detail={detail} />
+
         <WatchPlayerGrid detail={detail} />
 
         <WatchMatchSections detail={detail} />
-
-        <div className="dwr-watch-match-placeholder">
-          <p className="dwr-watch-match-placeholder-eyebrow">PHASE 7 — REMAINING</p>
-          <p className="dwr-watch-match-placeholder-body">
-            The "What stood out" lead-line synthesis (Phase 7) renders here when
-            those templates land. Per-player + match-level observations are now
-            live; lead-line surfaces the most-emphatic across them.
-          </p>
-        </div>
 
         <details className="dwr-watch-match-raw">
           <summary>Raw /matches/{detail.match_id} payload (JSON)</summary>
