@@ -16,6 +16,12 @@ type FetchState =
   | { kind: 'error'; message: string; retry: () => void }
 
 const VISIBLE_COUNT = 50
+// Below this many tracked-tier matches in the recent feed, surface a
+// "calendar is quiet, not the tool" hint under the toggle line. Picked
+// at 8 so a typical tournament-day stays unannotated (DreamLeague + a
+// concurrent BLAST Slam easily exceed this) but a slow Tuesday between
+// majors doesn't read as "the site is broken".
+const SPARSE_TRACKED_THRESHOLD = 8
 
 export function WatchPage({ onSelectMatch }: WatchPageProps) {
   const [state, setState] = useState<FetchState>({ kind: 'loading' })
@@ -174,6 +180,11 @@ function ReadyView({
               Showing {visible.length} from tracked tournaments
               {counts.allLong > visible.length && ` (${counts.allLong - visible.length} more in the unfiltered feed)`}.
             </span>
+            {counts.trackedAndLong < SPARSE_TRACKED_THRESHOLD && (
+              <span className="dwr-watch-toggle-sparse">
+                Quiet week between premier events. TI 2026 qualifiers begin June 9.
+              </span>
+            )}
             <button
               type="button"
               className="dwr-link-btn dwr-watch-toggle-link"

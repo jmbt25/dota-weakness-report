@@ -54,9 +54,21 @@ const TOURNAMENT_NAME_PATTERNS: RegExp[] = [
  *
  * Add entries with a one-line comment explaining why they're here so
  * future maintenance can re-evaluate.
+ *
+ * TODO (pre-2026-06-04 launch deploy): Populate with TI 2026 Open
+ * Qualifier league_ids once they're announced (late May / early June,
+ * around the 2026-06-01 roster lock). Sources:
+ *   1. https://api.opendota.com/api/leagues — find new entries with
+ *      tier=premium or tier=professional matching "Road to TI 2026"
+ *      naming. The 2023 cycle used IDs 15689-15694 for regional quals.
+ *   2. Liquipedia TI 2026 page — has the canonical IDs once Valve
+ *      publishes the bracket.
+ * Don't rely on regex alone for TI matches — league names can be
+ * renamed mid-tournament (Valve has done this before), and IDs are
+ * the stable canonical reference. Inclusion here is the safety net.
  */
 const TOURNAMENT_ID_ALLOWLIST: number[] = [
-  // (none yet)
+  // (none yet — see TODO above)
 ]
 
 const MIN_DURATION_SEC = 18 * 60 // 1080s — drops throws + forfeits

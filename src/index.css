@@ -2328,6 +2328,11 @@
 .dwr-watch-toggle-status {
   font-style: italic;
 }
+.dwr-watch-toggle-sparse {
+  font-size: 12px;
+  color: var(--ink-dim);
+  font-style: italic;
+}
 .dwr-watch-toggle-link {
   font-size: 12px;
   color: var(--accent);
