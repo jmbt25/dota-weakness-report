@@ -13,6 +13,20 @@ src/lib/version.ts AND add an entry to this file. Both happen in the
 same commit. Newest entries go on top.
 -->
 
+## v1.5.0 — 2026-04-30
+
+Phase 4 of the watch-feature buildout — within-match per-player observations.
+/watch/{match_id} now renders 10 per-player cards arranged by team, each
+showing fired observation lines about that player's match. Match-level
+observations (draft, lane, Roshan, teamfights — Phase 6) and the
+"What stood out" lead-line synthesis (Phase 7) still pending.
+
+- /watch/{match_id} now renders 10 per-player cards with within-match observations (Cat 1B): vision output, 5-slot timing, KDA extremes, teamfight participation rank, dead-time blocks, buyback discipline, lane efficiency, stun output, hero damage share. Templates compare each player to the other 9 in the same match — observation, not editorial.
+- Tone register enforced: WATCH_BANNED_TOKENS validator drops any prose containing prescriptive language, judgment adjectives, counterfactual editorial, superiority markers, or second-person address. Self-test runs at module load.
+- Display name resolution: curated name from pro-baselines-list when available, position label fallback otherwise. personaname is structurally not read by any prose code (Steam display names are unstable — some pros use other pros' handles as their display name).
+- Multi-unit hero exclusion list (Meepo, Arc Warden, Lone Druid bear, Brewmaster forms, Visage familiars) prevents dead_time_block from firing on simultaneous clone deaths.
+- buyback_pattern_zero now requires the player to be on the losing team OR have peak net worth below the buyback cost — eliminates structurally-true noise on winning cores.
+
 ## v1.4.0 — 2026-04-30
 
 New "Watch like a coach" feature surface — two new routes for analyzing
