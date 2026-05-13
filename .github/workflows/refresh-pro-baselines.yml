@@ -37,10 +37,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
@@ -59,7 +59,7 @@ jobs:
         # Only runs if the previous step succeeded AND the JSON changed.
         # On no-op (empty diff), the action exits cleanly without opening
         # an empty PR.
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: 'chore(pro-baselines): weekly refresh ${{ github.run_id }}'
           title: 'chore: weekly pro baselines refresh'
