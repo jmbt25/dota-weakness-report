@@ -1,31 +1,10 @@
 {
-  "last_updated": "2026-04-29T05:50:12.418Z",
+  "last_updated": "2026-05-18T13:21:35.416Z",
   "source": "scripts/refresh-pro-corpus.mjs",
-  "pro_count": 46,
+  "pro_count": 50,
   "expected_count": 50,
-  "failed_count": 4,
-  "failed_pros": [
-    {
-      "name": "Mira",
-      "account_id": 256156323,
-      "kind": "other"
-    },
-    {
-      "name": "kaori",
-      "account_id": 320219866,
-      "kind": "other"
-    },
-    {
-      "name": "Abed",
-      "account_id": 154715080,
-      "kind": "other"
-    },
-    {
-      "name": "Dukalis",
-      "account_id": 73401082,
-      "kind": "other"
-    }
-  ],
+  "failed_count": 0,
+  "failed_pros": [],
   "vectors": [
     {
       "account_id": 106305042,
@@ -44,45 +23,45 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.34,
-          "top3_concentration": 0.36,
-          "melee_carry": 0,
+          "unique_hero_ratio": 0.4,
+          "top3_concentration": 0.4,
+          "melee_carry": 0.02,
           "ranged_carry": 0.04,
-          "caster_nuker": 0.58,
-          "initiator": 0.32,
+          "caster_nuker": 0.6,
+          "initiator": 0.28,
           "support": 0.02,
           "durable_core": 0.04
         },
         "tempo": {
-          "median_duration_min": 40.3,
-          "pct_under_30min": 0.04,
-          "pct_over_45min": 0.3,
-          "kda_per_min": 0.5
+          "median_duration_min": 43.8,
+          "pct_under_30min": 0,
+          "pct_over_45min": 0.42,
+          "kda_per_min": 0.49
         },
         "farm": {
-          "lh_per_min": 8.7,
-          "gpm": 568,
-          "lh_at_10": 63,
-          "lane_efficiency_pct": 78
+          "lh_per_min": 8.3,
+          "gpm": 593,
+          "lh_at_10": 55,
+          "lane_efficiency_pct": 74
         },
         "vision": {
-          "obs_per_game": 0.9,
-          "sen_per_game": 0.7,
-          "dewards_per_game": 2.6
+          "obs_per_game": 1.2,
+          "sen_per_game": 0.5,
+          "dewards_per_game": 3.5
         },
         "death": {
-          "deaths_per_match": 4.5,
-          "deaths_per_min": 0.103,
-          "kda_ratio": 3.89
+          "deaths_per_match": 4.3,
+          "deaths_per_min": 0.094,
+          "kda_ratio": 4.22
         },
         "spending": {
-          "core_spike_min": 23.1,
-          "core_spike_n": 14,
+          "core_spike_min": 19.7,
+          "core_spike_n": 12,
           "support_spike_min": null,
           "support_spike_n": 1
         },
         "involvement": {
-          "kill_participation": 0.72
+          "kill_participation": 0.62
         }
       }
     },
@@ -155,52 +134,52 @@
       "detail_count": 15,
       "raw": {
         "role_dist": {
-          "pos1": 1,
-          "pos2": 0,
+          "pos1": 0.933,
+          "pos2": 0.067,
           "pos3": 0,
           "pos4": 0,
           "pos5": 0
         },
         "hero_archetype": {
           "unique_hero_ratio": 0.44,
-          "top3_concentration": 0.28,
-          "melee_carry": 0.36,
-          "ranged_carry": 0.34,
-          "caster_nuker": 0.18,
+          "top3_concentration": 0.36,
+          "melee_carry": 0.54,
+          "ranged_carry": 0.2,
+          "caster_nuker": 0.14,
           "initiator": 0.08,
           "support": 0,
           "durable_core": 0.04
         },
         "tempo": {
-          "median_duration_min": 40.3,
-          "pct_under_30min": 0.04,
-          "pct_over_45min": 0.3,
+          "median_duration_min": 43.8,
+          "pct_under_30min": 0,
+          "pct_over_45min": 0.42,
           "kda_per_min": 0.43
         },
         "farm": {
-          "lh_per_min": 12.1,
-          "gpm": 705,
-          "lh_at_10": 65,
-          "lane_efficiency_pct": 78
+          "lh_per_min": 11.6,
+          "gpm": 759,
+          "lh_at_10": 59,
+          "lane_efficiency_pct": 76
         },
         "vision": {
-          "obs_per_game": 0.5,
-          "sen_per_game": 0.2,
-          "dewards_per_game": 1.3
+          "obs_per_game": 0.3,
+          "sen_per_game": 0.3,
+          "dewards_per_game": 1.7
         },
         "death": {
-          "deaths_per_match": 4,
+          "deaths_per_match": 4.3,
           "deaths_per_min": 0.093,
           "kda_ratio": 3.61
         },
         "spending": {
-          "core_spike_min": 25.1,
-          "core_spike_n": 15,
+          "core_spike_min": 26.7,
+          "core_spike_n": 14,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.59
+          "kill_participation": 0.57
         }
       }
     },
@@ -214,52 +193,52 @@
       "detail_count": 15,
       "raw": {
         "role_dist": {
-          "pos1": 0,
-          "pos2": 0.067,
+          "pos1": 0.067,
+          "pos2": 0,
           "pos3": 0,
-          "pos4": 0.6,
-          "pos5": 0.333
+          "pos4": 0.067,
+          "pos5": 0.867
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.3,
-          "top3_concentration": 0.5,
+          "unique_hero_ratio": 0.34,
+          "top3_concentration": 0.46,
           "melee_carry": 0,
           "ranged_carry": 0,
           "caster_nuker": 0.42,
-          "initiator": 0.08,
-          "support": 0.5,
+          "initiator": 0.04,
+          "support": 0.54,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 40.3,
-          "pct_under_30min": 0.04,
-          "pct_over_45min": 0.3,
-          "kda_per_min": 0.53
+          "median_duration_min": 43.8,
+          "pct_under_30min": 0,
+          "pct_over_45min": 0.42,
+          "kda_per_min": 0.54
         },
         "farm": {
           "lh_per_min": 1.9,
-          "gpm": 335,
+          "gpm": 372,
           "lh_at_10": 8,
           "lane_efficiency_pct": 37
         },
         "vision": {
-          "obs_per_game": 8.6,
-          "sen_per_game": 14.3,
-          "dewards_per_game": 5.6
+          "obs_per_game": 7.7,
+          "sen_per_game": 18.3,
+          "dewards_per_game": 8.2
         },
         "death": {
-          "deaths_per_match": 6.4,
-          "deaths_per_min": 0.147,
-          "kda_ratio": 2.63
+          "deaths_per_match": 6.5,
+          "deaths_per_min": 0.141,
+          "kda_ratio": 2.78
         },
         "spending": {
           "core_spike_min": null,
-          "core_spike_n": 2,
-          "support_spike_min": 26.9,
+          "core_spike_n": 1,
+          "support_spike_min": 27.6,
           "support_spike_n": 10
         },
         "involvement": {
-          "kill_participation": 0.75
+          "kill_participation": 0.64
         }
       }
     },
@@ -332,52 +311,52 @@
       "detail_count": 15,
       "raw": {
         "role_dist": {
-          "pos1": 0.067,
-          "pos2": 0,
+          "pos1": 0,
+          "pos2": 0.067,
           "pos3": 0,
-          "pos4": 0.067,
-          "pos5": 0.867
+          "pos4": 0.133,
+          "pos5": 0.8
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.26,
-          "top3_concentration": 0.5,
+          "unique_hero_ratio": 0.22,
+          "top3_concentration": 0.58,
           "melee_carry": 0,
           "ranged_carry": 0,
-          "caster_nuker": 0.12,
+          "caster_nuker": 0.14,
           "initiator": 0.04,
-          "support": 0.84,
+          "support": 0.82,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 42.2,
-          "pct_under_30min": 0.02,
-          "pct_over_45min": 0.38,
-          "kda_per_min": 0.54
+          "median_duration_min": 44.7,
+          "pct_under_30min": 0,
+          "pct_over_45min": 0.48,
+          "kda_per_min": 0.57
         },
         "farm": {
-          "lh_per_min": 2.9,
-          "gpm": 377,
-          "lh_at_10": 10,
-          "lane_efficiency_pct": 37
+          "lh_per_min": 2.5,
+          "gpm": 396,
+          "lh_at_10": 11,
+          "lane_efficiency_pct": 39
         },
         "vision": {
-          "obs_per_game": 12.6,
-          "sen_per_game": 26.1,
-          "dewards_per_game": 10.5
+          "obs_per_game": 13.1,
+          "sen_per_game": 28,
+          "dewards_per_game": 9.2
         },
         "death": {
-          "deaths_per_match": 7,
-          "deaths_per_min": 0.16,
-          "kda_ratio": 2.39
+          "deaths_per_match": 7.2,
+          "deaths_per_min": 0.152,
+          "kda_ratio": 2.77
         },
         "spending": {
           "core_spike_min": null,
-          "core_spike_n": 1,
-          "support_spike_min": 26.3,
-          "support_spike_n": 10
+          "core_spike_n": 2,
+          "support_spike_min": 27.5,
+          "support_spike_n": 12
         },
         "involvement": {
-          "kill_participation": 0.62
+          "kill_participation": 0.58
         }
       }
     },
@@ -392,51 +371,51 @@
       "raw": {
         "role_dist": {
           "pos1": 0,
-          "pos2": 0.133,
+          "pos2": 0.067,
           "pos3": 0,
-          "pos4": 0.867,
+          "pos4": 0.933,
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.26,
-          "top3_concentration": 0.52,
+          "unique_hero_ratio": 0.24,
+          "top3_concentration": 0.6,
           "melee_carry": 0,
           "ranged_carry": 0,
-          "caster_nuker": 0.42,
-          "initiator": 0.22,
-          "support": 0.36,
+          "caster_nuker": 0.28,
+          "initiator": 0.32,
+          "support": 0.4,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 42.2,
-          "pct_under_30min": 0.02,
-          "pct_over_45min": 0.38,
-          "kda_per_min": 0.54
+          "median_duration_min": 44.7,
+          "pct_under_30min": 0,
+          "pct_over_45min": 0.48,
+          "kda_per_min": 0.58
         },
         "farm": {
-          "lh_per_min": 2.3,
-          "gpm": 356,
-          "lh_at_10": 10,
-          "lane_efficiency_pct": 38
+          "lh_per_min": 1.6,
+          "gpm": 349,
+          "lh_at_10": 9,
+          "lane_efficiency_pct": 36
         },
         "vision": {
-          "obs_per_game": 7.8,
-          "sen_per_game": 11.1,
-          "dewards_per_game": 3.7
+          "obs_per_game": 6.7,
+          "sen_per_game": 9.9,
+          "dewards_per_game": 3.3
         },
         "death": {
-          "deaths_per_match": 6.9,
-          "deaths_per_min": 0.156,
-          "kda_ratio": 2.48
+          "deaths_per_match": 7,
+          "deaths_per_min": 0.148,
+          "kda_ratio": 2.94
         },
         "spending": {
-          "core_spike_min": null,
-          "core_spike_n": 2,
-          "support_spike_min": 22.1,
-          "support_spike_n": 12
+          "core_spike_min": 28.3,
+          "core_spike_n": 4,
+          "support_spike_min": 21.6,
+          "support_spike_n": 8
         },
         "involvement": {
-          "kill_participation": 0.64
+          "kill_participation": 0.67
         }
       }
     },
@@ -457,45 +436,45 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.38,
-          "top3_concentration": 0.32,
-          "melee_carry": 0.38,
-          "ranged_carry": 0.12,
-          "caster_nuker": 0.18,
-          "initiator": 0.16,
-          "support": 0.08,
-          "durable_core": 0.08
+          "unique_hero_ratio": 0.32,
+          "top3_concentration": 0.46,
+          "melee_carry": 0.48,
+          "ranged_carry": 0.16,
+          "caster_nuker": 0.08,
+          "initiator": 0.22,
+          "support": 0.04,
+          "durable_core": 0.02
         },
         "tempo": {
-          "median_duration_min": 42.2,
-          "pct_under_30min": 0.02,
-          "pct_over_45min": 0.38,
-          "kda_per_min": 0.42
+          "median_duration_min": 44.7,
+          "pct_under_30min": 0,
+          "pct_over_45min": 0.48,
+          "kda_per_min": 0.45
         },
         "farm": {
-          "lh_per_min": 10.7,
-          "gpm": 692,
-          "lh_at_10": 68,
-          "lane_efficiency_pct": 78
+          "lh_per_min": 11.8,
+          "gpm": 788,
+          "lh_at_10": 70,
+          "lane_efficiency_pct": 85
         },
         "vision": {
-          "obs_per_game": 0.1,
-          "sen_per_game": 0.4,
+          "obs_per_game": 0,
+          "sen_per_game": 0,
           "dewards_per_game": 1.1
         },
         "death": {
-          "deaths_per_match": 3.5,
-          "deaths_per_min": 0.08,
-          "kda_ratio": 4.32
+          "deaths_per_match": 3.2,
+          "deaths_per_min": 0.067,
+          "kda_ratio": 5.63
         },
         "spending": {
-          "core_spike_min": 25.3,
+          "core_spike_min": 21.8,
           "core_spike_n": 15,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.52
+          "kill_participation": 0.58
         }
       }
     },
@@ -516,45 +495,45 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.3,
-          "top3_concentration": 0.5,
+          "unique_hero_ratio": 0.26,
+          "top3_concentration": 0.46,
           "melee_carry": 0.04,
-          "ranged_carry": 0.1,
-          "caster_nuker": 0.08,
-          "initiator": 0.16,
+          "ranged_carry": 0.08,
+          "caster_nuker": 0.02,
+          "initiator": 0.12,
           "support": 0.02,
-          "durable_core": 0.6
+          "durable_core": 0.72
         },
         "tempo": {
-          "median_duration_min": 43.3,
-          "pct_under_30min": 0.04,
-          "pct_over_45min": 0.4,
-          "kda_per_min": 0.48
+          "median_duration_min": 45.8,
+          "pct_under_30min": 0.02,
+          "pct_over_45min": 0.56,
+          "kda_per_min": 0.5
         },
         "farm": {
-          "lh_per_min": 9.3,
-          "gpm": 647,
-          "lh_at_10": 60,
+          "lh_per_min": 11,
+          "gpm": 775,
+          "lh_at_10": 58,
           "lane_efficiency_pct": 80
         },
         "vision": {
           "obs_per_game": 0,
           "sen_per_game": 0.1,
-          "dewards_per_game": 2.2
+          "dewards_per_game": 1.9
         },
         "death": {
-          "deaths_per_match": 4.2,
-          "deaths_per_min": 0.095,
-          "kda_ratio": 4.07
+          "deaths_per_match": 4.5,
+          "deaths_per_min": 0.093,
+          "kda_ratio": 4.33
         },
         "spending": {
-          "core_spike_min": 19.4,
+          "core_spike_min": 20.9,
           "core_spike_n": 15,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.66
+          "kill_participation": 0.64
         }
       }
     },
@@ -575,36 +554,36 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.36,
-          "top3_concentration": 0.42,
-          "melee_carry": 0.02,
-          "ranged_carry": 0.06,
-          "caster_nuker": 0.32,
-          "initiator": 0.56,
+          "unique_hero_ratio": 0.28,
+          "top3_concentration": 0.5,
+          "melee_carry": 0.06,
+          "ranged_carry": 0.02,
+          "caster_nuker": 0.3,
+          "initiator": 0.6,
           "support": 0,
-          "durable_core": 0.04
+          "durable_core": 0.02
         },
         "tempo": {
-          "median_duration_min": 41.3,
-          "pct_under_30min": 0.08,
-          "pct_over_45min": 0.36,
-          "kda_per_min": 0.54
+          "median_duration_min": 44.7,
+          "pct_under_30min": 0.02,
+          "pct_over_45min": 0.48,
+          "kda_per_min": 0.56
         },
         "farm": {
-          "lh_per_min": 8.6,
-          "gpm": 582,
-          "lh_at_10": 64,
-          "lane_efficiency_pct": 80
+          "lh_per_min": 9.1,
+          "gpm": 644,
+          "lh_at_10": 60,
+          "lane_efficiency_pct": 82
         },
         "vision": {
-          "obs_per_game": 1.5,
-          "sen_per_game": 1.5,
-          "dewards_per_game": 3.4
+          "obs_per_game": 1.6,
+          "sen_per_game": 0.8,
+          "dewards_per_game": 3.5
         },
         "death": {
-          "deaths_per_match": 4.8,
-          "deaths_per_min": 0.111,
-          "kda_ratio": 3.86
+          "deaths_per_match": 4.4,
+          "deaths_per_min": 0.093,
+          "kda_ratio": 5.09
         },
         "spending": {
           "core_spike_min": 20.4,
@@ -613,7 +592,7 @@
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.68
+          "kill_participation": 0.69
         }
       }
     },
@@ -627,52 +606,52 @@
       "detail_count": 15,
       "raw": {
         "role_dist": {
-          "pos1": 1,
-          "pos2": 0,
+          "pos1": 0.933,
+          "pos2": 0.067,
           "pos3": 0,
           "pos4": 0,
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.42,
-          "top3_concentration": 0.28,
-          "melee_carry": 0.46,
-          "ranged_carry": 0.22,
-          "caster_nuker": 0.1,
-          "initiator": 0.14,
+          "unique_hero_ratio": 0.44,
+          "top3_concentration": 0.32,
+          "melee_carry": 0.5,
+          "ranged_carry": 0.2,
+          "caster_nuker": 0.16,
+          "initiator": 0.08,
           "support": 0,
-          "durable_core": 0.08
+          "durable_core": 0.06
         },
         "tempo": {
-          "median_duration_min": 40.1,
+          "median_duration_min": 40.3,
           "pct_under_30min": 0.1,
-          "pct_over_45min": 0.3,
-          "kda_per_min": 0.5
+          "pct_over_45min": 0.32,
+          "kda_per_min": 0.47
         },
         "farm": {
-          "lh_per_min": 10.5,
-          "gpm": 651,
-          "lh_at_10": 59,
-          "lane_efficiency_pct": 76
+          "lh_per_min": 10.8,
+          "gpm": 689,
+          "lh_at_10": 67,
+          "lane_efficiency_pct": 85
         },
         "vision": {
           "obs_per_game": 0.1,
-          "sen_per_game": 0.1,
-          "dewards_per_game": 1.1
+          "sen_per_game": 0.3,
+          "dewards_per_game": 1.5
         },
         "death": {
-          "deaths_per_match": 4,
-          "deaths_per_min": 0.098,
-          "kda_ratio": 4.07
+          "deaths_per_match": 3.9,
+          "deaths_per_min": 0.093,
+          "kda_ratio": 4.03
         },
         "spending": {
-          "core_spike_min": 24.9,
-          "core_spike_n": 13,
+          "core_spike_min": 22.7,
+          "core_spike_n": 15,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.61
+          "kill_participation": 0.52
         }
       }
     },
@@ -694,44 +673,44 @@
         },
         "hero_archetype": {
           "unique_hero_ratio": 0.26,
-          "top3_concentration": 0.5,
-          "melee_carry": 0,
+          "top3_concentration": 0.58,
+          "melee_carry": 0.04,
           "ranged_carry": 0,
-          "caster_nuker": 0.16,
-          "initiator": 0.28,
+          "caster_nuker": 0.28,
+          "initiator": 0.18,
           "support": 0,
-          "durable_core": 0.56
+          "durable_core": 0.5
         },
         "tempo": {
-          "median_duration_min": 39.5,
-          "pct_under_30min": 0.16,
-          "pct_over_45min": 0.26,
-          "kda_per_min": 0.51
+          "median_duration_min": 41.6,
+          "pct_under_30min": 0.12,
+          "pct_over_45min": 0.36,
+          "kda_per_min": 0.48
         },
         "farm": {
-          "lh_per_min": 8.7,
-          "gpm": 578,
-          "lh_at_10": 60,
-          "lane_efficiency_pct": 73
+          "lh_per_min": 9.1,
+          "gpm": 609,
+          "lh_at_10": 54,
+          "lane_efficiency_pct": 72
         },
         "vision": {
-          "obs_per_game": 0.3,
-          "sen_per_game": 0.2,
+          "obs_per_game": 0.1,
+          "sen_per_game": 0.1,
           "dewards_per_game": 0.6
         },
         "death": {
-          "deaths_per_match": 4,
-          "deaths_per_min": 0.1,
-          "kda_ratio": 4.11
+          "deaths_per_match": 4.1,
+          "deaths_per_min": 0.092,
+          "kda_ratio": 4.18
         },
         "spending": {
-          "core_spike_min": 20.1,
-          "core_spike_n": 13,
+          "core_spike_min": 22.8,
+          "core_spike_n": 15,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.65
+          "kill_participation": 0.5
         }
       }
     },
@@ -753,44 +732,44 @@
         },
         "hero_archetype": {
           "unique_hero_ratio": 0.28,
-          "top3_concentration": 0.48,
+          "top3_concentration": 0.46,
           "melee_carry": 0,
           "ranged_carry": 0.02,
-          "caster_nuker": 0.52,
-          "initiator": 0.46,
+          "caster_nuker": 0.64,
+          "initiator": 0.34,
           "support": 0,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 39.5,
-          "pct_under_30min": 0.16,
-          "pct_over_45min": 0.26,
-          "kda_per_min": 0.58
+          "median_duration_min": 41.6,
+          "pct_under_30min": 0.12,
+          "pct_over_45min": 0.36,
+          "kda_per_min": 0.57
         },
         "farm": {
-          "lh_per_min": 8.9,
-          "gpm": 608,
-          "lh_at_10": 59,
-          "lane_efficiency_pct": 78
+          "lh_per_min": 9.7,
+          "gpm": 648,
+          "lh_at_10": 58,
+          "lane_efficiency_pct": 76
         },
         "vision": {
-          "obs_per_game": 1.4,
+          "obs_per_game": 1.8,
           "sen_per_game": 1.4,
-          "dewards_per_game": 2.3
+          "dewards_per_game": 3.7
         },
         "death": {
-          "deaths_per_match": 4.4,
-          "deaths_per_min": 0.11,
-          "kda_ratio": 4.26
+          "deaths_per_match": 5,
+          "deaths_per_min": 0.113,
+          "kda_ratio": 4.06
         },
         "spending": {
-          "core_spike_min": 19.9,
-          "core_spike_n": 14,
+          "core_spike_min": 20.2,
+          "core_spike_n": 13,
           "support_spike_min": null,
-          "support_spike_n": 0
+          "support_spike_n": 1
         },
         "involvement": {
-          "kill_participation": 0.67
+          "kill_participation": 0.71
         }
       }
     },
@@ -807,49 +786,49 @@
           "pos1": 0,
           "pos2": 0.067,
           "pos3": 0,
-          "pos4": 0.2,
-          "pos5": 0.733
+          "pos4": 0.267,
+          "pos5": 0.667
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.3,
-          "top3_concentration": 0.56,
+          "unique_hero_ratio": 0.28,
+          "top3_concentration": 0.54,
           "melee_carry": 0,
           "ranged_carry": 0,
-          "caster_nuker": 0.08,
-          "initiator": 0.02,
-          "support": 0.9,
+          "caster_nuker": 0.24,
+          "initiator": 0.06,
+          "support": 0.7,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 39.5,
-          "pct_under_30min": 0.16,
-          "pct_over_45min": 0.26,
-          "kda_per_min": 0.6
+          "median_duration_min": 41.6,
+          "pct_under_30min": 0.12,
+          "pct_over_45min": 0.36,
+          "kda_per_min": 0.61
         },
         "farm": {
-          "lh_per_min": 1.9,
-          "gpm": 333,
-          "lh_at_10": 9,
-          "lane_efficiency_pct": 34
+          "lh_per_min": 1.8,
+          "gpm": 361,
+          "lh_at_10": 7,
+          "lane_efficiency_pct": 42
         },
         "vision": {
-          "obs_per_game": 10.5,
-          "sen_per_game": 26.2,
-          "dewards_per_game": 8.2
+          "obs_per_game": 12.1,
+          "sen_per_game": 28.3,
+          "dewards_per_game": 8.5
         },
         "death": {
-          "deaths_per_match": 6.7,
-          "deaths_per_min": 0.165,
-          "kda_ratio": 2.64
+          "deaths_per_match": 7.4,
+          "deaths_per_min": 0.168,
+          "kda_ratio": 2.6
         },
         "spending": {
           "core_spike_min": null,
           "core_spike_n": 1,
-          "support_spike_min": 25.1,
-          "support_spike_n": 12
+          "support_spike_min": 29.2,
+          "support_spike_n": 11
         },
         "involvement": {
-          "kill_participation": 0.68
+          "kill_participation": 0.73
         }
       }
     },
@@ -863,52 +842,52 @@
       "detail_count": 15,
       "raw": {
         "role_dist": {
-          "pos1": 0.933,
+          "pos1": 1,
           "pos2": 0,
-          "pos3": 0.067,
+          "pos3": 0,
           "pos4": 0,
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.36,
-          "top3_concentration": 0.42,
-          "melee_carry": 0.22,
+          "unique_hero_ratio": 0.4,
+          "top3_concentration": 0.3,
+          "melee_carry": 0.32,
           "ranged_carry": 0.16,
-          "caster_nuker": 0.46,
-          "initiator": 0.06,
-          "support": 0.02,
-          "durable_core": 0.08
+          "caster_nuker": 0.34,
+          "initiator": 0.08,
+          "support": 0,
+          "durable_core": 0.1
         },
         "tempo": {
-          "median_duration_min": 39.3,
-          "pct_under_30min": 0.24,
-          "pct_over_45min": 0.28,
-          "kda_per_min": 0.58
+          "median_duration_min": 41.6,
+          "pct_under_30min": 0.14,
+          "pct_over_45min": 0.34,
+          "kda_per_min": 0.54
         },
         "farm": {
-          "lh_per_min": 11,
-          "gpm": 748,
-          "lh_at_10": 64,
-          "lane_efficiency_pct": 84
+          "lh_per_min": 11.4,
+          "gpm": 686,
+          "lh_at_10": 66,
+          "lane_efficiency_pct": 82
         },
         "vision": {
           "obs_per_game": 0.1,
-          "sen_per_game": 0.3,
-          "dewards_per_game": 1.7
+          "sen_per_game": 0.4,
+          "dewards_per_game": 1.1
         },
         "death": {
-          "deaths_per_match": 3.6,
-          "deaths_per_min": 0.089,
-          "kda_ratio": 5.53
+          "deaths_per_match": 4.7,
+          "deaths_per_min": 0.109,
+          "kda_ratio": 3.95
         },
         "spending": {
-          "core_spike_min": 21.7,
-          "core_spike_n": 14,
+          "core_spike_min": 23.9,
+          "core_spike_n": 15,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.65
+          "kill_participation": 0.58
         }
       }
     },
@@ -929,40 +908,40 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.34,
-          "top3_concentration": 0.38,
+          "unique_hero_ratio": 0.3,
+          "top3_concentration": 0.5,
           "melee_carry": 0.46,
-          "ranged_carry": 0.1,
-          "caster_nuker": 0.12,
-          "initiator": 0.24,
-          "support": 0.04,
-          "durable_core": 0.04
+          "ranged_carry": 0.08,
+          "caster_nuker": 0.18,
+          "initiator": 0.2,
+          "support": 0.02,
+          "durable_core": 0.06
         },
         "tempo": {
-          "median_duration_min": 38.8,
-          "pct_under_30min": 0.16,
+          "median_duration_min": 40.3,
+          "pct_under_30min": 0.08,
           "pct_over_45min": 0.36,
-          "kda_per_min": 0.49
+          "kda_per_min": 0.45
         },
         "farm": {
-          "lh_per_min": 11.2,
-          "gpm": 695,
-          "lh_at_10": 59,
+          "lh_per_min": 10.8,
+          "gpm": 693,
+          "lh_at_10": 60,
           "lane_efficiency_pct": 79
         },
         "vision": {
-          "obs_per_game": 0.3,
-          "sen_per_game": 0.2,
-          "dewards_per_game": 0.8
+          "obs_per_game": 0.2,
+          "sen_per_game": 0.1,
+          "dewards_per_game": 1
         },
         "death": {
-          "deaths_per_match": 2.9,
-          "deaths_per_min": 0.07,
-          "kda_ratio": 6.03
+          "deaths_per_match": 3.1,
+          "deaths_per_min": 0.072,
+          "kda_ratio": 5.22
         },
         "spending": {
-          "core_spike_min": 25.7,
-          "core_spike_n": 14,
+          "core_spike_min": 24.6,
+          "core_spike_n": 13,
           "support_spike_min": null,
           "support_spike_n": 0
         },
@@ -988,45 +967,281 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.28,
-          "top3_concentration": 0.44,
+          "unique_hero_ratio": 0.3,
+          "top3_concentration": 0.4,
           "melee_carry": 0,
           "ranged_carry": 0.02,
-          "caster_nuker": 0.14,
-          "initiator": 0.5,
+          "caster_nuker": 0.18,
+          "initiator": 0.44,
           "support": 0,
-          "durable_core": 0.34
+          "durable_core": 0.36
         },
         "tempo": {
-          "median_duration_min": 39.7,
-          "pct_under_30min": 0.14,
-          "pct_over_45min": 0.34,
+          "median_duration_min": 40.3,
+          "pct_under_30min": 0.08,
+          "pct_over_45min": 0.36,
           "kda_per_min": 0.52
         },
         "farm": {
-          "lh_per_min": 8,
-          "gpm": 548,
-          "lh_at_10": 56,
+          "lh_per_min": 8.5,
+          "gpm": 595,
+          "lh_at_10": 58,
           "lane_efficiency_pct": 77
         },
         "vision": {
-          "obs_per_game": 0.2,
-          "sen_per_game": 0.3,
-          "dewards_per_game": 1.2
+          "obs_per_game": 0,
+          "sen_per_game": 0.2,
+          "dewards_per_game": 0.8
         },
         "death": {
-          "deaths_per_match": 4.2,
-          "deaths_per_min": 0.101,
-          "kda_ratio": 4.16
+          "deaths_per_match": 5.1,
+          "deaths_per_min": 0.117,
+          "kda_ratio": 3.44
         },
         "spending": {
-          "core_spike_min": 21.8,
-          "core_spike_n": 15,
+          "core_spike_min": 19.6,
+          "core_spike_n": 13,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.72
+          "kill_participation": 0.66
+        }
+      }
+    },
+    {
+      "account_id": 256156323,
+      "name": "Mira",
+      "team": "Aurora Gaming",
+      "country": "UA",
+      "fantasy_role": 2,
+      "match_count": 50,
+      "detail_count": 15,
+      "raw": {
+        "role_dist": {
+          "pos1": 0,
+          "pos2": 0.067,
+          "pos3": 0,
+          "pos4": 0.933,
+          "pos5": 0
+        },
+        "hero_archetype": {
+          "unique_hero_ratio": 0.18,
+          "top3_concentration": 0.82,
+          "melee_carry": 0,
+          "ranged_carry": 0,
+          "caster_nuker": 0.42,
+          "initiator": 0.1,
+          "support": 0.48,
+          "durable_core": 0
+        },
+        "tempo": {
+          "median_duration_min": 40.3,
+          "pct_under_30min": 0.08,
+          "pct_over_45min": 0.36,
+          "kda_per_min": 0.61
+        },
+        "farm": {
+          "lh_per_min": 1.4,
+          "gpm": 311,
+          "lh_at_10": 8,
+          "lane_efficiency_pct": 36
+        },
+        "vision": {
+          "obs_per_game": 8.9,
+          "sen_per_game": 13.7,
+          "dewards_per_game": 5.1
+        },
+        "death": {
+          "deaths_per_match": 8.4,
+          "deaths_per_min": 0.194,
+          "kda_ratio": 2.17
+        },
+        "spending": {
+          "core_spike_min": null,
+          "core_spike_n": 1,
+          "support_spike_min": 26.9,
+          "support_spike_n": 9
+        },
+        "involvement": {
+          "kill_participation": 0.66
+        }
+      }
+    },
+    {
+      "account_id": 320219866,
+      "name": "kaori",
+      "team": "Aurora Gaming",
+      "country": "UA",
+      "fantasy_role": 2,
+      "match_count": 50,
+      "detail_count": 15,
+      "raw": {
+        "role_dist": {
+          "pos1": 0,
+          "pos2": 0,
+          "pos3": 0,
+          "pos4": 0.267,
+          "pos5": 0.733
+        },
+        "hero_archetype": {
+          "unique_hero_ratio": 0.14,
+          "top3_concentration": 0.66,
+          "melee_carry": 0,
+          "ranged_carry": 0,
+          "caster_nuker": 0.14,
+          "initiator": 0,
+          "support": 0.86,
+          "durable_core": 0
+        },
+        "tempo": {
+          "median_duration_min": 40.3,
+          "pct_under_30min": 0.08,
+          "pct_over_45min": 0.36,
+          "kda_per_min": 0.57
+        },
+        "farm": {
+          "lh_per_min": 2.5,
+          "gpm": 352,
+          "lh_at_10": 9,
+          "lane_efficiency_pct": 37
+        },
+        "vision": {
+          "obs_per_game": 9.5,
+          "sen_per_game": 23.1,
+          "dewards_per_game": 6.7
+        },
+        "death": {
+          "deaths_per_match": 7.9,
+          "deaths_per_min": 0.181,
+          "kda_ratio": 2.15
+        },
+        "spending": {
+          "core_spike_min": null,
+          "core_spike_n": 1,
+          "support_spike_min": 25.8,
+          "support_spike_n": 10
+        },
+        "involvement": {
+          "kill_participation": 0.69
+        }
+      }
+    },
+    {
+      "account_id": 154715080,
+      "name": "Abed",
+      "team": "Aurora Gaming",
+      "country": "PH",
+      "fantasy_role": 4,
+      "match_count": 50,
+      "detail_count": 15,
+      "raw": {
+        "role_dist": {
+          "pos1": 0,
+          "pos2": 1,
+          "pos3": 0,
+          "pos4": 0,
+          "pos5": 0
+        },
+        "hero_archetype": {
+          "unique_hero_ratio": 0.2,
+          "top3_concentration": 0.58,
+          "melee_carry": 0,
+          "ranged_carry": 0,
+          "caster_nuker": 0.76,
+          "initiator": 0.22,
+          "support": 0,
+          "durable_core": 0.02
+        },
+        "tempo": {
+          "median_duration_min": 40.2,
+          "pct_under_30min": 0.08,
+          "pct_over_45min": 0.24,
+          "kda_per_min": 0.5
+        },
+        "farm": {
+          "lh_per_min": 7.2,
+          "gpm": 534,
+          "lh_at_10": 52,
+          "lane_efficiency_pct": 77
+        },
+        "vision": {
+          "obs_per_game": 2.5,
+          "sen_per_game": 1.9,
+          "dewards_per_game": 2.1
+        },
+        "death": {
+          "deaths_per_match": 3.8,
+          "deaths_per_min": 0.091,
+          "kda_ratio": 4.49
+        },
+        "spending": {
+          "core_spike_min": 24.5,
+          "core_spike_n": 12,
+          "support_spike_min": null,
+          "support_spike_n": 0
+        },
+        "involvement": {
+          "kill_participation": 0.7
+        }
+      }
+    },
+    {
+      "account_id": 73401082,
+      "name": "Dukalis",
+      "team": "PARIVISION",
+      "country": "RU",
+      "fantasy_role": 2,
+      "match_count": 50,
+      "detail_count": 15,
+      "raw": {
+        "role_dist": {
+          "pos1": 0,
+          "pos2": 0.133,
+          "pos3": 0,
+          "pos4": 0.133,
+          "pos5": 0.733
+        },
+        "hero_archetype": {
+          "unique_hero_ratio": 0.28,
+          "top3_concentration": 0.52,
+          "melee_carry": 0,
+          "ranged_carry": 0,
+          "caster_nuker": 0.2,
+          "initiator": 0.12,
+          "support": 0.68,
+          "durable_core": 0
+        },
+        "tempo": {
+          "median_duration_min": 39.3,
+          "pct_under_30min": 0.18,
+          "pct_over_45min": 0.3,
+          "kda_per_min": 0.62
+        },
+        "farm": {
+          "lh_per_min": 1.3,
+          "gpm": 333,
+          "lh_at_10": 7,
+          "lane_efficiency_pct": 33
+        },
+        "vision": {
+          "obs_per_game": 12.6,
+          "sen_per_game": 22.5,
+          "dewards_per_game": 7.3
+        },
+        "death": {
+          "deaths_per_match": 6.5,
+          "deaths_per_min": 0.161,
+          "kda_ratio": 2.84
+        },
+        "spending": {
+          "core_spike_min": null,
+          "core_spike_n": 1,
+          "support_spike_min": 22.1,
+          "support_spike_n": 6
+        },
+        "involvement": {
+          "kill_participation": 0.6
         }
       }
     },
@@ -1047,45 +1262,45 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.34,
-          "top3_concentration": 0.42,
-          "melee_carry": 0.02,
+          "unique_hero_ratio": 0.26,
+          "top3_concentration": 0.44,
+          "melee_carry": 0,
           "ranged_carry": 0.06,
-          "caster_nuker": 0.64,
-          "initiator": 0.24,
+          "caster_nuker": 0.74,
+          "initiator": 0.18,
           "support": 0,
-          "durable_core": 0.04
+          "durable_core": 0.02
         },
         "tempo": {
-          "median_duration_min": 38.6,
-          "pct_under_30min": 0.24,
-          "pct_over_45min": 0.28,
-          "kda_per_min": 0.59
+          "median_duration_min": 39.3,
+          "pct_under_30min": 0.18,
+          "pct_over_45min": 0.3,
+          "kda_per_min": 0.57
         },
         "farm": {
-          "lh_per_min": 8.6,
-          "gpm": 582,
-          "lh_at_10": 61,
-          "lane_efficiency_pct": 79
+          "lh_per_min": 8.3,
+          "gpm": 593,
+          "lh_at_10": 56,
+          "lane_efficiency_pct": 75
         },
         "vision": {
-          "obs_per_game": 0.7,
+          "obs_per_game": 0.9,
           "sen_per_game": 0.5,
-          "dewards_per_game": 1.2
+          "dewards_per_game": 1.5
         },
         "death": {
-          "deaths_per_match": 2.8,
-          "deaths_per_min": 0.073,
-          "kda_ratio": 7.16
+          "deaths_per_match": 3.2,
+          "deaths_per_min": 0.08,
+          "kda_ratio": 6.18
         },
         "spending": {
-          "core_spike_min": 18.9,
-          "core_spike_n": 15,
+          "core_spike_min": 21.6,
+          "core_spike_n": 14,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.74
+          "kill_participation": 0.64
         }
       }
     },
@@ -1099,52 +1314,52 @@
       "detail_count": 15,
       "raw": {
         "role_dist": {
-          "pos1": 0,
-          "pos2": 0.067,
-          "pos3": 0.267,
-          "pos4": 0.667,
+          "pos1": 0.067,
+          "pos2": 0.133,
+          "pos3": 0,
+          "pos4": 0.8,
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.36,
+          "unique_hero_ratio": 0.22,
           "top3_concentration": 0.56,
-          "melee_carry": 0.06,
-          "ranged_carry": 0.02,
-          "caster_nuker": 0.22,
-          "initiator": 0.12,
-          "support": 0.58,
+          "melee_carry": 0.1,
+          "ranged_carry": 0.06,
+          "caster_nuker": 0.08,
+          "initiator": 0.2,
+          "support": 0.56,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 38.6,
-          "pct_under_30min": 0.24,
-          "pct_over_45min": 0.28,
-          "kda_per_min": 0.61
+          "median_duration_min": 39.3,
+          "pct_under_30min": 0.18,
+          "pct_over_45min": 0.3,
+          "kda_per_min": 0.56
         },
         "farm": {
-          "lh_per_min": 2.9,
-          "gpm": 349,
-          "lh_at_10": 15,
-          "lane_efficiency_pct": 41
+          "lh_per_min": 3,
+          "gpm": 382,
+          "lh_at_10": 14,
+          "lane_efficiency_pct": 40
         },
         "vision": {
-          "obs_per_game": 5.3,
-          "sen_per_game": 12.6,
-          "dewards_per_game": 5.9
+          "obs_per_game": 4.7,
+          "sen_per_game": 10.6,
+          "dewards_per_game": 6.4
         },
         "death": {
-          "deaths_per_match": 5.6,
-          "deaths_per_min": 0.145,
-          "kda_ratio": 3.23
+          "deaths_per_match": 5.7,
+          "deaths_per_min": 0.142,
+          "kda_ratio": 2.96
         },
         "spending": {
-          "core_spike_min": 35.1,
-          "core_spike_n": 3,
-          "support_spike_min": 23.8,
-          "support_spike_n": 9
+          "core_spike_min": null,
+          "core_spike_n": 2,
+          "support_spike_min": 20.9,
+          "support_spike_n": 5
         },
         "involvement": {
-          "kill_participation": 0.61
+          "kill_participation": 0.55
         }
       }
     },
@@ -1217,52 +1432,52 @@
       "detail_count": 15,
       "raw": {
         "role_dist": {
-          "pos1": 1,
-          "pos2": 0,
+          "pos1": 0.933,
+          "pos2": 0.067,
           "pos3": 0,
           "pos4": 0,
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.38,
-          "top3_concentration": 0.38,
-          "melee_carry": 0.5,
-          "ranged_carry": 0.3,
-          "caster_nuker": 0.2,
-          "initiator": 0,
+          "unique_hero_ratio": 0.4,
+          "top3_concentration": 0.46,
+          "melee_carry": 0.38,
+          "ranged_carry": 0.08,
+          "caster_nuker": 0.36,
+          "initiator": 0.18,
           "support": 0,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 38.6,
-          "pct_under_30min": 0.24,
+          "median_duration_min": 38.9,
+          "pct_under_30min": 0.2,
           "pct_over_45min": 0.28,
-          "kda_per_min": 0.49
+          "kda_per_min": 0.51
         },
         "farm": {
-          "lh_per_min": 13.4,
-          "gpm": 772,
-          "lh_at_10": 68,
-          "lane_efficiency_pct": 79
+          "lh_per_min": 11.6,
+          "gpm": 743,
+          "lh_at_10": 70,
+          "lane_efficiency_pct": 83
         },
         "vision": {
-          "obs_per_game": 0.1,
-          "sen_per_game": 0,
-          "dewards_per_game": 1.6
+          "obs_per_game": 0.4,
+          "sen_per_game": 0.2,
+          "dewards_per_game": 1.7
         },
         "death": {
-          "deaths_per_match": 2.7,
-          "deaths_per_min": 0.07,
-          "kda_ratio": 6.05
+          "deaths_per_match": 2.9,
+          "deaths_per_min": 0.074,
+          "kda_ratio": 5.79
         },
         "spending": {
-          "core_spike_min": 21.7,
-          "core_spike_n": 15,
+          "core_spike_min": 23.6,
+          "core_spike_n": 13,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.52
+          "kill_participation": 0.56
         }
       }
     },
@@ -1283,45 +1498,45 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.38,
-          "top3_concentration": 0.38,
-          "melee_carry": 0.02,
+          "unique_hero_ratio": 0.42,
+          "top3_concentration": 0.4,
+          "melee_carry": 0.04,
           "ranged_carry": 0,
-          "caster_nuker": 0.04,
-          "initiator": 0.32,
-          "support": 0.06,
-          "durable_core": 0.56
+          "caster_nuker": 0.06,
+          "initiator": 0.38,
+          "support": 0.04,
+          "durable_core": 0.48
         },
         "tempo": {
-          "median_duration_min": 41.9,
-          "pct_under_30min": 0.08,
-          "pct_over_45min": 0.38,
+          "median_duration_min": 41,
+          "pct_under_30min": 0.04,
+          "pct_over_45min": 0.36,
           "kda_per_min": 0.52
         },
         "farm": {
-          "lh_per_min": 8.7,
-          "gpm": 617,
-          "lh_at_10": 62,
-          "lane_efficiency_pct": 76
+          "lh_per_min": 8.5,
+          "gpm": 585,
+          "lh_at_10": 64,
+          "lane_efficiency_pct": 78
         },
         "vision": {
-          "obs_per_game": 0.1,
-          "sen_per_game": 0.2,
-          "dewards_per_game": 1.5
+          "obs_per_game": 0.2,
+          "sen_per_game": 0.1,
+          "dewards_per_game": 0.9
         },
         "death": {
-          "deaths_per_match": 3.4,
-          "deaths_per_min": 0.078,
-          "kda_ratio": 5.63
+          "deaths_per_match": 3.2,
+          "deaths_per_min": 0.072,
+          "kda_ratio": 6.22
         },
         "spending": {
-          "core_spike_min": 22.3,
+          "core_spike_min": 22.6,
           "core_spike_n": 15,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.64
+          "kill_participation": 0.66
         }
       }
     },
@@ -1342,45 +1557,45 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.36,
-          "top3_concentration": 0.38,
-          "melee_carry": 0.54,
-          "ranged_carry": 0.14,
-          "caster_nuker": 0.28,
-          "initiator": 0.04,
+          "unique_hero_ratio": 0.26,
+          "top3_concentration": 0.48,
+          "melee_carry": 0.5,
+          "ranged_carry": 0.04,
+          "caster_nuker": 0.36,
+          "initiator": 0.08,
           "support": 0,
-          "durable_core": 0
+          "durable_core": 0.02
         },
         "tempo": {
-          "median_duration_min": 41.9,
-          "pct_under_30min": 0.08,
-          "pct_over_45min": 0.38,
+          "median_duration_min": 41,
+          "pct_under_30min": 0.04,
+          "pct_over_45min": 0.36,
           "kda_per_min": 0.51
         },
         "farm": {
-          "lh_per_min": 10.6,
-          "gpm": 754,
-          "lh_at_10": 67,
-          "lane_efficiency_pct": 80
+          "lh_per_min": 10.9,
+          "gpm": 704,
+          "lh_at_10": 69,
+          "lane_efficiency_pct": 81
         },
         "vision": {
           "obs_per_game": 0,
-          "sen_per_game": 0.5,
-          "dewards_per_game": 2
+          "sen_per_game": 0.2,
+          "dewards_per_game": 1.6
         },
         "death": {
-          "deaths_per_match": 3,
-          "deaths_per_min": 0.069,
-          "kda_ratio": 6.42
+          "deaths_per_match": 3.2,
+          "deaths_per_min": 0.072,
+          "kda_ratio": 6.06
         },
         "spending": {
-          "core_spike_min": 23.6,
+          "core_spike_min": 23,
           "core_spike_n": 15,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.62
+          "kill_participation": 0.53
         }
       }
     },
@@ -1401,8 +1616,8 @@
           "pos5": 0.867
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.24,
-          "top3_concentration": 0.44,
+          "unique_hero_ratio": 0.2,
+          "top3_concentration": 0.56,
           "melee_carry": 0,
           "ranged_carry": 0,
           "caster_nuker": 0,
@@ -1411,35 +1626,35 @@
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 41.9,
-          "pct_under_30min": 0.08,
-          "pct_over_45min": 0.38,
+          "median_duration_min": 41,
+          "pct_under_30min": 0.04,
+          "pct_over_45min": 0.36,
           "kda_per_min": 0.57
         },
         "farm": {
-          "lh_per_min": 1.1,
-          "gpm": 344,
-          "lh_at_10": 6,
-          "lane_efficiency_pct": 35
+          "lh_per_min": 1.3,
+          "gpm": 337,
+          "lh_at_10": 10,
+          "lane_efficiency_pct": 38
         },
         "vision": {
-          "obs_per_game": 13.7,
-          "sen_per_game": 24.2,
-          "dewards_per_game": 8.8
+          "obs_per_game": 14.3,
+          "sen_per_game": 24.5,
+          "dewards_per_game": 11.3
         },
         "death": {
-          "deaths_per_match": 6.5,
-          "deaths_per_min": 0.149,
-          "kda_ratio": 2.84
+          "deaths_per_match": 6.4,
+          "deaths_per_min": 0.145,
+          "kda_ratio": 2.96
         },
         "spending": {
           "core_spike_min": null,
-          "core_spike_n": 2,
-          "support_spike_min": 22.6,
-          "support_spike_n": 10
+          "core_spike_n": 1,
+          "support_spike_min": 23.1,
+          "support_spike_n": 12
         },
         "involvement": {
-          "kill_participation": 0.65
+          "kill_participation": 0.62
         }
       }
     },
@@ -1454,51 +1669,51 @@
       "raw": {
         "role_dist": {
           "pos1": 0,
-          "pos2": 0.133,
+          "pos2": 0.067,
           "pos3": 0,
-          "pos4": 0.867,
+          "pos4": 0.933,
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.24,
-          "top3_concentration": 0.48,
+          "unique_hero_ratio": 0.2,
+          "top3_concentration": 0.68,
           "melee_carry": 0,
           "ranged_carry": 0,
-          "caster_nuker": 0.48,
-          "initiator": 0.02,
+          "caster_nuker": 0.5,
+          "initiator": 0,
           "support": 0.5,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 41.9,
-          "pct_under_30min": 0.08,
-          "pct_over_45min": 0.38,
+          "median_duration_min": 41,
+          "pct_under_30min": 0.04,
+          "pct_over_45min": 0.36,
           "kda_per_min": 0.61
         },
         "farm": {
-          "lh_per_min": 2,
-          "gpm": 366,
+          "lh_per_min": 2.3,
+          "gpm": 374,
           "lh_at_10": 8,
-          "lane_efficiency_pct": 42
+          "lane_efficiency_pct": 40
         },
         "vision": {
-          "obs_per_game": 5.9,
-          "sen_per_game": 13.3,
-          "dewards_per_game": 6.7
+          "obs_per_game": 5.4,
+          "sen_per_game": 13.6,
+          "dewards_per_game": 4.6
         },
         "death": {
-          "deaths_per_match": 4.6,
-          "deaths_per_min": 0.106,
-          "kda_ratio": 4.78
+          "deaths_per_match": 4.5,
+          "deaths_per_min": 0.101,
+          "kda_ratio": 4.99
         },
         "spending": {
-          "core_spike_min": 39.7,
-          "core_spike_n": 3,
-          "support_spike_min": 23.9,
-          "support_spike_n": 8
+          "core_spike_min": 32.8,
+          "core_spike_n": 4,
+          "support_spike_min": 21.9,
+          "support_spike_n": 9
         },
         "involvement": {
-          "kill_participation": 0.74
+          "kill_participation": 0.77
         }
       }
     },
@@ -1519,45 +1734,45 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.28,
-          "top3_concentration": 0.44,
-          "melee_carry": 0.02,
+          "unique_hero_ratio": 0.26,
+          "top3_concentration": 0.46,
+          "melee_carry": 0.04,
           "ranged_carry": 0.04,
-          "caster_nuker": 0.66,
-          "initiator": 0.22,
+          "caster_nuker": 0.56,
+          "initiator": 0.34,
           "support": 0,
-          "durable_core": 0.06
+          "durable_core": 0.02
         },
         "tempo": {
-          "median_duration_min": 41.9,
-          "pct_under_30min": 0.08,
-          "pct_over_45min": 0.38,
-          "kda_per_min": 0.56
+          "median_duration_min": 41,
+          "pct_under_30min": 0.04,
+          "pct_over_45min": 0.36,
+          "kda_per_min": 0.58
         },
         "farm": {
           "lh_per_min": 9.5,
-          "gpm": 650,
-          "lh_at_10": 67,
-          "lane_efficiency_pct": 82
+          "gpm": 642,
+          "lh_at_10": 62,
+          "lane_efficiency_pct": 83
         },
         "vision": {
-          "obs_per_game": 1.5,
-          "sen_per_game": 1,
-          "dewards_per_game": 3.9
+          "obs_per_game": 1.7,
+          "sen_per_game": 1.2,
+          "dewards_per_game": 2.1
         },
         "death": {
-          "deaths_per_match": 3.2,
-          "deaths_per_min": 0.073,
-          "kda_ratio": 6.74
+          "deaths_per_match": 2.8,
+          "deaths_per_min": 0.063,
+          "kda_ratio": 8.17
         },
         "spending": {
-          "core_spike_min": 20.2,
-          "core_spike_n": 15,
-          "support_spike_min": null,
-          "support_spike_n": 0
+          "core_spike_min": 17.9,
+          "core_spike_n": 9,
+          "support_spike_min": 15.1,
+          "support_spike_n": 6
         },
         "involvement": {
-          "kill_participation": 0.7
+          "kill_participation": 0.75
         }
       }
     },
@@ -1572,51 +1787,51 @@
       "raw": {
         "role_dist": {
           "pos1": 0,
-          "pos2": 0,
+          "pos2": 0.067,
           "pos3": 0,
-          "pos4": 0.133,
-          "pos5": 0.867
+          "pos4": 0.2,
+          "pos5": 0.733
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.38,
+          "unique_hero_ratio": 0.4,
           "top3_concentration": 0.4,
           "melee_carry": 0,
           "ranged_carry": 0,
-          "caster_nuker": 0.24,
-          "initiator": 0.1,
-          "support": 0.66,
+          "caster_nuker": 0.16,
+          "initiator": 0.2,
+          "support": 0.64,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 41,
-          "pct_under_30min": 0.08,
-          "pct_over_45min": 0.38,
-          "kda_per_min": 0.58
+          "median_duration_min": 39.6,
+          "pct_under_30min": 0.1,
+          "pct_over_45min": 0.34,
+          "kda_per_min": 0.62
         },
         "farm": {
-          "lh_per_min": 2,
-          "gpm": 360,
-          "lh_at_10": 12,
-          "lane_efficiency_pct": 40
+          "lh_per_min": 1.6,
+          "gpm": 329,
+          "lh_at_10": 5,
+          "lane_efficiency_pct": 35
         },
         "vision": {
-          "obs_per_game": 10.7,
-          "sen_per_game": 22.6,
-          "dewards_per_game": 7.4
+          "obs_per_game": 10.1,
+          "sen_per_game": 20.6,
+          "dewards_per_game": 7.1
         },
         "death": {
-          "deaths_per_match": 5.8,
-          "deaths_per_min": 0.13,
-          "kda_ratio": 3.43
+          "deaths_per_match": 6,
+          "deaths_per_min": 0.141,
+          "kda_ratio": 3.35
         },
         "spending": {
           "core_spike_min": null,
-          "core_spike_n": 2,
-          "support_spike_min": 24.5,
-          "support_spike_n": 8
+          "core_spike_n": 0,
+          "support_spike_min": 20.1,
+          "support_spike_n": 9
         },
         "involvement": {
-          "kill_participation": 0.71
+          "kill_participation": 0.64
         }
       }
     },
@@ -1631,51 +1846,51 @@
       "raw": {
         "role_dist": {
           "pos1": 0,
-          "pos2": 0,
-          "pos3": 1,
+          "pos2": 0.067,
+          "pos3": 0.933,
           "pos4": 0,
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.32,
+          "unique_hero_ratio": 0.3,
           "top3_concentration": 0.46,
           "melee_carry": 0.04,
           "ranged_carry": 0,
-          "caster_nuker": 0.02,
-          "initiator": 0.46,
+          "caster_nuker": 0.04,
+          "initiator": 0.32,
           "support": 0.02,
-          "durable_core": 0.46
+          "durable_core": 0.58
         },
         "tempo": {
-          "median_duration_min": 41,
-          "pct_under_30min": 0.08,
-          "pct_over_45min": 0.38,
-          "kda_per_min": 0.51
+          "median_duration_min": 39.6,
+          "pct_under_30min": 0.1,
+          "pct_over_45min": 0.34,
+          "kda_per_min": 0.53
         },
         "farm": {
-          "lh_per_min": 8.8,
-          "gpm": 593,
-          "lh_at_10": 59,
-          "lane_efficiency_pct": 76
+          "lh_per_min": 7.7,
+          "gpm": 563,
+          "lh_at_10": 52,
+          "lane_efficiency_pct": 70
         },
         "vision": {
-          "obs_per_game": 0.2,
+          "obs_per_game": 0,
           "sen_per_game": 0.1,
-          "dewards_per_game": 1
+          "dewards_per_game": 0.5
         },
         "death": {
-          "deaths_per_match": 4.7,
-          "deaths_per_min": 0.106,
-          "kda_ratio": 3.76
+          "deaths_per_match": 4,
+          "deaths_per_min": 0.096,
+          "kda_ratio": 4.51
         },
         "spending": {
-          "core_spike_min": 17.6,
-          "core_spike_n": 15,
+          "core_spike_min": 22.4,
+          "core_spike_n": 13,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.63
+          "kill_participation": 0.6
         }
       }
     },
@@ -1689,52 +1904,52 @@
       "detail_count": 15,
       "raw": {
         "role_dist": {
-          "pos1": 1,
-          "pos2": 0,
+          "pos1": 0.933,
+          "pos2": 0.067,
           "pos3": 0,
           "pos4": 0,
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.36,
-          "top3_concentration": 0.48,
-          "melee_carry": 0.2,
+          "unique_hero_ratio": 0.32,
+          "top3_concentration": 0.5,
+          "melee_carry": 0.16,
           "ranged_carry": 0.1,
           "caster_nuker": 0.48,
-          "initiator": 0.2,
+          "initiator": 0.22,
           "support": 0,
-          "durable_core": 0.02
+          "durable_core": 0.04
         },
         "tempo": {
-          "median_duration_min": 41,
-          "pct_under_30min": 0.08,
-          "pct_over_45min": 0.38,
-          "kda_per_min": 0.5
+          "median_duration_min": 39.6,
+          "pct_under_30min": 0.1,
+          "pct_over_45min": 0.34,
+          "kda_per_min": 0.52
         },
         "farm": {
-          "lh_per_min": 11.9,
-          "gpm": 744,
-          "lh_at_10": 69,
-          "lane_efficiency_pct": 83
+          "lh_per_min": 10.4,
+          "gpm": 672,
+          "lh_at_10": 65,
+          "lane_efficiency_pct": 79
         },
         "vision": {
           "obs_per_game": 0.1,
-          "sen_per_game": 0.2,
-          "dewards_per_game": 1.7
+          "sen_per_game": 0.1,
+          "dewards_per_game": 1.1
         },
         "death": {
-          "deaths_per_match": 3.8,
+          "deaths_per_match": 3.6,
           "deaths_per_min": 0.086,
-          "kda_ratio": 4.82
+          "kda_ratio": 5.09
         },
         "spending": {
-          "core_spike_min": 23.6,
-          "core_spike_n": 15,
+          "core_spike_min": 25.6,
+          "core_spike_n": 12,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.65
+          "kill_participation": 0.6
         }
       }
     },
@@ -1755,45 +1970,45 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.42,
-          "top3_concentration": 0.38,
-          "melee_carry": 0.02,
-          "ranged_carry": 0.06,
-          "caster_nuker": 0.66,
-          "initiator": 0.2,
-          "support": 0.02,
-          "durable_core": 0.04
+          "unique_hero_ratio": 0.3,
+          "top3_concentration": 0.44,
+          "melee_carry": 0,
+          "ranged_carry": 0.04,
+          "caster_nuker": 0.72,
+          "initiator": 0.22,
+          "support": 0,
+          "durable_core": 0.02
         },
         "tempo": {
           "median_duration_min": 39.6,
-          "pct_under_30min": 0.12,
-          "pct_over_45min": 0.3,
-          "kda_per_min": 0.68
+          "pct_under_30min": 0.1,
+          "pct_over_45min": 0.32,
+          "kda_per_min": 0.62
         },
         "farm": {
-          "lh_per_min": 10.6,
-          "gpm": 702,
-          "lh_at_10": 66,
-          "lane_efficiency_pct": 80
+          "lh_per_min": 8.5,
+          "gpm": 601,
+          "lh_at_10": 60,
+          "lane_efficiency_pct": 78
         },
         "vision": {
-          "obs_per_game": 1.3,
-          "sen_per_game": 1.4,
-          "dewards_per_game": 2.6
+          "obs_per_game": 1.6,
+          "sen_per_game": 1.8,
+          "dewards_per_game": 2.9
         },
         "death": {
-          "deaths_per_match": 4.3,
-          "deaths_per_min": 0.106,
-          "kda_ratio": 5.4
+          "deaths_per_match": 3.8,
+          "deaths_per_min": 0.091,
+          "kda_ratio": 5.85
         },
         "spending": {
-          "core_spike_min": 20,
-          "core_spike_n": 14,
+          "core_spike_min": 21,
+          "core_spike_n": 13,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.71
+          "kill_participation": 0.68
         }
       }
     },
@@ -1809,50 +2024,50 @@
         "role_dist": {
           "pos1": 0,
           "pos2": 0.067,
-          "pos3": 0,
-          "pos4": 0.733,
-          "pos5": 0.2
+          "pos3": 0.067,
+          "pos4": 0.867,
+          "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.28,
-          "top3_concentration": 0.44,
+          "unique_hero_ratio": 0.34,
+          "top3_concentration": 0.34,
           "melee_carry": 0,
-          "ranged_carry": 0,
-          "caster_nuker": 0.14,
-          "initiator": 0.7,
-          "support": 0.14,
+          "ranged_carry": 0.02,
+          "caster_nuker": 0.28,
+          "initiator": 0.44,
+          "support": 0.24,
           "durable_core": 0.02
         },
         "tempo": {
-          "median_duration_min": 38,
-          "pct_under_30min": 0.16,
-          "pct_over_45min": 0.3,
-          "kda_per_min": 0.6
+          "median_duration_min": 39.6,
+          "pct_under_30min": 0.08,
+          "pct_over_45min": 0.34,
+          "kda_per_min": 0.58
         },
         "farm": {
-          "lh_per_min": 1.9,
-          "gpm": 320,
-          "lh_at_10": 7,
-          "lane_efficiency_pct": 34
+          "lh_per_min": 2.7,
+          "gpm": 341,
+          "lh_at_10": 8,
+          "lane_efficiency_pct": 38
         },
         "vision": {
-          "obs_per_game": 12.5,
-          "sen_per_game": 19.6,
-          "dewards_per_game": 7.1
+          "obs_per_game": 6.4,
+          "sen_per_game": 10.7,
+          "dewards_per_game": 3.8
         },
         "death": {
-          "deaths_per_match": 6.8,
-          "deaths_per_min": 0.161,
-          "kda_ratio": 2.71
+          "deaths_per_match": 6.4,
+          "deaths_per_min": 0.146,
+          "kda_ratio": 2.96
         },
         "spending": {
-          "core_spike_min": 41.1,
-          "core_spike_n": 5,
-          "support_spike_min": null,
-          "support_spike_n": 2
+          "core_spike_min": null,
+          "core_spike_n": 0,
+          "support_spike_min": 25,
+          "support_spike_n": 11
         },
         "involvement": {
-          "kill_participation": 0.72
+          "kill_participation": 0.64
         }
       }
     },
@@ -1874,39 +2089,39 @@
         },
         "hero_archetype": {
           "unique_hero_ratio": 0.18,
-          "top3_concentration": 0.62,
+          "top3_concentration": 0.6,
           "melee_carry": 0.04,
           "ranged_carry": 0,
-          "caster_nuker": 0.9,
-          "initiator": 0.06,
+          "caster_nuker": 0.84,
+          "initiator": 0.12,
           "support": 0,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 39.7,
-          "pct_under_30min": 0.14,
-          "pct_over_45min": 0.34,
-          "kda_per_min": 0.52
+          "median_duration_min": 40.3,
+          "pct_under_30min": 0.08,
+          "pct_over_45min": 0.36,
+          "kda_per_min": 0.48
         },
         "farm": {
-          "lh_per_min": 9.6,
-          "gpm": 617,
-          "lh_at_10": 63,
-          "lane_efficiency_pct": 80
+          "lh_per_min": 9.1,
+          "gpm": 603,
+          "lh_at_10": 59,
+          "lane_efficiency_pct": 82
         },
         "vision": {
-          "obs_per_game": 1.8,
-          "sen_per_game": 0.7,
-          "dewards_per_game": 1.5
+          "obs_per_game": 1.6,
+          "sen_per_game": 1,
+          "dewards_per_game": 1.9
         },
         "death": {
-          "deaths_per_match": 2.5,
-          "deaths_per_min": 0.061,
-          "kda_ratio": 7.52
+          "deaths_per_match": 3.2,
+          "deaths_per_min": 0.073,
+          "kda_ratio": 5.6
         },
         "spending": {
-          "core_spike_min": 23,
-          "core_spike_n": 15,
+          "core_spike_min": 21.5,
+          "core_spike_n": 13,
           "support_spike_min": null,
           "support_spike_n": 0
         },
@@ -1922,55 +2137,55 @@
       "country": "MY",
       "fantasy_role": 2,
       "match_count": 50,
-      "detail_count": 3,
+      "detail_count": 2,
       "raw": {
         "role_dist": {
           "pos1": 0,
           "pos2": 0,
           "pos3": 0,
-          "pos4": 0.333,
-          "pos5": 0.667
+          "pos4": 0.5,
+          "pos5": 0.5
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.4,
+          "unique_hero_ratio": 0.38,
           "top3_concentration": 0.34,
-          "melee_carry": 0.08,
+          "melee_carry": 0.06,
           "ranged_carry": 0.02,
-          "caster_nuker": 0.08,
-          "initiator": 0.18,
-          "support": 0.64,
+          "caster_nuker": 0.06,
+          "initiator": 0.16,
+          "support": 0.7,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 32.4,
-          "pct_under_30min": 0.4,
-          "pct_over_45min": 0.14,
-          "kda_per_min": 0.8
+          "median_duration_min": 31.3,
+          "pct_under_30min": 0.44,
+          "pct_over_45min": 0.12,
+          "kda_per_min": 0.89
         },
         "farm": {
-          "lh_per_min": 0.9,
-          "gpm": 294,
-          "lh_at_10": 4,
-          "lane_efficiency_pct": 34
+          "lh_per_min": 2.5,
+          "gpm": 361,
+          "lh_at_10": 2,
+          "lane_efficiency_pct": 32
         },
         "vision": {
-          "obs_per_game": 8,
-          "sen_per_game": 10.3,
-          "dewards_per_game": 6.7
+          "obs_per_game": 7.5,
+          "sen_per_game": 12.5,
+          "dewards_per_game": 5
         },
         "death": {
-          "deaths_per_match": 6.1,
-          "deaths_per_min": 0.18,
-          "kda_ratio": 3.44
+          "deaths_per_match": 5.7,
+          "deaths_per_min": 0.176,
+          "kda_ratio": 4.04
         },
         "spending": {
           "core_spike_min": null,
           "core_spike_n": 0,
           "support_spike_min": null,
-          "support_spike_n": 0
+          "support_spike_n": 1
         },
         "involvement": {
-          "kill_participation": 0.61
+          "kill_participation": 0.56
         }
       }
     },
@@ -1984,52 +2199,52 @@
       "detail_count": 15,
       "raw": {
         "role_dist": {
-          "pos1": 0.933,
+          "pos1": 1,
           "pos2": 0,
-          "pos3": 0.067,
+          "pos3": 0,
           "pos4": 0,
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.44,
-          "top3_concentration": 0.34,
-          "melee_carry": 0.46,
-          "ranged_carry": 0.3,
-          "caster_nuker": 0.12,
-          "initiator": 0.02,
-          "support": 0.04,
-          "durable_core": 0.06
+          "unique_hero_ratio": 0.4,
+          "top3_concentration": 0.4,
+          "melee_carry": 0.52,
+          "ranged_carry": 0.1,
+          "caster_nuker": 0.22,
+          "initiator": 0.14,
+          "support": 0,
+          "durable_core": 0.02
         },
         "tempo": {
-          "median_duration_min": 43.6,
-          "pct_under_30min": 0.08,
-          "pct_over_45min": 0.48,
-          "kda_per_min": 0.44
+          "median_duration_min": 42.5,
+          "pct_under_30min": 0.1,
+          "pct_over_45min": 0.46,
+          "kda_per_min": 0.49
         },
         "farm": {
-          "lh_per_min": 9.9,
-          "gpm": 654,
-          "lh_at_10": 59,
-          "lane_efficiency_pct": 80
+          "lh_per_min": 11.8,
+          "gpm": 748,
+          "lh_at_10": 69,
+          "lane_efficiency_pct": 84
         },
         "vision": {
           "obs_per_game": 0.1,
-          "sen_per_game": 0.7,
-          "dewards_per_game": 1.7
+          "sen_per_game": 0.1,
+          "dewards_per_game": 0.9
         },
         "death": {
-          "deaths_per_match": 3.8,
-          "deaths_per_min": 0.085,
-          "kda_ratio": 4.19
+          "deaths_per_match": 3.5,
+          "deaths_per_min": 0.083,
+          "kda_ratio": 4.9
         },
         "spending": {
-          "core_spike_min": 23,
-          "core_spike_n": 14,
+          "core_spike_min": 21.6,
+          "core_spike_n": 13,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.56
+          "kill_participation": 0.59
         }
       }
     },
@@ -2044,51 +2259,51 @@
       "raw": {
         "role_dist": {
           "pos1": 0,
-          "pos2": 0.4,
+          "pos2": 0.2,
           "pos3": 0,
-          "pos4": 0.533,
-          "pos5": 0.067
+          "pos4": 0.667,
+          "pos5": 0.133
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.28,
-          "top3_concentration": 0.5,
+          "unique_hero_ratio": 0.3,
+          "top3_concentration": 0.56,
           "melee_carry": 0,
           "ranged_carry": 0,
-          "caster_nuker": 0.28,
-          "initiator": 0.22,
-          "support": 0.48,
+          "caster_nuker": 0.38,
+          "initiator": 0.16,
+          "support": 0.44,
           "durable_core": 0.02
         },
         "tempo": {
-          "median_duration_min": 36,
-          "pct_under_30min": 0.08,
+          "median_duration_min": 39.4,
+          "pct_under_30min": 0.1,
           "pct_over_45min": 0.32,
           "kda_per_min": 0.55
         },
         "farm": {
-          "lh_per_min": 1,
-          "gpm": 279,
-          "lh_at_10": 6,
-          "lane_efficiency_pct": 31
+          "lh_per_min": 1.8,
+          "gpm": 337,
+          "lh_at_10": 9,
+          "lane_efficiency_pct": 39
         },
         "vision": {
-          "obs_per_game": 4.1,
-          "sen_per_game": 8.2,
-          "dewards_per_game": 3.9
+          "obs_per_game": 4.8,
+          "sen_per_game": 9.2,
+          "dewards_per_game": 5.4
         },
         "death": {
-          "deaths_per_match": 5.4,
+          "deaths_per_match": 5.3,
           "deaths_per_min": 0.132,
-          "kda_ratio": 3.12
+          "kda_ratio": 3.2
         },
         "spending": {
           "core_spike_min": null,
           "core_spike_n": 2,
-          "support_spike_min": 27.5,
-          "support_spike_n": 7
+          "support_spike_min": 30.7,
+          "support_spike_n": 8
         },
         "involvement": {
-          "kill_participation": 0.54
+          "kill_participation": 0.71
         }
       }
     },
@@ -2158,55 +2373,55 @@
       "country": "CN",
       "fantasy_role": 2,
       "match_count": 50,
-      "detail_count": 9,
+      "detail_count": 0,
       "raw": {
         "role_dist": {
           "pos1": 0,
           "pos2": 0,
           "pos3": 0,
-          "pos4": 1,
+          "pos4": 0,
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.36,
+          "unique_hero_ratio": 0.34,
           "top3_concentration": 0.42,
           "melee_carry": 0.02,
           "ranged_carry": 0,
-          "caster_nuker": 0.38,
-          "initiator": 0.3,
-          "support": 0.3,
+          "caster_nuker": 0.34,
+          "initiator": 0.24,
+          "support": 0.4,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 34.2,
-          "pct_under_30min": 0.34,
-          "pct_over_45min": 0.22,
+          "median_duration_min": 34.3,
+          "pct_under_30min": 0.3,
+          "pct_over_45min": 0.18,
           "kda_per_min": 0.67
         },
         "farm": {
-          "lh_per_min": 2.2,
-          "gpm": 317,
-          "lh_at_10": 11,
-          "lane_efficiency_pct": 40
+          "lh_per_min": 0,
+          "gpm": 0,
+          "lh_at_10": 0,
+          "lane_efficiency_pct": 0
         },
         "vision": {
-          "obs_per_game": 4.9,
-          "sen_per_game": 10.6,
-          "dewards_per_game": 6.1
+          "obs_per_game": 0,
+          "sen_per_game": 0,
+          "dewards_per_game": 0
         },
         "death": {
-          "deaths_per_match": 5.2,
-          "deaths_per_min": 0.142,
-          "kda_ratio": 3.73
+          "deaths_per_match": 5.5,
+          "deaths_per_min": 0.151,
+          "kda_ratio": 3.47
         },
         "spending": {
           "core_spike_min": null,
-          "core_spike_n": 1,
-          "support_spike_min": 29.9,
-          "support_spike_n": 4
+          "core_spike_n": 0,
+          "support_spike_min": null,
+          "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.8
+          "kill_participation": 0
         }
       }
     },
@@ -2223,49 +2438,49 @@
           "pos1": 0,
           "pos2": 0,
           "pos3": 0,
-          "pos4": 0.267,
-          "pos5": 0.733
+          "pos4": 0.133,
+          "pos5": 0.867
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.36,
-          "top3_concentration": 0.38,
+          "unique_hero_ratio": 0.34,
+          "top3_concentration": 0.4,
           "melee_carry": 0,
           "ranged_carry": 0,
-          "caster_nuker": 0.16,
-          "initiator": 0.04,
+          "caster_nuker": 0.14,
+          "initiator": 0.06,
           "support": 0.8,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 37.2,
-          "pct_under_30min": 0.14,
-          "pct_over_45min": 0.18,
-          "kda_per_min": 0.53
+          "median_duration_min": 39.1,
+          "pct_under_30min": 0.12,
+          "pct_over_45min": 0.34,
+          "kda_per_min": 0.5
         },
         "farm": {
-          "lh_per_min": 2.1,
-          "gpm": 335,
+          "lh_per_min": 2.4,
+          "gpm": 340,
           "lh_at_10": 11,
-          "lane_efficiency_pct": 36
+          "lane_efficiency_pct": 35
         },
         "vision": {
-          "obs_per_game": 11.3,
-          "sen_per_game": 25.3,
-          "dewards_per_game": 10.1
+          "obs_per_game": 14.6,
+          "sen_per_game": 30.2,
+          "dewards_per_game": 8.6
         },
         "death": {
-          "deaths_per_match": 5.6,
-          "deaths_per_min": 0.144,
-          "kda_ratio": 2.68
+          "deaths_per_match": 5.7,
+          "deaths_per_min": 0.132,
+          "kda_ratio": 2.8
         },
         "spending": {
           "core_spike_min": null,
           "core_spike_n": 0,
-          "support_spike_min": 25.3,
-          "support_spike_n": 6
+          "support_spike_min": 22.8,
+          "support_spike_n": 11
         },
         "involvement": {
-          "kill_participation": 0.65
+          "kill_participation": 0.61
         }
       }
     },
@@ -2286,45 +2501,45 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.28,
-          "top3_concentration": 0.46,
+          "unique_hero_ratio": 0.3,
+          "top3_concentration": 0.56,
           "melee_carry": 0,
           "ranged_carry": 0,
-          "caster_nuker": 0.28,
-          "initiator": 0.32,
-          "support": 0.4,
+          "caster_nuker": 0.52,
+          "initiator": 0.16,
+          "support": 0.32,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 37.2,
-          "pct_under_30min": 0.14,
-          "pct_over_45min": 0.18,
-          "kda_per_min": 0.57
+          "median_duration_min": 39.1,
+          "pct_under_30min": 0.12,
+          "pct_over_45min": 0.34,
+          "kda_per_min": 0.52
         },
         "farm": {
-          "lh_per_min": 2.1,
-          "gpm": 351,
-          "lh_at_10": 9,
-          "lane_efficiency_pct": 39
+          "lh_per_min": 2.3,
+          "gpm": 337,
+          "lh_at_10": 11,
+          "lane_efficiency_pct": 37
         },
         "vision": {
-          "obs_per_game": 5.3,
-          "sen_per_game": 7.2,
-          "dewards_per_game": 5
+          "obs_per_game": 5.9,
+          "sen_per_game": 7.9,
+          "dewards_per_game": 6.3
         },
         "death": {
-          "deaths_per_match": 5.7,
-          "deaths_per_min": 0.147,
-          "kda_ratio": 2.89
+          "deaths_per_match": 6.2,
+          "deaths_per_min": 0.144,
+          "kda_ratio": 2.65
         },
         "spending": {
           "core_spike_min": null,
-          "core_spike_n": 1,
-          "support_spike_min": 28,
-          "support_spike_n": 7
+          "core_spike_n": 0,
+          "support_spike_min": 22.7,
+          "support_spike_n": 11
         },
         "involvement": {
-          "kill_participation": 0.7
+          "kill_participation": 0.66
         }
       }
     },
@@ -2345,45 +2560,45 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.32,
-          "top3_concentration": 0.5,
+          "unique_hero_ratio": 0.28,
+          "top3_concentration": 0.38,
           "melee_carry": 0,
           "ranged_carry": 0,
-          "caster_nuker": 0.02,
-          "initiator": 0.54,
+          "caster_nuker": 0.04,
+          "initiator": 0.4,
           "support": 0,
-          "durable_core": 0.44
+          "durable_core": 0.56
         },
         "tempo": {
-          "median_duration_min": 37.2,
-          "pct_under_30min": 0.14,
-          "pct_over_45min": 0.18,
-          "kda_per_min": 0.46
+          "median_duration_min": 38.3,
+          "pct_under_30min": 0.12,
+          "pct_over_45min": 0.3,
+          "kda_per_min": 0.45
         },
         "farm": {
-          "lh_per_min": 8.3,
-          "gpm": 567,
-          "lh_at_10": 61,
-          "lane_efficiency_pct": 80
+          "lh_per_min": 9.4,
+          "gpm": 593,
+          "lh_at_10": 59,
+          "lane_efficiency_pct": 73
         },
         "vision": {
-          "obs_per_game": 0.1,
+          "obs_per_game": 0,
           "sen_per_game": 0,
-          "dewards_per_game": 1.1
+          "dewards_per_game": 1.2
         },
         "death": {
-          "deaths_per_match": 3,
-          "deaths_per_min": 0.078,
-          "kda_ratio": 4.88
+          "deaths_per_match": 3.2,
+          "deaths_per_min": 0.076,
+          "kda_ratio": 4.84
         },
         "spending": {
-          "core_spike_min": 19,
-          "core_spike_n": 14,
+          "core_spike_min": 21.9,
+          "core_spike_n": 15,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.59
+          "kill_participation": 0.61
         }
       }
     },
@@ -2404,45 +2619,45 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.34,
-          "top3_concentration": 0.48,
-          "melee_carry": 0.02,
-          "ranged_carry": 0.08,
-          "caster_nuker": 0.56,
-          "initiator": 0.3,
+          "unique_hero_ratio": 0.28,
+          "top3_concentration": 0.52,
+          "melee_carry": 0,
+          "ranged_carry": 0.04,
+          "caster_nuker": 0.48,
+          "initiator": 0.44,
           "support": 0.02,
           "durable_core": 0.02
         },
         "tempo": {
-          "median_duration_min": 37.2,
-          "pct_under_30min": 0.14,
-          "pct_over_45min": 0.18,
-          "kda_per_min": 0.52
+          "median_duration_min": 39.1,
+          "pct_under_30min": 0.12,
+          "pct_over_45min": 0.34,
+          "kda_per_min": 0.49
         },
         "farm": {
-          "lh_per_min": 7.6,
-          "gpm": 543,
-          "lh_at_10": 65,
-          "lane_efficiency_pct": 81
+          "lh_per_min": 8.6,
+          "gpm": 585,
+          "lh_at_10": 64,
+          "lane_efficiency_pct": 80
         },
         "vision": {
-          "obs_per_game": 1.3,
-          "sen_per_game": 1.1,
-          "dewards_per_game": 1.2
+          "obs_per_game": 1.6,
+          "sen_per_game": 0.7,
+          "dewards_per_game": 5.6
         },
         "death": {
           "deaths_per_match": 4,
-          "deaths_per_min": 0.102,
-          "kda_ratio": 4.07
+          "deaths_per_min": 0.092,
+          "kda_ratio": 4.33
         },
         "spending": {
-          "core_spike_min": 22.9,
-          "core_spike_n": 15,
+          "core_spike_min": 21.4,
+          "core_spike_n": 13,
           "support_spike_min": null,
-          "support_spike_n": 0
+          "support_spike_n": 1
         },
         "involvement": {
-          "kill_participation": 0.66
+          "kill_participation": 0.78
         }
       }
     },
@@ -2463,45 +2678,45 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.26,
-          "top3_concentration": 0.46,
+          "unique_hero_ratio": 0.3,
+          "top3_concentration": 0.38,
           "melee_carry": 0,
-          "ranged_carry": 0.16,
-          "caster_nuker": 0.32,
-          "initiator": 0.3,
-          "support": 0.16,
-          "durable_core": 0.06
+          "ranged_carry": 0.1,
+          "caster_nuker": 0.34,
+          "initiator": 0.34,
+          "support": 0.12,
+          "durable_core": 0.1
         },
         "tempo": {
-          "median_duration_min": 37.2,
+          "median_duration_min": 39.9,
           "pct_under_30min": 0.16,
-          "pct_over_45min": 0.22,
-          "kda_per_min": 0.55
+          "pct_over_45min": 0.28,
+          "kda_per_min": 0.53
         },
         "farm": {
-          "lh_per_min": 8.6,
-          "gpm": 548,
-          "lh_at_10": 62,
-          "lane_efficiency_pct": 76
+          "lh_per_min": 8.1,
+          "gpm": 575,
+          "lh_at_10": 57,
+          "lane_efficiency_pct": 78
         },
         "vision": {
-          "obs_per_game": 0.8,
-          "sen_per_game": 0.6,
-          "dewards_per_game": 1.3
+          "obs_per_game": 0.6,
+          "sen_per_game": 0.4,
+          "dewards_per_game": 1.5
         },
         "death": {
-          "deaths_per_match": 3.2,
-          "deaths_per_min": 0.084,
-          "kda_ratio": 5.52
+          "deaths_per_match": 3.5,
+          "deaths_per_min": 0.089,
+          "kda_ratio": 5.03
         },
         "spending": {
-          "core_spike_min": 21.8,
-          "core_spike_n": 11,
+          "core_spike_min": 21,
+          "core_spike_n": 13,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.59
+          "kill_participation": 0.7
         }
       }
     },
@@ -2516,51 +2731,51 @@
       "raw": {
         "role_dist": {
           "pos1": 0,
-          "pos2": 0,
-          "pos3": 1,
+          "pos2": 0.067,
+          "pos3": 0.933,
           "pos4": 0,
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.28,
-          "top3_concentration": 0.54,
+          "unique_hero_ratio": 0.3,
+          "top3_concentration": 0.56,
           "melee_carry": 0.02,
           "ranged_carry": 0,
-          "caster_nuker": 0.12,
-          "initiator": 0.18,
+          "caster_nuker": 0.06,
+          "initiator": 0.2,
           "support": 0,
-          "durable_core": 0.68
+          "durable_core": 0.72
         },
         "tempo": {
-          "median_duration_min": 41.1,
+          "median_duration_min": 41,
           "pct_under_30min": 0.1,
-          "pct_over_45min": 0.24,
-          "kda_per_min": 0.51
+          "pct_over_45min": 0.22,
+          "kda_per_min": 0.49
         },
         "farm": {
-          "lh_per_min": 6.7,
-          "gpm": 577,
-          "lh_at_10": 50,
-          "lane_efficiency_pct": 73
+          "lh_per_min": 6.1,
+          "gpm": 532,
+          "lh_at_10": 46,
+          "lane_efficiency_pct": 68
         },
         "vision": {
           "obs_per_game": 0,
           "sen_per_game": 0.1,
-          "dewards_per_game": 1
+          "dewards_per_game": 0.5
         },
         "death": {
-          "deaths_per_match": 4.4,
-          "deaths_per_min": 0.106,
-          "kda_ratio": 3.84
+          "deaths_per_match": 4.3,
+          "deaths_per_min": 0.105,
+          "kda_ratio": 3.69
         },
         "spending": {
-          "core_spike_min": 20.9,
+          "core_spike_min": 22.6,
           "core_spike_n": 14,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.67
+          "kill_participation": 0.57
         }
       }
     },
@@ -2571,7 +2786,7 @@
       "country": "KR",
       "fantasy_role": 1,
       "match_count": 50,
-      "detail_count": 6,
+      "detail_count": 11,
       "raw": {
         "role_dist": {
           "pos1": 1,
@@ -2581,45 +2796,45 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.58,
-          "top3_concentration": 0.24,
-          "melee_carry": 0.18,
-          "ranged_carry": 0.3,
+          "unique_hero_ratio": 0.62,
+          "top3_concentration": 0.26,
+          "melee_carry": 0.22,
+          "ranged_carry": 0.24,
           "caster_nuker": 0.4,
-          "initiator": 0.04,
+          "initiator": 0.06,
           "support": 0,
           "durable_core": 0.08
         },
         "tempo": {
           "median_duration_min": 31.7,
           "pct_under_30min": 0.36,
-          "pct_over_45min": 0.14,
+          "pct_over_45min": 0.18,
           "kda_per_min": 0.76
         },
         "farm": {
-          "lh_per_min": 8.8,
-          "gpm": 698,
-          "lh_at_10": 60,
-          "lane_efficiency_pct": 85
+          "lh_per_min": 10,
+          "gpm": 733,
+          "lh_at_10": 61,
+          "lane_efficiency_pct": 86
         },
         "vision": {
-          "obs_per_game": 0.3,
+          "obs_per_game": 0.2,
           "sen_per_game": 0,
           "dewards_per_game": 1.2
         },
         "death": {
-          "deaths_per_match": 2.9,
-          "deaths_per_min": 0.085,
-          "kda_ratio": 7.98
+          "deaths_per_match": 3.2,
+          "deaths_per_min": 0.092,
+          "kda_ratio": 7.3
         },
         "spending": {
-          "core_spike_min": 25.6,
-          "core_spike_n": 4,
+          "core_spike_min": 25.3,
+          "core_spike_n": 8,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.54
+          "kill_participation": 0.58
         }
       }
     },
@@ -2636,49 +2851,49 @@
           "pos1": 0,
           "pos2": 0,
           "pos3": 0,
-          "pos4": 0.133,
-          "pos5": 0.867
+          "pos4": 0.333,
+          "pos5": 0.667
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.2,
-          "top3_concentration": 0.52,
+          "unique_hero_ratio": 0.26,
+          "top3_concentration": 0.5,
           "melee_carry": 0,
           "ranged_carry": 0,
-          "caster_nuker": 0.1,
-          "initiator": 0,
-          "support": 0.9,
+          "caster_nuker": 0.12,
+          "initiator": 0.02,
+          "support": 0.86,
           "durable_core": 0
         },
         "tempo": {
-          "median_duration_min": 36.5,
+          "median_duration_min": 40.1,
           "pct_under_30min": 0.08,
-          "pct_over_45min": 0.16,
+          "pct_over_45min": 0.2,
           "kda_per_min": 0.54
         },
         "farm": {
-          "lh_per_min": 1.8,
-          "gpm": 323,
-          "lh_at_10": 10,
-          "lane_efficiency_pct": 40
+          "lh_per_min": 2.2,
+          "gpm": 365,
+          "lh_at_10": 11,
+          "lane_efficiency_pct": 37
         },
         "vision": {
           "obs_per_game": 10.6,
-          "sen_per_game": 22.8,
-          "dewards_per_game": 8.1
+          "sen_per_game": 23,
+          "dewards_per_game": 10.8
         },
         "death": {
-          "deaths_per_match": 5.6,
-          "deaths_per_min": 0.145,
-          "kda_ratio": 2.74
+          "deaths_per_match": 5.2,
+          "deaths_per_min": 0.131,
+          "kda_ratio": 3.09
         },
         "spending": {
           "core_spike_min": null,
-          "core_spike_n": 1,
-          "support_spike_min": 33.2,
-          "support_spike_n": 11
+          "core_spike_n": 0,
+          "support_spike_min": 29.2,
+          "support_spike_n": 12
         },
         "involvement": {
-          "kill_participation": 0.7
+          "kill_participation": 0.66
         }
       }
     },
@@ -2699,45 +2914,45 @@
           "pos5": 0
         },
         "hero_archetype": {
-          "unique_hero_ratio": 0.28,
-          "top3_concentration": 0.42,
-          "melee_carry": 0.02,
+          "unique_hero_ratio": 0.32,
+          "top3_concentration": 0.4,
+          "melee_carry": 0.04,
           "ranged_carry": 0.02,
-          "caster_nuker": 0.74,
-          "initiator": 0.18,
-          "support": 0.02,
-          "durable_core": 0.02
+          "caster_nuker": 0.64,
+          "initiator": 0.2,
+          "support": 0.04,
+          "durable_core": 0.06
         },
         "tempo": {
-          "median_duration_min": 36.5,
+          "median_duration_min": 40.1,
           "pct_under_30min": 0.08,
-          "pct_over_45min": 0.16,
-          "kda_per_min": 0.52
+          "pct_over_45min": 0.2,
+          "kda_per_min": 0.54
         },
         "farm": {
-          "lh_per_min": 8,
-          "gpm": 559,
-          "lh_at_10": 62,
-          "lane_efficiency_pct": 79
+          "lh_per_min": 8.2,
+          "gpm": 595,
+          "lh_at_10": 56,
+          "lane_efficiency_pct": 77
         },
         "vision": {
-          "obs_per_game": 1.1,
-          "sen_per_game": 1.2,
-          "dewards_per_game": 2.2
+          "obs_per_game": 1.5,
+          "sen_per_game": 0.7,
+          "dewards_per_game": 1.5
         },
         "death": {
-          "deaths_per_match": 4.3,
-          "deaths_per_min": 0.11,
-          "kda_ratio": 3.68
+          "deaths_per_match": 4.1,
+          "deaths_per_min": 0.102,
+          "kda_ratio": 4.33
         },
         "spending": {
-          "core_spike_min": 22.1,
-          "core_spike_n": 14,
+          "core_spike_min": 20.1,
+          "core_spike_n": 13,
           "support_spike_min": null,
           "support_spike_n": 0
         },
         "involvement": {
-          "kill_participation": 0.7
+          "kill_participation": 0.77
         }
       }
     }
