@@ -20,7 +20,8 @@
 //   3. Write the array verbatim to src/data/heroes.json
 //
 // Failure semantics:
-//   - HTTP non-2xx → exit 1, leave existing src/data/heroes.json
+//   - HTTP 5xx or network error → retry with backoff (up to MAX_RETRY)
+//   - HTTP non-2xx (after retries) → exit 1, leave existing src/data/heroes.json
 //   - empty array → exit 1
 //   - schema mismatch → exit 1
 //
@@ -39,14 +40,42 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = resolve(__dirname, '..', 'src', 'data')
 const OUT_PATH = resolve(DATA_DIR, 'heroes.json')
 
+// Cloudflare-fronted OpenDota intermittently returns 521/522/524 when
+// their origin is briefly unreachable. The 2026-05-18 weekly run hit
+// this and the workflow failed because the script was single-shot.
+// Retry on 5xx and network-level errors with linear backoff.
+const MAX_RETRY = 3
+const BACKOFF_MS = 30_000
+
+async function fetchHeroes() {
+  const url = 'https://api.opendota.com/api/heroes'
+  for (let attempt = 0; attempt <= MAX_RETRY; attempt++) {
+    try {
+      const res = await fetch(url)
+      if (res.ok) return res.json()
+      // Retry on 5xx (transient upstream); bail on 4xx (likely permanent)
+      if (res.status >= 500 && attempt < MAX_RETRY) {
+        console.warn(`HTTP ${res.status} from /heroes — retry ${attempt + 1}/${MAX_RETRY} in ${BACKOFF_MS / 1000}s`)
+        await new Promise((r) => setTimeout(r, BACKOFF_MS))
+        continue
+      }
+      throw new Error(`HTTP ${res.status} from /heroes`)
+    } catch (e) {
+      // fetch() throws on DNS / connection failures — same retry treatment
+      if (attempt < MAX_RETRY && !/HTTP \d+/.test(e?.message ?? '')) {
+        console.warn(`Network error on /heroes (${e?.message ?? e}) — retry ${attempt + 1}/${MAX_RETRY} in ${BACKOFF_MS / 1000}s`)
+        await new Promise((r) => setTimeout(r, BACKOFF_MS))
+        continue
+      }
+      throw e
+    }
+  }
+  throw new Error('unreachable')
+}
+
 async function main() {
   console.log('Fetching https://api.opendota.com/api/heroes ...')
-  const res = await fetch('https://api.opendota.com/api/heroes')
-  if (!res.ok) {
-    console.error(`FATAL: HTTP ${res.status} from /heroes`)
-    process.exit(1)
-  }
-  const heroes = await res.json()
+  const heroes = await fetchHeroes()
   if (!Array.isArray(heroes) || heroes.length === 0) {
     console.error('FATAL: /heroes returned empty or non-array payload')
     process.exit(1)
