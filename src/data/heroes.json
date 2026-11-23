@@ -1109,7 +1109,7 @@
     "id": 82,
     "name": "npc_dota_hero_meepo",
     "localized_name": "Meepo",
-    "primary_attr": "agi",
+    "primary_attr": "all",
     "attack_type": "Melee",
     "roles": [
       "Carry",
